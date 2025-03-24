@@ -7,10 +7,10 @@ const CenterValidation = joi.object({
     location: joi.string().required(),
     region_id: joi.number().required(),
     branch_number: joi.number().required(),
-    ceo_id: joi.number(),
+    ceo_id: joi.number().required(),
     description: joi.string().required(),
-    subject_id: joi.array(),
-    field_id: joi.array()
+    subject_id: joi.array().required(),
+    field_id: joi.array().required()
 })
 
 module.exports = CenterValidation
