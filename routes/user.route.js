@@ -1,6 +1,7 @@
 const {User} = require("../models/user.model")
 const {Region} = require("../models/region.model")
-const {UserValidation} = require("../validation/user.validation")
+const UserValidation = require("../validation/user.validation")
+const LoginValidation = require("../validation/user.validation")
 const router = require("express").Router()
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
@@ -9,6 +10,9 @@ const {roleMiddleware} = require("../middleware/role.middleware")
 const { totp } = require("otplib");
 const { sendEmail } = require("../config/transporter");
 const { Op } = require("sequelize");
+const DeviceDetector = require("device-detector-js");
+const deviceDetector = new DeviceDetector()
+
 totp.options = { step: 300, digits: 5 };
 
 router.post("/register", async (req, res) => {
@@ -99,7 +103,7 @@ router.post("/login", async (req, res) => {
     }
 });
 
-router.get("/", roleMiddleware(["admin"]), async (req, res) => {
+router.get("/", roleMiddleware(["ADMIN"]), async (req, res) => {
     try {
         let users = await User.findAll();
         res.send(users);
@@ -108,7 +112,7 @@ router.get("/", roleMiddleware(["admin"]), async (req, res) => {
     }
 });
 
-router.get("/:id", roleMiddleware(["admin"]), async (req, res) => {
+router.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
     try {
         let user = await User.findByPk(req.params.id);
         if (!user) return res.status(404).send({ message: "User not found" });
@@ -118,16 +122,13 @@ router.get("/:id", roleMiddleware(["admin"]), async (req, res) => {
     }
 });
 
-router.get("/me", AuthMiddleware,async(req, res)=>{
-
-})
-router.delete("/:id", roleMiddleware(["admin", "user"]), async (req, res) => {
+router.delete("/:id", roleMiddleware(["ADMIN", "USER"]), async (req, res) => {
     try {
         let user = await User.findByPk(req.params.id);
         if (!user) return res.status(404).send({ message: "User not found" });
 
-        if(req.user.role == "user" && req.user.id != user.id){
-          return res.status(400).send({ message: "You are not allowed to delete this user. User can delete his own account" });
+        if(req.user.role !== "ADMIN" && req.user.id != user.id){
+          return res.status(400).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account` });
         }
         await user.destroy();
         res.send({ message: "User deleted successfully" });
@@ -136,11 +137,25 @@ router.delete("/:id", roleMiddleware(["admin", "user"]), async (req, res) => {
     }
 });
 
+router.get("/me", AuthMiddleware,async(req, res)=>{
+    try {
+        let data = deviceDetector.parse(req.headers["user-agent"])
+        let user = await User.findByPk(req.user.id)
+        res.send({user: user, device: data})
+    } catch (error) {
+        res.status(404).send(error)
+    }
+})
+
+
 router.get("/refresh", AuthMiddleware,async(req,res)=>{
     try {
-        
+        let id = req.user.id
+        let role = req.user.role
+        let access_token = jwt.sign({id: id,role: role},"sekret",{expiresIn: "15m"})
+        res.send({access_token: access_token})
     } catch (error) {
-        
+        res.status(400).send(error)
     }
 })
 
