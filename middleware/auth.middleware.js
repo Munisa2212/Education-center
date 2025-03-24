@@ -7,8 +7,12 @@ function AuthMiddleware(){
             if(!token){
                 return res.status(401).send({message: "Token not provided"})
             }
-            next()
             let data = jwt.verify(token, 'sekret')
+            if(!data){
+                return res.status(401).send({message: "Invalid token"})
+            }
+            req.user = data
+            next()
         }catch(err){
             return res.status(401).send(err)
         }
