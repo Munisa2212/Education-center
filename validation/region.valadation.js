@@ -1,7 +1,7 @@
 const joi = require("joi")
 
-const Region_valadation = joi.object({
+const RegionValidation = joi.object({
     name: joi.string().required()
 })
 
-module.exports = Region_valadation
+module.exports = RegionValidation

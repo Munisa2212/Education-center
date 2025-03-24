@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize")
 const {db} = require("../config/db")
 
-const Registeration = db.define(
-    "Registerations",
+const Registration = db.define(
+    "Registrations",
     {
         id: {
             type: DataTypes.INTEGER,
@@ -24,4 +24,4 @@ const Registeration = db.define(
     }
 )
 
-module.exports = Registeration
+module.exports = Registration
