@@ -8,6 +8,7 @@ const Category = require("./category.module")
 const Subject = require("./subject.module")
 const Comment = require("./comment.module")
 const Resource = require("./resource.module")
+const Like = require("./like.module")
 
 User.hasMany(Comment, { foreignKey: "user_id" }); 
 Comment.belongsTo(User, { foreignKey: "user_id" });
