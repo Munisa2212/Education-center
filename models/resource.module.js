@@ -17,6 +17,20 @@ const Resource = db.define(
         },
         image: {
             type: DataTypes.STRING
+        },
+        description: {
+            type: DataTypes.STRING
+        },
+        category_id: {
+            type: DataTypes.INTEGER
+        },
+        file: {
+            type: DataTypes.STRING
+        },
+        link: {
+            type: DataTypes.STRING
         }
     }
 )
+
+module.exports = Resource
