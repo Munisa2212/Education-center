@@ -1,4 +1,4 @@
-const { db } = requirer('../config/db')
+const { db } = require('../config/db')
 const { DataTypes } = require('sequelize')
 
 const Region = db.define('Region', {

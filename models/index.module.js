@@ -19,8 +19,8 @@ Resource.belongsTo(User, { foreignKey: "user_id" });
 User.hasMany(Like, { foreignKey: "user_id" }); 
 Like.belongsTo(User, { foreignKey: "user_id" });
 
-User.hasMany(Registeration, { foreignKey: "user_id" });
-Registeration.belongsTo(User, { foreignKey: "user_id" });
+User.hasMany(Registration, { foreignKey: "user_id" });
+Registration.belongsTo(User, { foreignKey: "user_id" });
 
 Region.hasMany(Center, { foreignKey: "region_id" });
 Center.belongsTo(Region, { foreignKey: "region_id" });
@@ -34,14 +34,14 @@ Like.belongsTo(Center, { foreignKey: "learningCentre_id" });
 Center.hasMany(Comment, { foreignKey: "learningCentre_id" });
 Comment.belongsTo(Center, { foreignKey: "learningCentre_id" });
 
-Center.hasMany(Registeration, { foreignKey: "learningCentre_id" });
-Registeration.belongsTo(Center, { foreignKey: "learningCentre_id" });
+Center.hasMany(Registration, { foreignKey: "learningCentre_id" });
+Registration.belongsTo(Center, { foreignKey: "learningCentre_id" });
 
 Region.hasMany(Branch, { foreignKey: "region_id" });
 Branch.belongsTo(Region, { foreignKey: "region_id" });
 
-Branch.hasMany(Registeration, { foreignKey: "branch_id" });
-Registeration.belongsTo(Branch, { foreignKey: "branch_id" });
+Branch.hasMany(Registration, { foreignKey: "branch_id" });
+Registration.belongsTo(Branch, { foreignKey: "branch_id" });
 
 Branch.belongsTo(Center, { foreignKey: "learningCentre_id" });
 
@@ -50,3 +50,18 @@ Branch.belongsTo(Field, { foreignKey: "field_id" });
 
 Resource.belongsTo(Category, { foreignKey: "category_id" });
 Category.hasMany(Resource, { foreignKey: "category_id" });
+
+
+module.exports = {
+    User,
+    Comment,
+    Resource,
+    Like,
+    Registration,
+    Branch,
+    Center,
+    Region,
+    Field,
+    Category,
+    Subject,
+};
