@@ -42,7 +42,7 @@ router.post("/register", async (req, res) => {
         let otp = totp.generate(email + "email");
         console.log(otp);
         sendEmail(email, otp);
-        res.send({user_data: newUser, message: "User created successfully otp is sended to email and phone"});
+        res.status(201).send({user_data: newUser, message: "User created successfully otp is sended to email and phone"});
     } catch (error) {
         res.status(400).send(error);
     }
@@ -93,7 +93,7 @@ router.post("/login", async (req, res) => {
         let match = bcrypt.compareSync(password, user.password);
         if (!match) return res.status(400).send({ message: "Wrong password" });
 
-        if (user.status != "ACTIVE") return res.status(400).send({ message: "Verify your email first!" });
+        if (user.status != "ACTIVE") return res.status(401).send({ message: "Verify your email first!" });
 
         let refresh_token = jwt.sign({ id: user.id, role: user.role }, "sekret",{expiresIn: "1d"});
         let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "15m" });
@@ -128,7 +128,7 @@ router.delete("/:id", AuthMiddleware(), async (req, res) => {
         if (!user) return res.status(404).send({ message: "User not found" });
 
         if(req.user.role !== "ADMIN" && req.user.id != user.id){
-          return res.status(400).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account` });
+          return res.status(403).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account` });
         }
         let deleted = await user.destroy();
         res.send({deleted_data:  deleted, message: "User deleted successfully" });

@@ -9,13 +9,17 @@ const transporter = nodemailer.createTransport({
 });
 
 async function sendEmail(email, otp) {
-    await transporter.sendMail({
-      to: email,
-      subject: "verify auth",
-      from: "boltaboyevnurali55@gmail.com",
-      text: `Your one time password is ${otp}`
-    });
-    console.log("Sended to email");
+    try {
+      await transporter.sendMail({
+        to: email,
+        subject: "verify auth",
+        from: "boltaboyevnurali55@gmail.com",
+        text: `Your one time password is ${otp}`
+      });
+      console.log("Sended to email");
+    } catch (error) {
+      res.status(400).send(error); 
+    }
 }
 
 module.exports = {transporter, sendEmail}
