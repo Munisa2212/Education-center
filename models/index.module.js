@@ -50,3 +50,18 @@ Branch.belongsTo(Field, { foreignKey: "field_id" });
 
 Resource.belongsTo(Category, { foreignKey: "category_id" });
 Category.hasMany(Resource, { foreignKey: "category_id" });
+
+
+module.exports = {
+    User,
+    Comment,
+    Resource,
+    Like,
+    Registeration,
+    Branch,
+    Center,
+    Region,
+    Field,
+    Category,
+    Subject,
+};
