@@ -103,6 +103,23 @@ router.post("/login", async (req, res) => {
     }
 });
 
+router.get("/search", roleMiddleware(["ADMIN"]), async (req, res) => {
+    try {
+        let { name, email, phone, role } = req.query;
+        const where = {}
+
+        if(name) where.username = { [Op.like]: `%${name}%` }
+        if(email) where.email = { [Op.like]: `%${email}%` }
+        if(phone) where.phone = { [Op.like]: `%${phone}%` }
+        if(role) where.role = role
+
+        let users = await User.findAll({ where });
+        res.send(users);
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
 router.get("/", roleMiddleware(["ADMIN"]), async (req, res) => {
     try {
         let users = await User.findAll();
