@@ -7,7 +7,7 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const {AuthMiddleware} = require("../middleware/auth.middleware")
 const {roleMiddleware} = require("../middleware/role.middleware")
-const { totp } = require("otplib");
+const { totp, authenticator } = require("otplib");
 const { sendEmail } = require("../config/transporter");
 const { Op } = require("sequelize");
 const DeviceDetector = require("device-detector-js");
@@ -122,7 +122,7 @@ router.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
     }
 });
 
-router.delete("/:id", roleMiddleware(["ADMIN", "USER"]), async (req, res) => {
+router.delete("/:id", AuthMiddleware(), async (req, res) => {
     try {
         let user = await User.findByPk(req.params.id);
         if (!user) return res.status(404).send({ message: "User not found" });
@@ -130,14 +130,14 @@ router.delete("/:id", roleMiddleware(["ADMIN", "USER"]), async (req, res) => {
         if(req.user.role !== "ADMIN" && req.user.id != user.id){
           return res.status(400).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account` });
         }
-        await user.destroy();
-        res.send({ message: "User deleted successfully" });
+        let deleted = await user.destroy();
+        res.send({deleted_data:  deleted, message: "User deleted successfully" });
     } catch (error) {
         res.status(400).send(error);
     }
 });
 
-router.get("/me", AuthMiddleware,async(req, res)=>{
+router.get("/me", AuthMiddleware(), async(req, res)=>{
     try {
         let data = deviceDetector.parse(req.headers["user-agent"])
         let user = await User.findByPk(req.user.id)
@@ -148,7 +148,7 @@ router.get("/me", AuthMiddleware,async(req, res)=>{
 })
 
 
-router.get("/refresh", AuthMiddleware,async(req,res)=>{
+router.get("/refresh", AuthMiddleware(), async(req,res)=>{
     try {
         let id = req.user.id
         let role = req.user.role
