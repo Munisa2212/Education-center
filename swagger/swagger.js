@@ -28,7 +28,7 @@ const options = {
           type: 'object',
           properties: {
             id: { type: 'integer', example: 1 },
-            role: { type: 'string', example: 'admin' },
+            role: { type: 'string', example: 'ADMIN' },
             email: { type: 'string', example: 'user@example.com' },
             password: { type: 'string', example: 'hashedpassword' },
             phone: { type: 'string', example: '+998901234567' },
