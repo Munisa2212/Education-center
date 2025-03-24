@@ -1,4 +1,3 @@
-const Region = require("../models/region.module")
 const joi = require("joi")
 
 const Region_valadation = joi.object({

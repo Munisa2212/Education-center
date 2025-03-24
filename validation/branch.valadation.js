@@ -1,4 +1,3 @@
-const Branch = require("../models/branch.module")
 const joi = require("joi")
 
 const Branch_valadation = joi.object({
