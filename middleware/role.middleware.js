@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken")
 
-function AuthMiddleware(){
+function roleMiddleware(roles){
     return (req, res, next)=>{
         try{
             let token = req.header("Authorization")?.split(" ")[1]
@@ -8,15 +8,16 @@ function AuthMiddleware(){
                 return res.status(401).send({message: "Token not provided"})
             }
             let data = jwt.verify(token, 'sekret')
-            if(!data){
-                return res.status(401).send({message: "Invalid token"})
+            if(roles.includes(data.role)){
+                console.log(roles, data.role);
+                req.user = data
+                return next()
             }
-            req.user = data
-            next()
+            return res.status(400).send(`Not allowed for ${data.role}, only for ${roles}`)
         }catch(err){
             return res.status(401).send(err)
         }
     }
 }
 
-module.exports = {AuthMiddleware}
+module.exports = {roleMiddleware}
