@@ -1,5 +1,5 @@
-const {User} = require("../models/user.model")
-const {Region} = require("../models/region.model")
+const {User} = require("../models/index.module")
+const {Region} = require("../models/index.module")
 const UserValidation = require("../validation/user.validation")
 const LoginValidation = require("../validation/user.validation")
 const router = require("express").Router()
