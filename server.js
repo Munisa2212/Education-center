@@ -1,5 +1,5 @@
 const express = require('express')
-const { onnectDB } = require('./config/db')
+const { connectDB } = require('./config/db')
 const UserRoute = require('./routes/user.route')
 const BranchRoute = require('./routes/branch.route')
 const RegionRoute = require('./routes/region.route')
@@ -14,7 +14,7 @@ require('dotenv').config()
 const app = express()
 
 app.use(express.json())
-onnectDB()
+connectDB()
 
 app.use('/user', UserRoute)
 app.use('/branch', BranchRoute)
