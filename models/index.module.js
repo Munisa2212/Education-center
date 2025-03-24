@@ -25,17 +25,17 @@ Registration.belongsTo(User, { foreignKey: "user_id" });
 Region.hasMany(Center, { foreignKey: "region_id" });
 Center.belongsTo(Region, { foreignKey: "region_id" });
 
-Center.hasMany(Branch, { foreignKey: "learningCentre_id" });
-Branch.belongsTo(Center, { foreignKey: "learningCentre_id" });
+Center.hasMany(Branch, { foreignKey: "learningCenter_id" });
+Branch.belongsTo(Center, { foreignKey: "learningCenter_id" });
 
-Center.hasMany(Like, { foreignKey: "learningCentre_id" });
-Like.belongsTo(Center, { foreignKey: "learningCentre_id" });
+Center.hasMany(Like, { foreignKey: "learningCenter_id" });
+Like.belongsTo(Center, { foreignKey: "learningCenter_id" });
 
-Center.hasMany(Comment, { foreignKey: "learningCentre_id" });
-Comment.belongsTo(Center, { foreignKey: "learningCentre_id" });
+Center.hasMany(Comment, { foreignKey: "learningCenter_id" });
+Comment.belongsTo(Center, { foreignKey: "learningCenter_id" });
 
-Center.hasMany(Registration, { foreignKey: "learningCentre_id" });
-Registration.belongsTo(Center, { foreignKey: "learningCentre_id" });
+Center.hasMany(Registration, { foreignKey: "learningCenter_id" });
+Registration.belongsTo(Center, { foreignKey: "learningCenter_id" });
 
 Region.hasMany(Branch, { foreignKey: "region_id" });
 Branch.belongsTo(Region, { foreignKey: "region_id" });
@@ -43,7 +43,7 @@ Branch.belongsTo(Region, { foreignKey: "region_id" });
 Branch.hasMany(Registration, { foreignKey: "branch_id" });
 Registration.belongsTo(Branch, { foreignKey: "branch_id" });
 
-Branch.belongsTo(Center, { foreignKey: "learningCentre_id" });
+Branch.belongsTo(Center, { foreignKey: "learningCenter_id" });
 
 Branch.belongsTo(Subject, { foreignKey: "subject_id" });
 Branch.belongsTo(Field, { foreignKey: "field_id" });
