@@ -17,6 +17,7 @@ route.post('/', async (req, res) => {
   try {
     const { error } = Branch_valadation.validate(req.body)
     if (error)
+<<<<<<< HEAD
       return res.status(400).send({ message: error.details[0].message })
 
     let {learningCenter_id, region_id, field_id, subject_id} = req.body
@@ -28,6 +29,9 @@ route.post('/', async (req, res) => {
     if (!region) return res.status(404).send({ message: 'Region not found' })
 
 
+=======
+      return res.status(400).send({ message: error.message })
+>>>>>>> fc3953c2eac08e5beae2ab61d5b58919e94f3776
     let NewBranch = await Branch.create(req.body)
 
     res.status(201).send({ NewBranch })

@@ -40,6 +40,6 @@ const User = db.define('User', {
         allowNull: false,
         defaultValue: "INACTIVE"
     }
-})
+},{timestamps: false})
 
 module.exports = User
