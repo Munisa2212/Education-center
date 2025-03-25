@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const {Center, Region, User, Branch, Comment} = require("../models/index.module");
+const {Center, Region, User, Branch, Comment, Registration} = require("../models/index.module");
 const CenterValidation = require("../validation/center.validation");
 const { roleMiddleware } = require("../middleware/role.middleware");
 const { AuthMiddleware } = require("../middleware/auth.middleware");
@@ -47,18 +47,28 @@ app.get("/",AuthMiddleware,  async(req, res)=>{
     }
 })
 
-router.get("/average-star", async(req, res)=>{
+app.get("/students", async(req, res)=>{
     try {
-        let {center_id} = req.query;
-
-        if(!center_id){
-            return res.status(400).send({message: "center_id is required"})
+        if(!req.query.learningCenter_id){
+            return res.status(400).send({message: "learningCenter_id is required"})
         }
 
-        let center_data = await Comment.findAll({where: {center_id: center_id}});
-        
-        let average_star = 0
+        let student = await Registration.findAll({where: {learningCenter_id: req.query.learningCenter_id}})
 
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+app.get("/average-star", roleMiddleware(["CEO"]),async(req, res)=>{
+    try {
+        let {learningCenter_id} = req.query;
+
+        if(!learningCenter_id){
+            return res.status(400).send({message: "learningCenter_id is required"})
+        }
+        let center_data = await Comment.findAll({where: {learningCenter_id: learningCenter_id}});        
+        let average_star = 0
         if(!center_data){
             return res.send({average_star})
         }
@@ -70,8 +80,8 @@ router.get("/average-star", async(req, res)=>{
             count++
             star += e.star
         });
-
-        let total = stat / count;
+        let total = star / count;
+        res.send({average_star: total})
     } catch (error) {
         res.status(400).send(error)
     }

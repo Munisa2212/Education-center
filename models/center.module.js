@@ -25,7 +25,8 @@ const Center = db.define(
             type: DataTypes.INTEGER
         },
         branch_number: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            defaultValue: 0
         },
         ceo_id: {
             type: DataTypes.INTEGER
