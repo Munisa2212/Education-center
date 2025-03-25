@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const {Center, Region, User, Branch} = require("../models/index.module");
+const {Center, Region, User, Branch, Comment} = require("../models/index.module");
 const CenterValidation = require("../validation/center.validation");
 const { roleMiddleware } = require("../middleware/role.middleware");
 const { AuthMiddleware } = require("../middleware/auth.middleware");
@@ -9,7 +9,7 @@ app.post("/", async(req, res)=>{
     try {
         let { error } = CenterValidation.validate(req.body)
         console.log(error)
-        if (error) return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" })
+        if (error) return res.status(400).send({ message: error.details[0].message})
         
         const newCenter = await Center.create(req.body)
         res.send(newCenter)
@@ -37,13 +37,13 @@ app.get("/",  async(req, res)=>{
         });
 
         if(!centers){
-            return res.status({message: "Nothing found"})
+            return res.status(203).send({message: "Nothing found"})
         }
 
         res.send(centers)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
@@ -60,7 +60,7 @@ app.get("/:id",  async(req, res)=>{
           res.send(center);
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
@@ -79,7 +79,7 @@ app.patch("/:id",  async(req, res)=>{
         res.send(center)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
@@ -98,11 +98,8 @@ app.delete("/:id",  async(req, res)=>{
         res.send(center)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
 module.exports = app
-
-
-// roleMiddleware(["CEO"]) , 
