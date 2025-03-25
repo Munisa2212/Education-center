@@ -401,7 +401,7 @@ router.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
     }
 });
 
-router.delete("/:id", AuthMiddleware, async (req, res) => {
+router.delete("/:id", AuthMiddleware(), async (req, res) => {
     try {
         let user = await User.findByPk(req.params.id);
         if (!user) return res.status(404).send({ message: "User not found" });
@@ -416,7 +416,7 @@ router.delete("/:id", AuthMiddleware, async (req, res) => {
     }
 });
 
-router.get("/me", AuthMiddleware, async(req, res)=>{
+router.get("/me", AuthMiddleware(), async(req, res)=>{
     try {
         let data = deviceDetector.parse(req.headers["user-agent"])
         let user = await User.findByPk(req.user.id)
@@ -427,7 +427,7 @@ router.get("/me", AuthMiddleware, async(req, res)=>{
 })
 
 
-router.get("/refresh", AuthMiddleware, async(req,res)=>{
+router.get("/refresh", AuthMiddleware(), async(req,res)=>{
     try {
         let id = req.user.id
         let role = req.user.role

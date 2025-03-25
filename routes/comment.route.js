@@ -206,7 +206,7 @@ router.get("/:id", async(req, res)=>{
     }
 })
 
-router.post("/", AuthMiddleware, async(req, res)=>{
+router.post("/", AuthMiddleware(), async(req, res)=>{
     try {
         let { error } = CommentValidation.validate(req.body)
         if (error) return res.status(400).send({ message: error.details[0].message})
@@ -219,7 +219,7 @@ router.post("/", AuthMiddleware, async(req, res)=>{
     }
 })
 
-router.patch("/:id", AuthMiddleware, async(req, res)=>{
+router.patch("/:id", AuthMiddleware(), async(req, res)=>{
     try {
         let { comment, star, learningCenter_id } = req.body;
 
@@ -234,7 +234,7 @@ router.patch("/:id", AuthMiddleware, async(req, res)=>{
     }
 })
 
-router.delete("/:id", AuthMiddleware, async(req, res)=>{
+router.delete("/:id", AuthMiddleware(), async(req, res)=>{
     try {
         let comment = await Comment.findByPk(req.params.id);
         if (!comment) return res.status(404).send({ message: "Comment not found" });

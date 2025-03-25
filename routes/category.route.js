@@ -179,7 +179,7 @@ app.post("/", roleMiddleware(["ADMIN"]) , async(req, res)=>{
     }
 })
 
-app.get("/", AuthMiddleware , async(req, res)=>{
+app.get("/", AuthMiddleware() , async(req, res)=>{
     const {name, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query                                                                     
     try {
         const where = {};

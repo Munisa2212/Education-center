@@ -75,7 +75,7 @@ router.get("/", async (req, res) => {
     }
 })
 
-router.post("/", AuthMiddleware,async (req, res) => {
+router.post("/", AuthMiddleware(),async (req, res) => {
     try {
         let {center_id} = req.body
         let center = await Center.findByPk(center_id);
