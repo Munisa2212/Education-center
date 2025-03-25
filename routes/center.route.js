@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const {Center, Region, User, Branch, Comment, Registration} = require("../models/index.module");
+const {Center, Region, User, Branch, Comment, Registration, Subject, Field} = require("../models/index.module");
 const CenterValidation = require("../validation/center.validation");
 const { roleMiddleware } = require("../middleware/role.middleware");
 const { AuthMiddleware } = require("../middleware/auth.middleware");
@@ -8,19 +8,43 @@ const app = require("express").Router()
 app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
     try {
         let { error } = CenterValidation.validate(req.body)
-        if (error) return res.status(400).send({ message: error.details[0].message})
+        if (error) {return res.status(400).send({ message: error.details[0].message})}
         
-        const newCenter = await Center.create(req.body)
-        res.send(newCenter)
+        let {subject_id, field_id, ...rest} = req.body
+
+        for (let i of subject_id) {
+            let subject= await Subject.findByPk(i)
+            if (!subject) return res.status(404).send({ message: `Subject with ${i} id not found` })
+        }
+        
+        for (let i of field_id) {
+            let field= await Field.findByPk(i)
+            if (!field) return res.status(404).send({ message: `Field with ${i} id not found` })
+        }
+
+        const newCenter = await Center.create({
+            ...rest,
+            subject_id: JSON.stringify(subject_id),
+            field_id: JSON.stringify(field_id),
+        })
+
+        let data = {
+            ...rest,
+            subject_id,
+            field_id
+        }
+        res.send(data)
     } catch (error) {
         console.log(error)
         res.status(400).send({message: error})
     }
 })
 
-app.get("/",AuthMiddleware, async(req, res)=>{
+app.get("/",AuthMiddleware(), async(req, res)=>{
     const {name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
     try {
+        console.log("adse");
+        
         const where = {};
 
         if (name) where.name = { [Op.like]: `%${name}%` };
@@ -87,6 +111,14 @@ app.get("/average-star", roleMiddleware(["CEO"]),async(req, res)=>{
     }
 })
 
+app.get("/ratings/star", async(req, res)=>{
+    try {
+        let centers = await Center.findAll({include: [{model: Comment, attributes: ["star"]}]})
+        let data = []
+    } catch (error) {
+        res.status(400).send(error) 
+    }
+})
 app.get("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
     const {id} = req.params
     try {

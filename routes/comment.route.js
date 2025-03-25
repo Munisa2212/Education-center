@@ -44,7 +44,7 @@ router.get("/:id", async(req, res)=>{
     }
 })
 
-router.post("/", AuthMiddleware, async(req, res)=>{
+router.post("/", AuthMiddleware(), async(req, res)=>{
     try {
         let { comment, star, learningCenter_id } = req.body;
         let newComment = await Comment.create({comment, star, learningCenter_id, user_id: req.user.id});
@@ -54,7 +54,7 @@ router.post("/", AuthMiddleware, async(req, res)=>{
     }
 })
 
-router.patch("/:id", AuthMiddleware, async(req, res)=>{
+router.patch("/:id", AuthMiddleware(), async(req, res)=>{
     try {
         let { comment, star, learningCenter_id } = req.body;
 
