@@ -189,18 +189,17 @@ const app = require("express").Router()
 app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
     try {
         let { error } = CenterValidation.validate(req.body)
-        console.log(error)
         if (error) return res.status(400).send({ message: error.details[0].message})
         
         const newCenter = await Center.create(req.body)
         res.send(newCenter)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
-app.get("/",AuthMiddleware,  async(req, res)=>{
+app.get("/",AuthMiddleware, async(req, res)=>{
     const {name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
     try {
         const where = {};
@@ -235,7 +234,8 @@ app.get("/students", async(req, res)=>{
         }
 
         let student = await Registration.findAll({where: {learningCenter_id: req.query.learningCenter_id}})
-
+        
+        res.send(student)
     } catch (error) {
         res.status(400).send(error)
     }

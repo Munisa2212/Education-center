@@ -10,7 +10,7 @@ const ResourceRoute = require('./routes/resource.route')
 const FieldRoute = require('./routes/field.route')
 const RegistrationsRoute = require('./routes/registration.route')
 const LikeRoute = require('./routes/like.route')
-const setupSwagger = require('./swagger/swagger')
+const setupSwagger = require("./swagger/swagger")
 require('dotenv').config()
 const app = express()
 

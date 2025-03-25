@@ -1,7 +1,7 @@
-const { Branch, Center } = require('../models/index.module')
-const Branch_valadation = require('../validation/branch.valadation')
+const { Branch, Center, Region, Field, Subject } = require('../models/index.module')
+const Branch_validation = require('../validation/branch.validation')
 const express = require('express')
-const route = express()
+const route = express.Router()
 
 /**
  * @swagger
@@ -27,7 +27,7 @@ route.get('/', async (req, res) => {
     const branches = await Branch.findAll()
     res.json(branches)
   } catch (error) {
-    console.log(error)
+    console.error("Error in GET /branch:", error)
     res.status(400).send({ message: error.message })
   }
 })
@@ -89,11 +89,14 @@ route.get('/', async (req, res) => {
  */
 route.post('/', async (req, res) => {
   try {
-    const { error } = Branch_valadation.validate(req.body)
-    if (error)
-      return res.status(400).send({ message: error.details[0].message })
+    const { name, phone, image, location, region_id, learningCentre_id, field_id, subject_id } = req.body
+    
+    if (!learningCentre_id) return res.status(400).send({ message: 'learningCentre_id is required' });
+    if (!Array.isArray(subject_id) || subject_id.length === 0) return res.status(400).send({ message: 'subject_id must be a non-empty array' });
+    if (!Array.isArray(field_id) || field_id.length === 0) return res.status(400).send({ message: 'field_id must be a non-empty array' });
 
-    let { learningCentre_id, region_id } = req.body
+    const { error } = Branch_validation.validate(req.body)
+    if (error) return res.status(400).send({ message: error.details[0].message })
 
     let center = await Center.findByPk(learningCentre_id)
     if (!center) return res.status(404).send({ message: 'Center not found' })
@@ -101,93 +104,21 @@ route.post('/', async (req, res) => {
     let region = await Region.findByPk(region_id)
     if (!region) return res.status(404).send({ message: 'Region not found' })
 
-    let NewBranch = await Branch.create(req.body)
-
-    res.status(201).send({ NewBranch })
-  } catch (err) {
-    console.log(err)
-    return res.status(400).json({ message: err.message })
-  }
-})
-
-/**
- * @swagger
- * /branch/{id}:
- *   get:
- *     summary: Get a branch by ID
- *     tags: [Branch]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Branch ID
- *     responses:
- *       200:
- *         description: Branch details
- *       404:
- *         description: Branch not found
- */
-route.get('/:id', async (req, res) => {
-  try {
-    let one = await Branch.findByPk(req.params.id)
-    if (!one) return res.status(404).send({ message: 'Not found' })
-    res.send(one)
-  } catch (err) {
-    console.log(err)
-    return res.status(400).json({ message: err.message })
-  }
-})
-
-/**
- * @swagger
- * /branch/{id}:
- *   patch:
- *     summary: Update a branch
- *     tags: [Branch]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Branch ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: "Updated Branch"
- *               phone:
- *                 type: string
- *                 example: "+998901234567"
- *               location:
- *                 type: string
- *                 example: "Samarkand, Uzbekistan"
- *     responses:
- *       200:
- *         description: Branch updated successfully
- *       404:
- *         description: Branch not found
- */
-route.patch('/:id', async (req, res) => {
-  try {
-    let one = await Branch.findByPk(req.params.id)
-    if (!one) {
-      return res.status(404).json({ message: 'Not found' })
+    for (let id of subject_id) {
+      let subject = await Subject.findByPk(id)
+      if (!subject) return res.status(404).send({ message: `Subject with id ${id} not found` })
     }
 
-    let updatedBranch = await one.update(req.body, {
-      fields: Object.keys(req.body),
-    })
-    res.send(updatedBranch)
+    for (let id of field_id) {
+      let field = await Field.findByPk(id)
+      if (!field) return res.status(404).send({ message: `Field with id ${id} not found` })
+    }
+
+    await center.update({ branch_number: (center.branch_number || 0) + 1 });
+    let newBranch = await Branch.create(req.body)
+    res.status(201).send({ newBranch })
   } catch (err) {
-    console.error(err)
+    console.error("Error in POST /branch:", err);
     return res.status(400).json({ message: err.message })
   }
 })
@@ -215,11 +146,12 @@ route.delete('/:id', async (req, res) => {
   try {
     let one = await Branch.findByPk(req.params.id)
     if (!one) return res.status(404).send({ message: 'Not found' })
+    
     await one.destroy()
     res.send({ message: 'Deleted successfully' })
   } catch (err) {
-    console.log(err)
-    return res.status(400).json({ message: err.message })
+    console.error("Error in DELETE /branch:", err)
+    return res.status(400).json({ message: 'Cannot delete this branch, it may be linked to other records' })
   }
 })
 
