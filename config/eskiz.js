@@ -14,7 +14,7 @@ async function sendSMS(tel, otp) {
         })
         console.log("sended", otp, tel);
     } catch (error) {
-        res.status(400).send(error)
+        console.log(error);
     }
 }
 
