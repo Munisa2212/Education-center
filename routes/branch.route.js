@@ -44,8 +44,10 @@ route.patch('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Not found' })
     }
 
-    let updated = await one.update(req.body)
-    res.send(updated)
+    let updatedBranch = await one.update(req.body, {
+      fields: Object.keys(req.body),
+    })
+    res.send(updatedBranch)
   } catch (err) {
     console.error(err)
     return res.status(400).json({ message: err.message })

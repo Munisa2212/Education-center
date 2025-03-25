@@ -1,4 +1,4 @@
-const {Subject} = require('../models/index.module')
+const { Subject } = require('../models/index.module')
 const express = require('express')
 const SubjectValidation = require('../validation/subject.validation')
 const route = express.Router()
@@ -46,7 +46,9 @@ route.patch('/:id', async (req, res) => {
     if (!one) {
       return res.status(404).send({ message: 'Subject not found' })
     }
-    let updatedSubject = await one.update(req.body)
+    let updatedSubject = await one.update(req.body, {
+      fields: Object.keys(req.body),
+    })
     res.send(updatedSubject)
   } catch (err) {
     console.log(err)
@@ -56,11 +58,11 @@ route.patch('/:id', async (req, res) => {
 route.delete('/:id', async (req, res) => {
   try {
     let one = await Subject.findByPk(req.params.id)
-    if(!one){
-        return res.status(404).send({message: "Subject not found"})
+    if (!one) {
+      return res.status(404).send({ message: 'Subject not found' })
     }
     await one.destroy()
-    res.send({ message: 'Deleted successfully' });
+    res.send({ message: 'Deleted successfully' })
   } catch (err) {
     console.log(err)
     return res.status(400).send({ message: err.message })
