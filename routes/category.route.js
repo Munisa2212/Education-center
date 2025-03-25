@@ -11,8 +11,8 @@ app.post("/", async(req, res)=>{
         const newCategory = await Category.create(req.body)
         res.send(newCategory)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
@@ -36,8 +36,8 @@ app.get("/", async(req, res)=>{
         }
         res.send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
@@ -56,8 +56,8 @@ app.get("/:id", async(req, res)=>{
         }
         res.send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
@@ -75,8 +75,8 @@ app.delete("/:id", async(req, res)=>{
         await data.destroy()
         res.status(200).send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
@@ -95,8 +95,8 @@ app.patch("/:id", async(req, res)=>{
         await data.update(req.body)
         res.status(200).send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
