@@ -14,4 +14,4 @@ const LoginValidation = joi.object({
     password: joi.string().required()
 })
 
-module.exports = UserValidation
+module.exports = {UserValidation, LoginValidation}
