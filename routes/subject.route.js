@@ -3,6 +3,25 @@ const express = require('express')
 const SubjectValidation = require('../validation/subject.validation')
 const route = express.Router()
 
+/**
+ * @swagger
+ * tags:
+ *   name: Subject
+ *   description: Subject management API
+ */
+
+/**
+ * @swagger
+ * /subject:
+ *   get:
+ *     summary: Get all subjects
+ *     tags: [Subject]
+ *     responses:
+ *       200:
+ *         description: List of all subjects
+ *       400:
+ *         description: Bad request
+ */
 route.get('/', async (req, res) => {
   try {
     let subject = await Subject.findAll()
@@ -13,6 +32,33 @@ route.get('/', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /subject:
+ *   post:
+ *     summary: Create a new subject
+ *     tags: [Subject]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Mathematics"
+ *               image:
+ *                 type: string
+ *                 example: "https://example.com/image.jpg"
+ *     responses:
+ *       201:
+ *         description: Subject created successfully
+ *       400:
+ *         description: Validation error
+ */
 route.post('/', async (req, res) => {
   try {
     const { error } = SubjectValidation.validate(req.body)
@@ -26,6 +72,25 @@ route.post('/', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /subject/{id}:
+ *   get:
+ *     summary: Get a subject by ID
+ *     tags: [Subject]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Subject ID
+ *     responses:
+ *       200:
+ *         description: Subject details
+ *       404:
+ *         description: Subject not found
+ */
 route.get('/:id', async (req, res) => {
   try {
     let one = await Subject.findByPk(req.params.id)
@@ -36,10 +101,41 @@ route.get('/:id', async (req, res) => {
   } catch (err) {
     res.status(400).send({ message: err.message })
     console.log(err)
-    return
   }
 })
 
+/**
+ * @swagger
+ * /subject/{id}:
+ *   patch:
+ *     summary: Update a subject
+ *     tags: [Subject]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Subject ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Physics"
+ *               image:
+ *                 type: string
+ *                 example: "https://example.com/image.jpg"
+ *     responses:
+ *       200:
+ *         description: Subject updated successfully
+ *       404:
+ *         description: Subject not found
+ */
 route.patch('/:id', async (req, res) => {
   try {
     let one = await Subject.findByPk(req.params.id)
@@ -55,6 +151,26 @@ route.patch('/:id', async (req, res) => {
     return res.status(400).send({ message: err.message })
   }
 })
+
+/**
+ * @swagger
+ * /subject/{id}:
+ *   delete:
+ *     summary: Delete a subject
+ *     tags: [Subject]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Subject ID
+ *     responses:
+ *       200:
+ *         description: Subject deleted successfully
+ *       404:
+ *         description: Subject not found
+ */
 route.delete('/:id', async (req, res) => {
   try {
     let one = await Subject.findByPk(req.params.id)
