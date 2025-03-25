@@ -1,18 +1,24 @@
-const {Registration} = require("../models/index.module")
+const {Registration, User} = require("../models/index.module")
 const RegistrationValidation = require("../validation/registration.validation")
 const app = require("express").Router()
 
 app.post("/", async(req, res)=>{
+    const id = req.user.id
     try {
         let { error } = RegistrationValidation.validate(req.body)
         if (error) return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" })
         
-        const date = new Date()
-        let currentYear = date.getFullYear()
+        let currentYear = new Date().getFullYear()
 
+        let user = await User.findByPk(id)
+        let age = currentYear - user.year
         
+        if(age < 18){
+            return res.send("You cannot register to course. Please register with your parent's account")
+        }
 
-        const newRegister = await Registration.create(req.body)
+        const {...data} = req.body
+        const newRegister = await Registration.create({...data, user_id: id})
         res.send(newRegister)
     } catch (error) {
         console.log({message: error})
@@ -29,16 +35,16 @@ app.delete("/:id", async(req, res)=>{
 
         const data = await Registration.findByPk(id)
         if(!data){
-            return res.status(404).send("")
+            return res.status(404).send("Data not found")
         }
+
+        await data.destroy()
+        res.send(data)
     } catch (error) {
         console.log({message: error})
         res.status(400).send({message: error.details[0].message})
     }
 })
-
-
-
 
 
 module.exports = app

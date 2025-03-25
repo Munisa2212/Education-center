@@ -6,11 +6,13 @@ const { AuthMiddleware } = require("../middleware/auth.middleware")
 const app = require("express").Router()
 
 app.post("/",AuthMiddleware, async(req, res)=>{
+    const id = req.user.id
     try {
         let { error } = ResourceValidation.validate(req.body)
         if (error) return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" })
         
-        const newResource = await Resource.create(req.body)
+        const {...data} = req.body
+        const newResource = await Resource.create({...data, user_id: id})
         res.send(newResource)
     } catch (error) {
         console.log({message: error.details[0].message})
