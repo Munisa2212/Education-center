@@ -3,6 +3,18 @@ const RegionValidation = require('../validation/region.valadation')
 const express = require('express')
 const route = express.Router()
 
+/**
+ * @swagger
+ * /region:
+ *   get:
+ *     summary: Barcha regionlarni olish
+ *     tags: [Region]
+ *     responses:
+ *       200:
+ *         description: Regionlar ro‘yxati
+ *       400:
+ *         description: Xatolik yuz berdi
+ */
 route.get('/', async (req, res) => {
   try {
     const regions = await Region.findAll()
@@ -12,6 +24,30 @@ route.get('/', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /region:
+ *   post:
+ *     summary: Yangi region qo‘shish
+ *     tags: [Region]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Region nomi
+ *     responses:
+ *       201:
+ *         description: Yangi region yaratildi
+ *       400:
+ *         description: Xatolik yoki region allaqachon mavjud
+ */
 route.post('/', async (req, res) => {
   try {
     const { error } = RegionValidation.validate(req.body)
@@ -30,6 +66,25 @@ route.post('/', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /region/{id}:
+ *   get:
+ *     summary: ID bo‘yicha region olish
+ *     tags: [Region]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Region ID
+ *     responses:
+ *       200:
+ *         description: Region ma’lumotlari
+ *       404:
+ *         description: Region topilmadi
+ */
 route.get('/:id', async (req, res) => {
   try {
     let one = await Region.findByPk(req.params.id)
@@ -43,6 +98,37 @@ route.get('/:id', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /region/{id}:
+ *   patch:
+ *     summary: Region ma’lumotlarini yangilash
+ *     tags: [Region]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Region ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Yangilangan region nomi
+ *     responses:
+ *       200:
+ *         description: Region muvaffaqiyatli yangilandi
+ *       404:
+ *         description: Region topilmadi
+ *       400:
+ *         description: Xatolik yuz berdi
+ */
 route.patch('/:id', async (req, res) => {
   try {
     let one = await Region.findByPk(req.params.id)
@@ -59,6 +145,27 @@ route.patch('/:id', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /region/{id}:
+ *   delete:
+ *     summary: Regionni o‘chirish
+ *     tags: [Region]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Region ID
+ *     responses:
+ *       200:
+ *         description: Region muvaffaqiyatli o‘chirildi
+ *       404:
+ *         description: Region topilmadi
+ *       400:
+ *         description: Xatolik yuz berdi
+ */
 route.delete('/:id', async (req, res) => {
   try {
     let one = await Region.findByPk(req.params.id)

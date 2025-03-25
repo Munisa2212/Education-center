@@ -4,6 +4,68 @@ const {Center} = require("../models/index.module")
 const router = require("express").Router()
 const { AuthMiddleware } = require("../middleware/auth.middleware")
 
+/**
+ * @swagger
+ * tags:
+ *   name: Like
+ *   description: Likes management for learning centers
+ * 
+ * paths:
+ *   /like:
+ *     get:
+ *       summary: Get all likes
+ *       tags: [Like]
+ *       responses:
+ *         200:
+ *           description: List of all likes
+ * 
+ *     post:
+ *       summary: Like a learning center
+ *       security:
+ *         - BearerAuth: []
+ *       tags: [Like]
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Like'
+ *       responses:
+ *         201:
+ *           description: Like successfully added
+ *         404:
+ *           description: Center not found
+ * 
+ *   /like/{id}:
+ *     delete:
+ *       summary: Remove a like
+ *       tags: [Like]
+ *       parameters:
+ *         - in: path
+ *           name: id
+ *           required: true
+ *           schema:
+ *             type: integer
+ *           description: Like ID
+ *       responses:
+ *         200:
+ *           description: Like deleted successfully
+ *         404:
+ *           description: Like not found
+ * 
+ * components:
+ *   schemas:
+ *     Like:
+ *       type: object
+ *       properties:
+ *         user_id:
+ *           type: integer
+ *           example: 5
+ *         learningCenter_id:
+ *           type: integer
+ *           example: 3
+ */
+
 router.get("/", async (req, res) => {
     try {
         let likes = await Like.findAll();
