@@ -5,6 +5,187 @@ const { roleMiddleware } = require("../middleware/role.middleware");
 const { AuthMiddleware } = require("../middleware/auth.middleware");
 const app = require("express").Router()
 
+
+/**
+ * @swagger
+ * /centers:
+ *   post:
+ *     summary: Create a new center
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Centers
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Center'
+ *     responses:
+ *       200:
+ *         description: Center created successfully
+ *       400:
+ *         description: Validation error
+ * 
+ *   get:
+ *     summary: Get all centers with filtering, sorting, and pagination
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Centers
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by center name
+ *         schema:
+ *           type: string
+ *       - name: region_id
+ *         in: query
+ *         description: Filter by region ID
+ *         schema:
+ *           type: integer
+ *       - name: ceo_id
+ *         in: query
+ *         description: Filter by CEO ID
+ *         schema:
+ *           type: integer
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *     responses:
+ *       200:
+ *         description: List of centers
+ *       203:
+ *         description: No centers found
+ *       400:
+ *         description: Invalid request
+ * 
+ * /centers/{id}:
+ *   get:
+ *     summary: Get a center by ID
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Centers
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Center ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Center details
+ *       404:
+ *         description: Center not found
+ * 
+ *   patch:
+ *     summary: Update a center by ID
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Centers
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Center ID
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Center'
+ *     responses:
+ *       200:
+ *         description: Center updated successfully
+ *       404:
+ *         description: Center not found
+ * 
+ *   delete:
+ *     summary: Delete a center by ID
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Centers
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Center ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Center deleted successfully
+ *       404:
+ *         description: Center not found
+ * 
+ * /centers/students:
+ *   get:
+ *     summary: Get students registered in a center
+ *     tags:
+ *       - Centers
+ *     parameters:
+ *       - name: learningCenter_id
+ *         in: query
+ *         required: true
+ *         description: Learning center ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of students
+ *       400:
+ *         description: learningCenter_id is required
+ * 
+ * /centers/average-star:
+ *   get:
+ *     summary: Get average rating of a center
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Centers
+ *     parameters:
+ *       - name: learningCenter_id
+ *         in: query
+ *         required: true
+ *         description: Learning center ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Average star rating
+ *       400:
+ *         description: learningCenter_id is required
+ */
+
+
 app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
     try {
         let { error } = CenterValidation.validate(req.body)

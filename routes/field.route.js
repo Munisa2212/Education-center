@@ -5,7 +5,26 @@ const FieldValidation = require('../validation/field.validation')
 const express = require('express')
 const route = express.Router()
 
-route.get('/', AuthMiddleware , async (req, res) => {
+/**
+ * @swagger
+ * tags:
+ *   name: Field
+ *   description: Field management API
+ */
+
+/**
+ * @swagger
+ * /field:
+ *   get:
+ *     summary: Get all fields
+ *     tags: [Field]
+ *     responses:
+ *       200:
+ *         description: List of all fields
+ *       400:
+ *         description: Bad request
+ */
+route.get('/', async (req, res) => {
   try {
     const fields = await Field.findAll()
     res.send(fields)
@@ -15,7 +34,34 @@ route.get('/', AuthMiddleware , async (req, res) => {
   }
 })
 
-route.post('/', roleMiddleware(["ADMIN"]) , async (req, res) => {
+/**
+ * @swagger
+ * /field:
+ *   post:
+ *     summary: Create a new field
+ *     tags: [Field]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Engineering"
+ *               image:
+ *                 type: string
+ *                 example: "https://example.com/image.jpg"
+ *     responses:
+ *       201:
+ *         description: Field created successfully
+ *       400:
+ *         description: Validation error
+ */
+route.post('/', async (req, res) => {
   try {
     const { error } = FieldValidation.validate(req.body)
     if (error)
@@ -28,7 +74,26 @@ route.post('/', roleMiddleware(["ADMIN"]) , async (req, res) => {
   }
 })
 
-route.get('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
+/**
+ * @swagger
+ * /field/{id}:
+ *   get:
+ *     summary: Get a field by ID
+ *     tags: [Field]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Field ID
+ *     responses:
+ *       200:
+ *         description: Field details
+ *       404:
+ *         description: Field not found
+ */
+route.get('/:id', async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {
@@ -41,7 +106,39 @@ route.get('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
   }
 })
 
-route.patch('/:id', roleMiddleware(["SUPER-ADMIN"]), async (req, res) => {
+/**
+ * @swagger
+ * /field/{id}:
+ *   patch:
+ *     summary: Update a field
+ *     tags: [Field]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Field ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Medicine"
+ *               image:
+ *                 type: string
+ *                 example: "https://example.com/image.jpg"
+ *     responses:
+ *       200:
+ *         description: Field updated successfully
+ *       404:
+ *         description: Field not found
+ */
+route.patch('/:id', async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {
@@ -59,14 +156,33 @@ route.patch('/:id', roleMiddleware(["SUPER-ADMIN"]), async (req, res) => {
   }
 })
 
-route.delete('/:id',roleMiddleware(["ADMIN"]), async (req, res) => {
+/**
+ * @swagger
+ * /field/{id}:
+ *   delete:
+ *     summary: Delete a field
+ *     tags: [Field]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Field ID
+ *     responses:
+ *       200:
+ *         description: Field deleted successfully
+ *       404:
+ *         description: Field not found
+ */
+route.delete('/:id', async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {
       return res.status(404).send({ message: 'Field not found' })
     }
     await one.destroy()
-    res.send(one)
+    res.send({ message: 'Deleted successfully' })
   } catch (err) {
     console.log(err)
     return res.status(400).send({ message: err.message })

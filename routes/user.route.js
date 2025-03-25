@@ -13,6 +13,275 @@ const deviceDetector = new DeviceDetector()
 
 totp.options = { step: 300, digits: 5 };
 
+/**
+ * @swagger
+ * tags:
+ *   name: User
+ *   description: API endpoints for user management
+ */
+
+/**
+ * @swagger
+ * /user/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: 
+ *       - User
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       201:
+ *         description: User created successfully, OTP sent to email
+ *       400:
+ *         description: Validation error or user already exists
+ *
+ * /user/verify:
+ *   post:
+ *     summary: Verify user email with OTP
+ *     tags: 
+ *       - User
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               otp:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Email successfully verified
+ *       404:
+ *         description: User not found or invalid OTP
+ *
+ * /user/resend-otp:
+ *   post:
+ *     summary: Resend OTP to user email
+ *     tags: 
+ *       - User
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *       404:
+ *         description: User not found
+ *
+ * /user/login:
+ *   post:
+ *     summary: Log in as a user
+ *     tags: 
+ *       - User
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Login'
+ *     responses:
+ *       200:
+ *         description: User logged in successfully, access and refresh tokens returned
+ *       400:
+ *         description: Validation error or incorrect password
+ *       401:
+ *         description: User needs to verify email first
+ *       404:
+ *         description: User not found
+ *
+ * /user/search:
+ *   get:
+ *     summary: Search users (Admin only)
+ *     security:
+ *       - BearerAuth: []
+ *     tags: 
+ *       - User
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Search by username
+ *         schema:
+ *           type: string
+ *       - name: email
+ *         in: query
+ *         description: Search by email
+ *         schema:
+ *           type: string
+ *       - name: phone
+ *         in: query
+ *         description: Search by phone number
+ *         schema:
+ *           type: string
+ *       - name: role
+ *         in: query
+ *         description: Search by user role
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of users matching the criteria
+ *       400:
+ *         description: Bad request
+ *
+ * /user:
+ *   get:
+ *     summary: Get all users (Admin only)
+ *     security:
+ *       - BearerAuth: []
+ *     tags: 
+ *       - User
+ *     responses:
+ *       200:
+ *         description: List of all users
+ *       400:
+ *         description: Bad request
+ *
+ * /user/{id}:
+ *   get:
+ *     summary: Get a user by ID (Admin only)
+ *     security:
+ *       - BearerAuth: []
+ *     tags: 
+ *       - User
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: User ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User retrieved successfully
+ *       404:
+ *         description: User not found
+ *
+ *   delete:
+ *     summary: Delete a user (self or admin)
+ *     security:
+ *       - BearerAuth: []
+ *     tags: 
+ *       - User
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: User ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       403:
+ *         description: Unauthorized to delete this user
+ *       404:
+ *         description: User not found
+ *
+ * /user/me:
+ *   get:
+ *     summary: Get current authenticated user info
+ *     security:
+ *       - BearerAuth: []
+ *     tags: 
+ *       - User
+ *     responses:
+ *       200:
+ *         description: User information along with device details
+ *       404:
+ *         description: User not found
+ *
+ * /user/refresh:
+ *   get:
+ *     summary: Refresh access token
+ *     security:
+ *       - BearerAuth: []
+ *     tags: 
+ *       - User
+ *     responses:
+ *       200:
+ *         description: New access token returned
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - name
+ *         - email
+ *         - password
+ *         - phone
+ *         - role
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: Auto-generated ID of the user
+ *         name:
+ *           type: string
+ *           description: Full name of the user
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: Email address of the user
+ *         password:
+ *           type: string
+ *           format: password
+ *           description: User's password
+ *         phone:
+ *           type: string
+ *           description: User's phone number
+ *         image:
+ *           type: string
+ *           description: Profile image URL
+ *         role:
+ *           type: string
+ *           enum: [USER, ADMIN, SUPER-ADMIN, CEO]
+ *           description: Role of the user
+ *         year:
+ *           type: integer
+ *           description: Birth year of the user
+ *
+ *     Login:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: User email
+ *         password:
+ *           type: string
+ *           format: password
+ *           description: User password
+ */
+
+
 router.post("/register", async (req, res) => {
     try {
         let { error } = UserValidation.validate(req.body);
