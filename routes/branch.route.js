@@ -8,6 +8,7 @@ route.get('/', async (req, res) => {
     const branches = await Branch.findAll()
     res.json(branches)
   } catch (error) {
+    console.log(error)
     res.status(400).send({ message: error.message })
   }
 })
@@ -21,6 +22,7 @@ route.post('/', async (req, res) => {
     res.status(201).send({ NewBranch })
   } catch (err) {
     console.log(err)
+    return res.status(400).json({ message: err.message })
   }
 })
 
@@ -30,8 +32,36 @@ route.get('/:id', async (req, res) => {
     if (!one) return res.status(404).send({ message: 'Not found' })
     res.send(one)
   } catch (err) {
-    res.status(400).send({ message: error.message })
     console.log(err)
-    return
+    return res.status(400).json({ message: err.message })
   }
 })
+
+route.patch('/:id', async (req, res) => {
+  try {
+    let one = await Branch.findByPk(req.params.id)
+    if (!one) {
+      return res.status(404).json({ message: 'Not found' })
+    }
+
+    let updated = await one.update(req.body)
+    res.send(updated)
+  } catch (err) {
+    console.error(err)
+    return res.status(400).json({ message: err.message })
+  }
+})
+
+route.delete('/:id', async (req, res) => {
+  try {
+    let one = await Branch.findByPk(req.params.id)
+    if (!one) return res.status(404).send({ message: 'Not found' })
+    await one.destroy()
+    res.send({ message: 'Deleted successfully' })
+  } catch (err) {
+    console.log(err)
+    return res.status(400).json({ message: err.message })
+  }
+})
+
+module.exports = route
