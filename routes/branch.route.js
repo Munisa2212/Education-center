@@ -17,7 +17,7 @@ route.post('/', async (req, res) => {
   try {
     const { error } = Branch_valadation.validate(req.body)
     if (error)
-      return res.status(400).send({ message: error.details[0].message })
+      return res.status(400).send({ message: error.message })
     let NewBranch = await Branch.create(req.body)
     res.status(201).send({ NewBranch })
   } catch (err) {
