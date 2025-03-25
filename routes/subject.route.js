@@ -1,4 +1,4 @@
-const Subject = require('../models/subject.module')
+const {Subject} = require('../models/index.module')
 const express = require('express')
 const SubjectValidation = require('../validation/subject.validation')
 const route = express.Router()
