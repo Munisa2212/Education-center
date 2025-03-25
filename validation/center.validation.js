@@ -3,7 +3,7 @@ const joi = require("joi")
 const CenterValidation = joi.object({
     image: joi.string(),
     name: joi.string().required(),
-    phone: joi.string().required(),
+    phone: joi.string().required().length(13),
     location: joi.string().required(),
     region_id: joi.number().required(),
     branch_number: joi.number().required(),

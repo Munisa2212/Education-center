@@ -1,5 +1,4 @@
 const {User} = require("../models/index.module")
-const {Region} = require("../models/index.module")
 const UserValidation = require("../validation/user.validation")
 const LoginValidation = require("../validation/user.validation")
 const router = require("express").Router()
@@ -21,11 +20,7 @@ router.post("/register", async (req, res) => {
         if (error) {
             return res.status(400).send(error.details[0].message);
         }
-        const { username, password, email, phone,region_id, ...rest } = req.body;
-        let region_one = await Region.findByPk(region_id)
-        if(!region_one){
-          return res.status(404).send({ message: "Region not found" });
-        }
+        const { name, password, email, phone, ...rest } = req.body;
         let user = await User.findOne({ where: { email: email } });
         if (user) {
             return res.status(400).send({ message: "User already exists, email exists" });
@@ -33,8 +28,7 @@ router.post("/register", async (req, res) => {
         let hash = bcrypt.hashSync(password, 10);
         let newUser = await User.create({
             ...rest,
-            region_id: region_id,
-            username: username,
+            name: name,
             phone: phone,
             email: email,
             password: hash

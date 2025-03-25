@@ -1,14 +1,15 @@
 const { Op } = require("sequelize");
-const {Center, Region, User} = require("../models/index.module");
+const {Center, Region, User, Branch} = require("../models/index.module");
 const CenterValidation = require("../validation/center.validation");
 const { roleMiddleware } = require("../middleware/role.middleware");
 const { AuthMiddleware } = require("../middleware/auth.middleware");
 const app = require("express").Router()
 
-app.post("/", roleMiddleware(["CEO"]) , async(req, res)=>{
+app.post("/", async(req, res)=>{
     try {
         let { error } = CenterValidation.validate(req.body)
-        if (error) return res.status(400).send({ message: error.details[0].message })
+        console.log(error)
+        if (error) return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" })
         
         const newCenter = await Center.create(req.body)
         res.send(newCenter)
@@ -18,7 +19,7 @@ app.post("/", roleMiddleware(["CEO"]) , async(req, res)=>{
     }
 })
 
-app.get("/", AuthMiddleware , async(req, res)=>{
+app.get("/",  async(req, res)=>{
     const {name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
     try {
         const where = {};
@@ -32,7 +33,7 @@ app.get("/", AuthMiddleware , async(req, res)=>{
             limit: parseInt(limit),
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
-            include: [{model: Region, attributes: ["name"]}, {model: User, attributes: ["email", "name"]}]
+            include: [{model: Region, attributes: ["name"]}, {model: User, attributes: ["email", "name"]}, {model: Branch, attributes: ["name", "location"]}, {model: Comment, attributes: ["star", "comment"]}]
         });
 
         if(!centers){
@@ -46,7 +47,7 @@ app.get("/", AuthMiddleware , async(req, res)=>{
     }
 })
 
-app.get("/:id", roleMiddleware(["CEO"]) , async(req, res)=>{
+app.get("/:id",  async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
@@ -63,7 +64,7 @@ app.get("/:id", roleMiddleware(["CEO"]) , async(req, res)=>{
     }
 })
 
-app.patch("/:id", roleMiddleware(["CEO"]) , async(req, res)=>{
+app.patch("/:id",  async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
@@ -82,7 +83,7 @@ app.patch("/:id", roleMiddleware(["CEO"]) , async(req, res)=>{
     }
 })
 
-app.delete("/:id", roleMiddleware(["CEO"]) , async(req, res)=>{
+app.delete("/:id",  async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
@@ -102,3 +103,6 @@ app.delete("/:id", roleMiddleware(["CEO"]) , async(req, res)=>{
 })
 
 module.exports = app
+
+
+// roleMiddleware(["CEO"]) , 
