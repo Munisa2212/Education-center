@@ -2,8 +2,10 @@ const CategoryValidation = require("../validation/category.validation")
 const app = require("express").Router()
 const {Category, Resource} = require("../models/index.module")
 const { Op } = require("sequelize")
+const { roleMiddleware } = require("../middleware/role.middleware")
+const { AuthMiddleware } = require("../middleware/auth.middleware")
 
-app.post("/", async(req, res)=>{
+app.post("/", roleMiddleware(["ADMIN"]) , async(req, res)=>{
     try {
         let { error } = CategoryValidation.validate(req.body)
         if (error) return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" })
@@ -11,12 +13,12 @@ app.post("/", async(req, res)=>{
         const newCategory = await Category.create(req.body)
         res.send(newCategory)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
-app.get("/", async(req, res)=>{
+app.get("/", AuthMiddleware , async(req, res)=>{
     const {name, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query                                                                     
     try {
         const where = {};
@@ -36,12 +38,12 @@ app.get("/", async(req, res)=>{
         }
         res.send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
-app.get("/:id", async(req, res)=>{
+app.get("/:id", roleMiddleware(["ADMIN"]) , async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
@@ -56,12 +58,12 @@ app.get("/:id", async(req, res)=>{
         }
         res.send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
-app.delete("/:id", async(req, res)=>{
+app.delete("/:id", roleMiddleware(["ADMIN"]) , async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
@@ -75,12 +77,12 @@ app.delete("/:id", async(req, res)=>{
         await data.destroy()
         res.status(200).send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 
-app.patch("/:id", async(req, res)=>{
+app.patch("/:id", roleMiddleware(["ADMIN", "SUPER-ADMIN"]) , async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
@@ -95,8 +97,8 @@ app.patch("/:id", async(req, res)=>{
         await data.update(req.body)
         res.status(200).send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error})
     }
 })
 

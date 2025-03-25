@@ -13,6 +13,9 @@ const Like = require("./like.module")
 User.hasMany(Comment, { foreignKey: "user_id" }); 
 Comment.belongsTo(User, { foreignKey: "user_id" });
 
+User.hasMany(Center, { foreignKey: "ceo_id" });
+Center.belongsTo(User, { foreignKey: "ceo_id" });
+
 User.hasMany(Resource, { foreignKey: "user_id" }); 
 Resource.belongsTo(User, { foreignKey: "user_id" });
 

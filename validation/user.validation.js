@@ -1,6 +1,7 @@
 const joi = require("joi")
 
 const UserValidation = joi.object({
+    year: joi.number().min(1950).max(new Date().getFullYear()).required(),
     name: joi.string().required(),
     email: joi.string().email().required(),
     password: joi.string().required(),

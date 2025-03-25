@@ -47,6 +47,36 @@ app.get("/",AuthMiddleware,  async(req, res)=>{
     }
 })
 
+router.get("/average-star", async(req, res)=>{
+    try {
+        let {center_id} = req.query;
+
+        if(!center_id){
+            return res.status(400).send({message: "center_id is required"})
+        }
+
+        let center_data = await Comment.findAll({where: {center_id: center_id}});
+        
+        let average_star = 0
+
+        if(!center_data){
+            return res.send({average_star})
+        }
+
+        let count = 0
+        let star = 0
+
+        center_data.forEach(e => {
+            count++
+            star += e.star
+        });
+
+        let total = stat / count;
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
 app.get("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
     const {id} = req.params
     try {

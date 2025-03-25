@@ -8,7 +8,7 @@ route.get('/', async (req, res) => {
     const regions = await Region.findAll()
     res.json(regions)
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(400).json({ error: error.message })
   }
 })
 
@@ -55,7 +55,7 @@ route.patch('/:id', async (req, res) => {
     res.status(200).json(updatedRegion)
   } catch (err) {
     console.error('Server error:', err.message)
-    res.status(500).json({ error: 'Internal Server Error' })
+    res.status(400).json({ error: 'Internal Server Error' })
   }
 })
 
@@ -69,7 +69,7 @@ route.delete('/:id', async (req, res) => {
     res.status(200).json({ message: 'Region deleted successfully' })
   } catch (err) {
     console.error('Server error:', err.message)
-    res.status(500).json({ error: 'Internal Server Error' })
+    res.status(400).json({ error: 'Internal Server Error' })
   }
 })
 

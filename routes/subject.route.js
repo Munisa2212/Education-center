@@ -8,7 +8,7 @@ route.get('/', async (req, res) => {
     let subject = await Subject.findAll()
     res.send(subject)
   } catch (err) {
-    res.status(500).send({ message: err.message })
+    res.status(400).send({ message: err.message })
     console.log(err)
   }
 })
@@ -34,7 +34,7 @@ route.get('/:id', async (req, res) => {
     }
     res.send(one)
   } catch (err) {
-    res.status(500).send({ message: err.message })
+    res.status(400).send({ message: err.message })
     console.log(err)
     return
   }
