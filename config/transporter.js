@@ -18,7 +18,7 @@ async function sendEmail(email, otp) {
       });
       console.log("Sended to email");
     } catch (error) {
-      res.status(400).send(error); 
+      console.log((error));
     }
 }
 
