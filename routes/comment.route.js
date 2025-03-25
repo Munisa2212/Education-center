@@ -18,10 +18,10 @@ router.get("/search", async(req, res)=>{
         let {user_id, comment, star, learningCenter_id, take, page, sortBy, sortOrder} = req.query;
         const where = {}
 
-        if(user_id) where.user_id = { [Op.like]: `%${user_id}%` }
+        if(user_id) where.user_id = user_id
         if(comment) where.comment = { [Op.like]: `%${comment}%` }
-        if(star) where.star = { [Op.like]: `%${star}%` }
-        if(learningCenter_id) where.learningCenter_id = { [Op.like]: `%${learningCenter_id}%` }
+        if(star) where.star = star
+        if(learningCenter_id) where.learningCenter_id = learningCenter_id
 
         const limit = parseInt(take) || 10;
         const offset = (parseInt(page) - 1) * parseInt(take);
