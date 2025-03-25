@@ -8,9 +8,9 @@ const app = require("express").Router()
 app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
     try {
         let { error } = CenterValidation.validate(req.body)
-
+        console.log(error)
         if (error) return res.status(400).send({ message: error.details[0].message})
-
+        
         const newCenter = await Center.create(req.body)
         res.send(newCenter)
     } catch (error) {
