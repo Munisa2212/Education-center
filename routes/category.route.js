@@ -1,6 +1,7 @@
 const CategoryValidation = require("../validation/category.validation")
 const app = require("express").Router()
-const {Category} = require("../models/index.module")
+const {Category, Resource} = require("../models/index.module")
+const { Op } = require("sequelize")
 
 app.post("/", async(req, res)=>{
     try {
@@ -16,8 +17,20 @@ app.post("/", async(req, res)=>{
 })
 
 app.get("/", async(req, res)=>{
+    const {name, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query                                                                     
     try {
-        const data = await Category.findAll()
+        const where = {};
+
+        if (name) where.name = { [Op.like]: `%${name}%` };
+
+        const data = await Category.findAll({
+            where,
+            limit: parseInt(limit),
+            offset: (parseInt(page) - 1) * parseInt(limit),
+            order: [[sortBy, order.toUpperCase()]],
+            include: [{model: Resource, attributes: ["name", "description"]}]
+        });
+
         if(!data){
             res.status(404).send("Category not found")
         }
@@ -35,7 +48,9 @@ app.get("/:id", async(req, res)=>{
             return res.status(400).send("Wrong id")
         }
 
-        const data = await Category.findByPk(id)
+        const data = await Category.findByPk(id, {
+            include: [{model: Resource, attributes: ["name", "description"]}]
+        })
         if(!data){
             res.status(404).send("Category not found")
         }
