@@ -205,8 +205,8 @@ app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
 
         const newCenter = await Center.create({
             ...rest,
-            subject_id: JSON.stringify(subject_id),
-            field_id: JSON.stringify(field_id),
+            subject_id: subject_id,
+            field_id: field_id,
         })
 
         let data = {
@@ -214,7 +214,7 @@ app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
             subject_id,
             field_id
         }
-        res.send(data)
+        res.send(newCenter)
     } catch (error) {
         console.log(error)
         res.status(400).send({message: error})

@@ -32,6 +32,26 @@ route.get('/', async (req, res) => {
   }
 })
 
+route.get("/search", async (req, res) => {
+  try {
+    let { name, phone, location, region_id, learningCentre_id, field_id, subject_id } = req.query;
+    const where = {}
+
+    if (name) where.name = { [Op.like]: `%${name}%` }
+    if (phone) where.phone = { [Op.like]: `%${phone}%` }
+    if (location) where.location = { [Op.like]: `%${location}%` }
+    if (region_id) where.region_id = region_id
+    if (learningCentre_id) where.learningCentre_id = learningCentre_id
+    if (field_id) where.field_id = field_id
+    if (subject_id) where.subject_id = subject_id
+
+    let branches = await Branch.findAll({ where });
+    res.send(branches);
+  } catch (error) {
+    res.status(400).send(error)
+  }
+})
+
 /**
  * @swagger
  * /branch:
