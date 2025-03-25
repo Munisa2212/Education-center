@@ -69,7 +69,7 @@ router.patch("/:id", AuthMiddleware(), async(req, res)=>{
     }
 })
 
-router.delete("/:id", AuthMiddleware, async(req, res)=>{
+router.delete("/:id", AuthMiddleware(), async(req, res)=>{
     try {
         let comment = await Comment.findByPk(req.params.id);
         if (!comment) return res.status(404).send({ message: "Comment not found" });

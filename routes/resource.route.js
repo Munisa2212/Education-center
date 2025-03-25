@@ -5,7 +5,7 @@ const { roleMiddleware } = require("../middleware/role.middleware")
 const { AuthMiddleware } = require("../middleware/auth.middleware")
 const app = require("express").Router()
 
-app.post("/",AuthMiddleware, async(req, res)=>{
+app.post("/",AuthMiddleware(), async(req, res)=>{
     const id = req.user.id
     try {
         let { error } = ResourceValidation.validate(req.body)
@@ -20,7 +20,7 @@ app.post("/",AuthMiddleware, async(req, res)=>{
     }
 })
 
-app.get("/",AuthMiddleware, async(req, res)=>{
+app.get("/",AuthMiddleware(), async(req, res)=>{
     const {name, user_id, category_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query  
     try {
         const where = {};
