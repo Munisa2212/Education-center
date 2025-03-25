@@ -1,5 +1,5 @@
 const { Branch, Center, Region, Field, Subject } = require('../models/index.module')
-const Branch_validation = require('../validation/branch.validation')
+const Branch_validation = require('../validation/branch.valadation')
 const express = require('express')
 const route = express.Router()
 

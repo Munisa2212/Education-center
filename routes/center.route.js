@@ -8,7 +8,7 @@ const app = require("express").Router()
 
 /**
  * @swagger
- * /centers:
+ * /center:
  *   post:
  *     summary: Create a new center
  *     security:
@@ -82,7 +82,7 @@ const app = require("express").Router()
  *       400:
  *         description: Invalid request
  * 
- * /centers/{id}:
+ * /center/{id}:
  *   get:
  *     summary: Get a center by ID
  *     security:
@@ -146,7 +146,7 @@ const app = require("express").Router()
  *       404:
  *         description: Center not found
  * 
- * /centers/students:
+ * /center/students:
  *   get:
  *     summary: Get students registered in a center
  *     tags:
@@ -164,7 +164,7 @@ const app = require("express").Router()
  *       400:
  *         description: learningCenter_id is required
  * 
- * /centers/average-star:
+ * /center/average-star:
  *   get:
  *     summary: Get average rating of a center
  *     security:
