@@ -5,12 +5,12 @@ const { roleMiddleware } = require("../middleware/role.middleware");
 const { AuthMiddleware } = require("../middleware/auth.middleware");
 const app = require("express").Router()
 
-app.post("/", async(req, res)=>{
+app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
     try {
         let { error } = CenterValidation.validate(req.body)
-        console.log(error)
+
         if (error) return res.status(400).send({ message: error.details[0].message})
-        
+
         const newCenter = await Center.create(req.body)
         res.send(newCenter)
     } catch (error) {
@@ -19,7 +19,7 @@ app.post("/", async(req, res)=>{
     }
 })
 
-app.get("/",  async(req, res)=>{
+app.get("/",AuthMiddleware,  async(req, res)=>{
     const {name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
     try {
         const where = {};
@@ -47,7 +47,7 @@ app.get("/",  async(req, res)=>{
     }
 })
 
-app.get("/:id",  async(req, res)=>{
+app.get("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
@@ -64,7 +64,7 @@ app.get("/:id",  async(req, res)=>{
     }
 })
 
-app.patch("/:id",  async(req, res)=>{
+app.patch("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
@@ -83,7 +83,7 @@ app.patch("/:id",  async(req, res)=>{
     }
 })
 
-app.delete("/:id",  async(req, res)=>{
+app.delete("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){

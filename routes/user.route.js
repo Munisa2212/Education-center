@@ -1,6 +1,5 @@
 const {User} = require("../models/index.module")
-const UserValidation = require("../validation/user.validation")
-const LoginValidation = require("../validation/user.validation")
+const {UserValidation, LoginValidation} = require("../validation/user.validation")
 const router = require("express").Router()
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
