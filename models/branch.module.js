@@ -27,7 +27,7 @@ const Branch = db.define('Branch', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  learningCentre_id: {
+  learningCenter_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },

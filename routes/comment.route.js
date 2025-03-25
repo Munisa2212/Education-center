@@ -3,6 +3,7 @@ const {Comment, User, Center} = require("../models/index.module")
 const { AuthMiddleware } = require("../middleware/auth.middleware")
 const { roleMiddleware } = require("../middleware/role.middleware")
 const { Op } = require("sequelize");
+const CommentValidation = require("../validation/comment.validation");
 
 /**
  * @swagger
@@ -188,6 +189,9 @@ router.get("/:id", async(req, res)=>{
 
 router.post("/", AuthMiddleware(), async(req, res)=>{
     try {
+        let { error } = CommentValidation.validate(req.body)
+        if (error) return res.status(400).send({ message: error.details[0].message})
+
         let { comment, star, learningCenter_id } = req.body;
         let newComment = await Comment.create({comment, star, learningCenter_id, user_id: req.user.id});
         res.send(newComment);
