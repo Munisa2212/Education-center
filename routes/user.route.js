@@ -26,11 +26,11 @@ router.post("/register", async (req, res) => {
         }
         let hash = bcrypt.hashSync(password, 10);
         let newUser = await User.create({
-            ...rest,
             name: name,
             phone: phone,
             email: email,
-            password: hash
+            password: hash,
+            ...rest,
         });
         let otp = totp.generate(email + "email");
         console.log(otp);

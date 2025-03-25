@@ -1,9 +1,11 @@
+const { AuthMiddleware } = require('../middleware/auth.middleware')
+const { roleMiddleware } = require('../middleware/role.middleware')
 const { Field } = require('../models/index.module')
 const FieldValidation = require('../validation/field.validation')
 const express = require('express')
 const route = express.Router()
 
-route.get('/', async (req, res) => {
+route.get('/', AuthMiddleware , async (req, res) => {
   try {
     const fields = await Field.findAll()
     res.send(fields)
@@ -13,7 +15,7 @@ route.get('/', async (req, res) => {
   }
 })
 
-route.post('/', async (req, res) => {
+route.post('/', roleMiddleware(["ADMIN"]) , async (req, res) => {
   try {
     const { error } = FieldValidation.validate(req.body)
     if (error)
@@ -26,7 +28,7 @@ route.post('/', async (req, res) => {
   }
 })
 
-route.get('/:id', async (req, res) => {
+route.get('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {
@@ -39,7 +41,7 @@ route.get('/:id', async (req, res) => {
   }
 })
 
-route.patch('/:id', async (req, res) => {
+route.patch('/:id', roleMiddleware(["SUPER-ADMIN"]), async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {
@@ -57,13 +59,14 @@ route.patch('/:id', async (req, res) => {
   }
 })
 
-route.delete('/:id', async (req, res) => {
+route.delete('/:id',roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {
       return res.status(404).send({ message: 'Field not found' })
     }
     await one.destroy()
+    res.send(one)
   } catch (err) {
     console.log(err)
     return res.status(400).send({ message: err.message })
