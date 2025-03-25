@@ -9,7 +9,7 @@ route.get('/', async (req, res) => {
     res.send(fields)
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: err.message })
+    return res.status(400).send({ message: err.message })
   }
 })
 
@@ -22,7 +22,7 @@ route.post('/', async (req, res) => {
     res.status(201).send(newField)
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: err.message })
+    return res.status(400).send({ message: err.message })
   }
 })
 
@@ -35,7 +35,7 @@ route.get('/:id', async (req, res) => {
     res.send(one)
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: err.message })
+    return res.status(400).send({ message: err.message })
   }
 })
 
@@ -53,7 +53,7 @@ route.patch('/:id', async (req, res) => {
     res.status(200).json(updatedField)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ message: 'Internal Server Error' })
+    res.status(400).json({ message: 'Internal Server Error' })
   }
 })
 
@@ -66,7 +66,7 @@ route.delete('/:id', async (req, res) => {
     await one.destroy()
   } catch (err) {
     console.log(err)
-    return res.status(500).send({ message: err.message })
+    return res.status(400).send({ message: err.message })
   }
 })
 
