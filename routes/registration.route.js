@@ -1,8 +1,9 @@
+const { roleMiddleware } = require("../middleware/role.middleware")
 const {Registration, User} = require("../models/index.module")
 const RegistrationValidation = require("../validation/registration.validation")
 const app = require("express").Router()
 
-app.post("/", async(req, res)=>{
+app.post("/", roleMiddleware(["ADMIN"]) , async(req, res)=>{
     const id = req.user.id
     try {
         let { error } = RegistrationValidation.validate(req.body)
@@ -26,7 +27,7 @@ app.post("/", async(req, res)=>{
     }
 })
 
-app.delete("/:id", async(req, res)=>{
+app.delete("/:id", roleMiddleware(["ADMIN"]) , async(req, res)=>{
     const {id} = req.params
     try {
         if(!id){
