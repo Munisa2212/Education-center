@@ -59,10 +59,6 @@ const app = require("express").Router()
  *           type: integer
  *           minimum: 1
  *           example: 2
- *         user_id:
- *           type: integer
- *           minimum: 1
- *           example: 5
  *         date:
  *           type: string
  *           format: date

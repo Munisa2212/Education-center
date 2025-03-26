@@ -155,14 +155,13 @@ const { AuthMiddleware } = require("../middleware/auth.middleware")
  *       required:
  *         - name
  *       properties:
- *         id:
- *           type: integer
- *           description: Auto-generated ID of the category
  *         name:
  *           type: string
+ *           example: Book
  *           description: Name of the category
  *         image:
  *           type: string
+ *           example: photo
  *           description: Optional image URL for the category
  */
 

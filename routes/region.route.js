@@ -41,6 +41,7 @@ route.get('/', async (req, res) => {
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Earth
  *                 description: Region nomi
  *     responses:
  *       201:

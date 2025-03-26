@@ -149,15 +149,17 @@ const app = require("express").Router()
  *       properties:
  *         name:
  *           type: string
+ *           example: English article
  *           minLength: 2
- *         user_id:
- *           type: integer
  *         image:
  *           type: string
+ *           example: photo
  *         description:
  *           type: string
+ *           example: Good article
  *         category_id:
  *           type: integer
+ *           example: 1
  *         file:
  *           type: string
  *         link:

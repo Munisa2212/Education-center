@@ -58,9 +58,6 @@ const { AuthMiddleware } = require("../middleware/auth.middleware")
  *     Like:
  *       type: object
  *       properties:
- *         user_id:
- *           type: integer
- *           example: 5
  *         learningCenter_id:
  *           type: integer
  *           example: 3
@@ -77,10 +74,10 @@ router.get("/", async (req, res) => {
 
 router.post("/", AuthMiddleware(),async (req, res) => {
     try {
-        let {center_id} = req.body
-        let center = await Center.findByPk(center_id);
+        let {learningCenter_id} = req.body
+        let center = await Center.findByPk(learningCenter_id);
         if (!center) return res.status(404).send({ message: "Center not found" });
-        let like = await Like.create({user_id: req.user.id, center_id});
+        let like = await Like.create({user_id: req.user.id, learningCenter_id});
         res.send(like);
     } catch (error) {
         res.status(400).send(error)

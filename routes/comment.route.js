@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const {Comment, User, Center} = require("../models/index.module")
 const { AuthMiddleware } = require("../middleware/auth.middleware")
-const { roleMiddleware } = require("../middleware/role.middleware")
 const { Op } = require("sequelize");
 const CommentValidation = require("../validation/comment.validation");
 
@@ -103,9 +102,6 @@ const CommentValidation = require("../validation/comment.validation");
  *         comment:
  *           type: string
  *           example: "This is a great learning center!"
- *         user_id:
- *           type: integer
- *           example: 5
  *         star:
  *           type: integer
  *           example: 4
@@ -151,14 +147,16 @@ router.post("/", AuthMiddleware(), async(req, res)=>{
 
 router.patch("/:id", AuthMiddleware(), async(req, res)=>{
     try {
+        let existingComment = await Comment.findByPk(req.params.id);
+        if (!existingComment) return res.status(404).send({ message: "Comment not found" });
+
+        if(req.user.role !== "ADMIN" && req.user.id != existingComment.user_id){
+            return res.status(403).send({ message: "You are not allowed to edit this comment." });
+        }
         let { comment, star, learningCenter_id } = req.body;
 
-        if(req.user.role !== "ADMIN" && req.user.id != comment.user_id){
-            return res.status(403).send({ message: `You are not allowed to edit this comment. ${req.user.role} can edit only his own comment` });
-        }
-
-        let updatedComment = await Comment.update({comment, star, learningCenter_id}, {where: {id: req.params.id}});
-        res.send(updatedComment);
+        await existingComment.update({comment, star, learningCenter_id});
+        res.send(existingComment);
     } catch (error) {
         res.status(400).send(error)
     }
@@ -173,8 +171,8 @@ router.delete("/:id", AuthMiddleware(), async(req, res)=>{
           return res.status(403).send({ message: `You are not allowed to delete this comment. ${req.user.role} can delete only his own comment` });
         }
 
-        let deleted = await comment.destroy();
-        res.send({deleted_data:  deleted, message: "Comment deleted successfully" });
+        await comment.destroy();
+        res.send({deleted_data:  comment, message: "Comment deleted successfully" });
     } catch (error) {
         res.status(400).send(error)
     }

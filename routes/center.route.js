@@ -190,8 +190,17 @@ app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
     try {
         let { error } = CenterValidation.validate(req.body)
         if (error) {return res.status(400).send({ message: error.details[0].message})}
-        
-        let {subject_id, field_id, ...rest} = req.body
+        const ceo_id = req.user.id
+
+        if(!ceo_id){
+            return res.status(404).send("CEO not found")
+        }
+        let {subject_id, field_id, region_id, ...rest} = req.body
+
+        const region = await Region.findByPk(region_id)
+        if(!region){
+            return res.status(404).send({message: "Region not found"})
+        }
 
         for (let i of subject_id) {
             let subject= await Subject.findByPk(i)
@@ -205,6 +214,8 @@ app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
 
         const newCenter = await Center.create({
             ...rest,
+            region_id,
+            ceo_id,
             subject_id: subject_id,
             field_id: field_id,
         })
