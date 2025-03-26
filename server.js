@@ -18,6 +18,15 @@ const setupSwagger = require("./swagger/swagger")
 require('dotenv').config()
 const app = express()
 
+app.get('/alert', (req, res) => {
+  const message = "Hello, this is an alert message!";
+  res.send(`
+      <script>
+          alert("${message}");
+      </script>
+  `);
+});
+
 app.use(express.json())
 connectDB()
 
