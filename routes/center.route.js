@@ -239,7 +239,7 @@ app.get("/",AuthMiddleware(), async(req, res)=>{
             return res.status(203).send({message: "Nothing found"})
         }
 
-        res.send(centers)
+        res.send(centers.subject_id)
     } catch (error) {
         console.log(error)
         res.status(400).send({message: error})
