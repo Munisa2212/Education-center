@@ -1,5 +1,5 @@
 const { Branch, Center, Region, Field, Subject } = require('../models/index.module')
-const Branch_validation = require('../validation/branch.valadation')
+const Branch_validation = require("../validation/branch.validation")
 const express = require('express')
 const route = express.Router()
 
@@ -109,16 +109,16 @@ route.get("/search", async (req, res) => {
  */
 route.post('/', async (req, res) => {
   try {
-    const { name, phone, image, location, region_id, learningCentre_id, field_id, subject_id } = req.body
+    const { name, phone, image, location, region_id, learningCenter_id, field_id, subject_id } = req.body
     
-    if (!learningCentre_id) return res.status(400).send({ message: 'learningCentre_id is required' });
+    if (!learningCenter_id) return res.status(400).send({ message: 'learningCenter_id is required' });
     if (!Array.isArray(subject_id) || subject_id.length === 0) return res.status(400).send({ message: 'subject_id must be a non-empty array' });
     if (!Array.isArray(field_id) || field_id.length === 0) return res.status(400).send({ message: 'field_id must be a non-empty array' });
 
     const { error } = Branch_validation.validate(req.body)
     if (error) return res.status(400).send({ message: error.details[0].message })
 
-    let center = await Center.findByPk(learningCentre_id)
+    let center = await Center.findByPk(learningCenter_id)
     if (!center) return res.status(404).send({ message: 'Center not found' })
 
     let region = await Region.findByPk(region_id)

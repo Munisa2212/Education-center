@@ -209,11 +209,6 @@ app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
             field_id: field_id,
         })
 
-        let data = {
-            ...rest,
-            subject_id,
-            field_id
-        }
         res.send(newCenter)
     } catch (error) {
         console.log(error)
