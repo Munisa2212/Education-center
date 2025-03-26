@@ -56,9 +56,11 @@ totp.options = { step: 300, digits: 5 };
  *             properties:
  *               email:
  *                 type: string
+ *                 example: ibodullayevamunisa570@gmail.com
  *                 format: email
  *               otp:
  *                 type: string
+ *                 example: 11111
  *     responses:
  *       200:
  *         description: Email successfully verified
@@ -81,6 +83,7 @@ totp.options = { step: 300, digits: 5 };
  *             properties:
  *               email:
  *                 type: string
+ *                 example: ibodullayevamunisa570@gmail.com
  *                 format: email
  *     responses:
  *       200:
@@ -237,32 +240,36 @@ totp.options = { step: 300, digits: 5 };
  *         - phone
  *         - role
  *       properties:
- *         id:
- *           type: integer
- *           description: Auto-generated ID of the user
  *         name:
  *           type: string
+ *           example: Munisa
  *           description: Full name of the user
  *         email:
  *           type: string
  *           format: email
+ *           example: ibodullayevamunisa570@gmail.com
  *           description: Email address of the user
  *         password:
  *           type: string
  *           format: password
+ *           example: hello22
  *           description: User's password
  *         phone:
  *           type: string
+ *           example: +998882452212
  *           description: User's phone number
  *         image:
  *           type: string
+ *           example: photo
  *           description: Profile image URL
  *         role:
  *           type: string
  *           enum: [USER, ADMIN, SUPER-ADMIN, CEO]
+ *           example: CEO
  *           description: Role of the user
  *         year:
  *           type: integer
+ *           example: 2005
  *           description: Birth year of the user
  *
  *     Login:
@@ -273,11 +280,13 @@ totp.options = { step: 300, digits: 5 };
  *       properties:
  *         email:
  *           type: string
+ *           example: ibodullayevamunisa570@gmail.com
  *           format: email
  *           description: User email
  *         password:
  *           type: string
  *           format: password
+ *           example: hello22
  *           description: User password
  */
 
@@ -337,7 +346,7 @@ router.post("/resend-otp", async (req, res) => {
         const token = totp.generate(email + "email");
         console.log("OTP: ", token);
         sendEmail(email, token);
-        res.send({ message: `Token sent to ${email}` });
+        res.send({ message: `Otp sent to ${email}` });
     } catch (error) {
         console.log(error);
         res.status(400).send(error);
@@ -376,6 +385,16 @@ router.get("/", roleMiddleware(["ADMIN"]), async (req, res) => {
     }
 });
 
+router.get("/me", AuthMiddleware(), async(req, res)=>{
+    try {
+        let data = deviceDetector.parse(req.headers["user-agent"])
+        let user = await User.findByPk(req.user.id)
+        res.send({user: user, device: data})
+    } catch (error) {
+        res.status(404).send(error)
+    }
+})
+
 router.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
     try {
         let user = await User.findByPk(req.params.id);
@@ -401,15 +420,7 @@ router.delete("/:id", AuthMiddleware(), async (req, res) => {
     }
 });
 
-router.get("/me", AuthMiddleware(), async(req, res)=>{
-    try {
-        let data = deviceDetector.parse(req.headers["user-agent"])
-        let user = await User.findByPk(req.user.id)
-        res.send({user: user, device: data})
-    } catch (error) {
-        res.status(404).send(error)
-    }
-})
+
 
 
 router.get("/refresh", AuthMiddleware(), async(req,res)=>{

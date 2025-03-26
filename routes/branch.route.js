@@ -1,3 +1,4 @@
+const { Op } = require('sequelize')
 const { Branch, Center, Region, Field, Subject } = require('../models/index.module')
 const Branch_validation = require("../validation/branch.validation")
 const express = require('express')
@@ -172,6 +173,63 @@ route.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error("Error in DELETE /branch:", err)
     return res.status(400).json({ message: 'Cannot delete this branch, it may be linked to other records' })
+  }
+})
+
+/**
+ * @swagger
+ * /branch/{id}:
+ *   patch:
+ *     summary: Update a branch
+ *     tags: [Branch]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Branch ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Updated Branch Name"
+ *               phone:
+ *                 type: string
+ *                 example: "+998901234567"
+ *               location:
+ *                 type: string
+ *                 example: "Updated Location"
+ *     responses:
+ *       200:
+ *         description: Branch updated successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Branch not found
+ */
+route.patch("/:id", async(req, res)=>{
+  const {id} = req.params
+  try {
+      if(!id){
+        return res.status(400).send({message: "Wrong id"})
+      }
+
+      const data = await Branch.findByPk(id)
+      if(!data){
+          return res.status(404).send("Branch not found")
+      }
+        
+      await data.update(req.body)
+      res.status(200).send(data)
+  } catch (error) {
+      console.log(error)
+      res.status(400).send({message: error})
   }
 })
 
