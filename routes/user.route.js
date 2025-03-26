@@ -16,6 +16,15 @@ totp.options = { step: 300, digits: 5 };
 /**
  * @swagger
  * tags:
+ *   - name: Authorization
+ *     description: API endpoints for user authentication and authorization
+ *   - name: User
+ *     description: API endpoints for user management
+ */
+
+/**
+ * @swagger
+ * tags:
  *   name: User
  *   description: API endpoints for user management
  */
@@ -26,7 +35,7 @@ totp.options = { step: 300, digits: 5 };
  *   post:
  *     summary: Register a new user
  *     tags: 
- *       - User
+ *       - Authorization
  *     requestBody:
  *       required: true
  *       content:
@@ -43,7 +52,7 @@ totp.options = { step: 300, digits: 5 };
  *   post:
  *     summary: Verify user email with OTP
  *     tags: 
- *       - User
+ *       - Authorization
  *     requestBody:
  *       required: true
  *       content:
@@ -71,7 +80,7 @@ totp.options = { step: 300, digits: 5 };
  *   post:
  *     summary: Resend OTP to user email
  *     tags: 
- *       - User
+ *       - Authorization
  *     requestBody:
  *       required: true
  *       content:
@@ -95,7 +104,7 @@ totp.options = { step: 300, digits: 5 };
  *   post:
  *     summary: Log in as a user
  *     tags: 
- *       - User
+ *       - Authorization
  *     requestBody:
  *       required: true
  *       content:
@@ -112,40 +121,39 @@ totp.options = { step: 300, digits: 5 };
  *       404:
  *         description: User not found
  *
- * /user/search:
- *   get:
- *     summary: Search users (Admin only)
- *     security:
- *       - BearerAuth: []
- *     tags: 
- *       - User
- *     parameters:
- *       - name: name
- *         in: query
- *         description: Search by username
- *         schema:
- *           type: string
- *       - name: email
- *         in: query
- *         description: Search by email
- *         schema:
- *           type: string
- *       - name: phone
- *         in: query
- *         description: Search by phone number
- *         schema:
- *           type: string
- *       - name: role
- *         in: query
- *         description: Search by user role
- *         schema:
- *           type: string
+ * @swagger
+ * /user/refresh-token:
+ *   post:
+ *     summary: Refresh the access token using a refresh token
+ *     tags:
+ *       - Authorization
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refresh_token
+ *             properties:
+ *               refresh_token:
+ *                 type: string
+ *                 description: The refresh token used to generate a new access token
  *     responses:
  *       200:
- *         description: List of users matching the criteria
+ *         description: New access token generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                   description: The newly generated access token
  *       400:
- *         description: Bad request
- *
+ *         description: Refresh token is missing or invalid
+ *       404:
+ *         description: User not found
  * /user:
  *   get:
  *     summary: Get all users (Admin only)
@@ -213,20 +221,8 @@ totp.options = { step: 300, digits: 5 };
  *       404:
  *         description: User not found
  *
- * /user/refresh:
- *   get:
- *     summary: Refresh access token
- *     security:
- *       - BearerAuth: []
- *     tags: 
- *       - User
- *     responses:
- *       200:
- *         description: New access token returned
- *       400:
- *         description: Bad request
- */
 
+ */
 /**
  * @swagger
  * components:
@@ -290,7 +286,80 @@ totp.options = { step: 300, digits: 5 };
  *           description: User password
  */
 
-
+/**
+ * @swagger
+ * /user/request-reset:
+ *   post:
+ *     summary: Request a password reset OTP
+ *     tags:
+ *       - Password Reset
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address of the user requesting the password reset
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully to the user's email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 otp:
+ *                   type: string
+ *                   description: The OTP sent to the user's email
+ *       400:
+ *         description: Email is required or other validation error
+ *       404:
+ *         description: No account found with the provided email address
+ *
+ * /user/reset-password:
+ *   post:
+ *     summary: Reset the user's password using an OTP
+ *     tags:
+ *       - Password Reset
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - newPassword
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address of the user resetting the password
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 description: The new password for the user
+ *               otp:
+ *                 type: string
+ *                 description: The OTP sent to the user's email for verification
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Missing required fields, invalid OTP, or other validation error
+ *       404:
+ *         description: No account found with the provided email address
+ */
 router.post("/register", async (req, res) => {
     try {
         let { error } = UserValidation.validate(req.body);
@@ -304,11 +373,11 @@ router.post("/register", async (req, res) => {
         }
         let hash = bcrypt.hashSync(password, 10);
         let newUser = await User.create({
+            ...rest,
             name: name,
             phone: phone,
             email: email,
-            password: hash,
-            ...rest,
+            password: hash
         });
         let otp = totp.generate(email + "email");
         console.log(otp);
@@ -366,7 +435,7 @@ router.post("/login", async (req, res) => {
 
         if (user.status != "ACTIVE") return res.status(401).send({ message: "Verify your email first!" });
 
-        let refresh_token = jwt.sign({ id: user.id, role: user.role }, "sekret",{expiresIn: "1d"});
+        let refresh_token = jwt.sign({ id: user.id, role: user.role }, "refresh",{expiresIn: "1d"});
         let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "15m" });
         res.send({ refresh_token: refresh_token, access_token: access_token });
     } catch (err) {
@@ -374,7 +443,58 @@ router.post("/login", async (req, res) => {
     }
 });
 
+router.post("/refresh-token", async(req, res)=>{
+    try {
+        let {refresh_token} = req.body
+        if(!refresh_token) return res.status(400).send({message: "Refresh token is required"})
+        let decoded = jwt.verify(refresh_token, "refresh")
+        if(!decoded) return res.status(400).send({message: "Invalid refresh token"})
+        let user = await User.findByPk(decoded.id)
+        if(!user) return res.status(404).send({message: "User not found"})
 
+        let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "15m" });
+        res.send({access_token: access_token})
+    } catch (error) {
+        res.status(400).send({message: "Wrong refresh_token"})
+    }
+})
+
+router.post("/request-reset", async(req, res)=>{
+    try {
+        let {email} = req.body
+        if(!email) return res.status(400).send({message: "Email is required"})
+        let user = await User.findOne({where: {email: email}})
+        if(!user) return res.status(404).send({message: "No account found with the Email address you provided!"})
+        let otp = totp.generate(email + "reset_password")
+        sendEmail(email, otp)
+        res.send({
+            message: `${user.name}, an OTP has been sent to your email (${user.email}). Please check and confirm it!`,
+            otp: otp
+          })
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+router.post("/reset-password", async(req, res)=>{
+    try {
+        let {email, newPassword, otp} = req.body
+        if(!email || !newPassword || !otp){
+            return res.status(400).send({message: "email, newPassword, otp are required. Provide every detail!"})
+        }
+        let user = await User.findOne({where: {email}})
+        if(!user) return res.status(400).send({message: "No account found with the Email address you provided!"})
+
+        let decode_otp = totp.verify({token: otp, secret: email + "reset_password"})
+        if(!decode_otp) return res.status(400).send({message: "OTP is not valid"})
+
+        let hash = bcrypt.hashSync(newPassword, 10)
+        user.update({password: hash})
+        res.send({message: `New password set successully🎉. Your newPassword🔑 - ${newPassword}`})
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
 
 router.get("/", roleMiddleware(["ADMIN"]), async (req, res) => {
     try {

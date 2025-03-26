@@ -14,7 +14,7 @@ const app = require("express").Router()
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - Centers
+ *       - LearningCenters
  *     requestBody:
  *       required: true
  *       content:
@@ -32,7 +32,7 @@ const app = require("express").Router()
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - Centers
+ *       - LearningCenters
  *     parameters:
  *       - name: name
  *         in: query
@@ -88,7 +88,7 @@ const app = require("express").Router()
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - Centers
+ *       - LearningCenters
  *     parameters:
  *       - name: id
  *         in: path
@@ -107,7 +107,7 @@ const app = require("express").Router()
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - Centers
+ *       - LearningCenters
  *     parameters:
  *       - name: id
  *         in: path
@@ -132,7 +132,7 @@ const app = require("express").Router()
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - Centers
+ *       - LearningCenters
  *     parameters:
  *       - name: id
  *         in: path
@@ -150,7 +150,7 @@ const app = require("express").Router()
  *   get:
  *     summary: Get students registered in a center
  *     tags:
- *       - Centers
+ *       - LearningCenters
  *     parameters:
  *       - name: learningCenter_id
  *         in: query
@@ -170,7 +170,7 @@ const app = require("express").Router()
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - Centers
+ *       - LearningCenters
  *     parameters:
  *       - name: learningCenter_id
  *         in: query

@@ -35,57 +35,6 @@ const CommentValidation = require("../validation/comment.validation");
  *           description: Comment successfully added
  *         400:
  *           description: Validation error
- * 
- *   /comment/search:
- *     get:
- *       summary: Search for comments with filters
- *       tags: [Comment]
- *       parameters:
- *         - in: query
- *           name: user_id
- *           schema:
- *             type: integer
- *           description: Filter by user ID
- *         - in: query
- *           name: comment
- *           schema:
- *             type: string
- *           description: Filter by comment content
- *         - in: query
- *           name: star
- *           schema:
- *             type: integer
- *           description: Filter by star rating
- *         - in: query
- *           name: learningCenter_id
- *           schema:
- *             type: integer
- *           description: Filter by learning center ID
- *         - in: query
- *           name: take
- *           schema:
- *             type: integer
- *           description: Number of records per page
- *         - in: query
- *           name: page
- *           schema:
- *             type: integer
- *           description: Page number
- *         - in: query
- *           name: sortBy
- *           schema:
- *             type: string
- *           description: Sorting column
- *         - in: query
- *           name: sortOrder
- *           schema:
- *             type: string
- *             enum: [ASC, DESC]
- *           description: Sorting order
- *       responses:
- *         200:
- *           description: Filtered list of comments
- * 
  *   /comment/{id}:
  *     get:
  *       summary: Get a comment by ID
