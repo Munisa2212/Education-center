@@ -1,12 +1,12 @@
 const { Branch, Center, Region, Field, Subject } = require('../models/index.module')
-const Branch_validation = require('../validation/branch.valadation')
+const Branch_validation = require('../validation/branch.validation')
 const express = require('express')
 const route = express.Router()
 
 /**
  * @swagger
  * tags:
- *   name: Branch
+ *   name: Branch 🏢
  *   description: Branch management API
  */
 
@@ -15,7 +15,7 @@ const route = express.Router()
  * /branch:
  *   get:
  *     summary: Get all branches
- *     tags: [Branch]
+ *     tags: [Branch 🏢]
  *     responses:
  *       200:
  *         description: List of all branches
@@ -32,23 +32,14 @@ route.get('/', async (req, res) => {
   }
 })
 
-route.get("/search", async (req, res) => {
+route.get("/:id", async (req, res) => {
   try {
-    let { name, phone, location, region_id, learningCentre_id, field_id, subject_id } = req.query;
-    const where = {}
-
-    if (name) where.name = { [Op.like]: `%${name}%` }
-    if (phone) where.phone = { [Op.like]: `%${phone}%` }
-    if (location) where.location = { [Op.like]: `%${location}%` }
-    if (region_id) where.region_id = region_id
-    if (learningCentre_id) where.learningCentre_id = learningCentre_id
-    if (field_id) where.field_id = field_id
-    if (subject_id) where.subject_id = subject_id
-
-    let branches = await Branch.findAll({ where });
-    res.send(branches);
+    const branch = await Branch.findByPk(req.params.id)
+    if (!branch) return res.status(404).send({ message: 'Branch not found' })
+    res.json(branch)
   } catch (error) {
-    res.status(400).send(error)
+    console.error("Error in GET /branch/:id:", error)
+    res.status(400).send({ message: error.message })
   }
 })
 
@@ -57,7 +48,7 @@ route.get("/search", async (req, res) => {
  * /branch:
  *   post:
  *     summary: Create a new branch
- *     tags: [Branch]
+ *     tags: [Branch 🏢]
  *     requestBody:
  *       required: true
  *       content:
@@ -143,12 +134,25 @@ route.post('/', async (req, res) => {
   }
 })
 
+route.patch('/:id', async (req, res) => {
+  try {
+    let one = await Branch.findByPk(req.params.id)
+    if (!one) return res.status(404).send({ message: 'Not found' })
+
+    await one.update(req.body)
+    res.send({ message: 'Updated successfully' })
+  } catch (err) {
+    console.error("Error in PATCH /branch:", err)
+    return res.status(400).json({ message: err.message })
+  }
+})
+
 /**
  * @swagger
  * /branch/{id}:
  *   delete:
  *     summary: Delete a branch
- *     tags: [Branch]
+ *     tags: [Branch 🏢]
  *     parameters:
  *       - in: path
  *         name: id
