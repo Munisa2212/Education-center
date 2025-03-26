@@ -15,7 +15,13 @@ const Field = db.define(
         image: {
             type: DataTypes.STRING
         }
-    }
+    },{timestamps: false}
 )
+
+Field.beforeCreate((field)=>{
+    if(!field.image){
+        field.image = `${field.name}.png`
+    }
+})
 
 module.exports = Field

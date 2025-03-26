@@ -15,7 +15,7 @@ const Category = db.define(
         image: {
             type: DataTypes.STRING
         }
-    }
+    },{timestamps: false}
 )
 
 module.exports = Category

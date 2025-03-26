@@ -69,6 +69,7 @@ route.post('/', async (req, res) => {
     res.status(201).send(subject)
   } catch (err) {
     console.log(err)
+    res.status(400).send(err)
   }
 })
 

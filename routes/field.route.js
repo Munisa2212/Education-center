@@ -18,13 +18,15 @@ const route = express.Router()
  *   get:
  *     summary: Get all fields
  *     tags: [Field]
+ *     security:
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: List of all fields
  *       400:
  *         description: Bad request
  */
-route.get('/', async (req, res) => {
+route.get('/', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     const fields = await Field.findAll()
     res.send(fields)
@@ -40,6 +42,8 @@ route.get('/', async (req, res) => {
  *   post:
  *     summary: Create a new field
  *     tags: [Field]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -61,11 +65,15 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Validation error
  */
-route.post('/', async (req, res) => {
+route.post('/', roleMiddleware(["ADMIN"]),async (req, res) => {
   try {
     const { error } = FieldValidation.validate(req.body)
-    if (error)
-      return res.status(400).send({ message: error.details[0].message })
+    if (error) return res.status(400).send({ message: error.details[0].message })
+
+    let field = await Field.findOne({where: {name: req.body.name}})
+    if(field){
+      return res.status(400).send({message: "Field already exists"})
+    }
     let newField = await Field.create(req.body)
     res.status(201).send(newField)
   } catch (err) {
@@ -80,6 +88,8 @@ route.post('/', async (req, res) => {
  *   get:
  *     summary: Get a field by ID
  *     tags: [Field]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -93,7 +103,7 @@ route.post('/', async (req, res) => {
  *       404:
  *         description: Field not found
  */
-route.get('/:id', async (req, res) => {
+route.get('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {
@@ -112,6 +122,8 @@ route.get('/:id', async (req, res) => {
  *   patch:
  *     summary: Update a field
  *     tags: [Field]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -138,7 +150,7 @@ route.get('/:id', async (req, res) => {
  *       404:
  *         description: Field not found
  */
-route.patch('/:id', async (req, res) => {
+route.patch('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {
@@ -162,6 +174,8 @@ route.patch('/:id', async (req, res) => {
  *   delete:
  *     summary: Delete a field
  *     tags: [Field]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -175,7 +189,7 @@ route.patch('/:id', async (req, res) => {
  *       404:
  *         description: Field not found
  */
-route.delete('/:id', async (req, res) => {
+route.delete('/:id', roleMiddleware(["ADMIN"]),async (req, res) => {
   try {
     let one = await Field.findByPk(req.params.id)
     if (!one) {

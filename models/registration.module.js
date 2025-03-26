@@ -21,7 +21,7 @@ const Registration = db.define(
         date: {
             type: DataTypes.DATE
         }
-    }
+    },{timestamps: false}
 )
 
 module.exports = Registration

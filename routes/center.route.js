@@ -3,6 +3,9 @@ const {Center, Region, User, Branch, Comment, Registration, Subject, Field} = re
 const CenterValidation = require("../validation/center.validation");
 const { roleMiddleware } = require("../middleware/role.middleware");
 const { AuthMiddleware } = require("../middleware/auth.middleware");
+const BranchField = require("../models/branchField.module");
+const CenterField = require("../models/centerField.module");
+const CenterSubject = require("../models/centerSubject.module");
 const app = require("express").Router()
 
 
@@ -186,52 +189,69 @@ const app = require("express").Router()
  */
 
 
-app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
+app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
     try {
-        let { error } = CenterValidation.validate(req.body)
-        if (error) {return res.status(400).send({ message: error.details[0].message})}
-        const ceo_id = req.user.id
-
-        if(!ceo_id){
-            return res.status(404).send("CEO not found")
+        let { error } = CenterValidation.validate(req.body);
+        if (error) {
+            return res.status(400).send({ message: error.details[0].message });
         }
-        let {subject_id, field_id, region_id, ...rest} = req.body
+        const ceo_id = req.user.id;
 
-        const region = await Region.findByPk(region_id)
-        if(!region){
-            return res.status(404).send({message: "Region not found"})
+        if (!ceo_id) {
+            return res.status(404).send("CEO not found");
         }
+        let { subject_id, field_id, region_id, ...rest } = req.body;
 
-        const subjects = await Subject.findAll({ where: { id: subject_id } });
-        if (subjects.length !== subject_id.length) {
-            return res.status(404).send({ message: "Some subjects not found" });
+        let existingCenter = await Center.findOne({where: {name: rest.name}})
+        if(existingCenter) return res.status(400).send({message: "The learning center with such a name already exists!"})
+        const region = await Region.findByPk(region_id);
+        if (!region) {
+            return res.status(404).send({ message: "Region not found" });
         }
 
         const fields = await Field.findAll({ where: { id: field_id } });
         if (fields.length !== field_id.length) {
-            return res.status(404).send({ message: "Some fields not found" });
+            return res.status(404).send({ message: "Some fields_id not found" });
+        }
+
+        const subjects = await Subject.findAll({ where: { id: subject_id } });
+        if (subjects.length !== subject_id.length) {
+            return res.status(404).send({ message: "Some subjects_id not found" });
         }
 
         const newCenter = await Center.create({
             ...rest,
             region_id,
             ceo_id,
-            subject_id: subject_id,
-            field_id: field_id,
-        })
+        });
 
-        res.send(newCenter)
+        await CenterSubject.bulkCreate(
+            subject_id.map((subject_id) => ({
+                CenterId: newCenter.id,
+                SubjectId: subject_id,
+            }))
+        );
+        console.log("Subjects added to CenterSubject:", subject_id);
+        
+        await CenterField.bulkCreate(
+            field_id.map((field_id) => ({
+                CenterId: newCenter.id,
+                FieldId: field_id,
+            }))
+        );
+        console.log("Fields added to CenterField:", field_id);
+        req.body.ceo_id = ceo_id
+        
+        res.send(req.body);
     } catch (error) {
-        console.log(error)
-        res.status(400).send({message: error.details[0]?.message})
+        console.log(error);
+        res.status(400).send({ message: error.message });
     }
-})
+});
 
 app.get("/",AuthMiddleware(), async(req, res)=>{
     const {name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
     try {
-        console.log("adse");
-        
         const where = {};
 
         if (name) where.name = { [Op.like]: `%${name}%` };
@@ -243,7 +263,7 @@ app.get("/",AuthMiddleware(), async(req, res)=>{
             limit: parseInt(limit),
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
-            include: [{model: Region, attributes: ["name"]}, {model: User, attributes: ["email", "name"]}, {model: Branch, attributes: ["name", "location"]}, {model: Comment, attributes: ["star", "comment"]}]
+            include: [{ model: Subject, through: { attributes: [] } }, { model: Field, through: { attributes: [] } },{model: Region, attributes: ["name"]}, {model: User, attributes: ["email", "name"]}, {model: Branch, attributes: ["name", "location"]}, {model: Comment, attributes: ["star", "comment"]}]
         });
 
         if(!centers){
@@ -253,7 +273,7 @@ app.get("/",AuthMiddleware(), async(req, res)=>{
         res.send(centers)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
@@ -267,7 +287,7 @@ app.get("/students", async(req, res)=>{
         
         res.send(student)
     } catch (error) {
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
@@ -311,7 +331,7 @@ app.get("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
           res.send(center);
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
@@ -330,7 +350,7 @@ app.patch("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
         res.send(center)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 
@@ -349,7 +369,7 @@ app.delete("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
         res.send(center)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error})
     }
 })
 

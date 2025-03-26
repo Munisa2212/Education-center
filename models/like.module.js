@@ -15,7 +15,7 @@ const Like = db.define(
         learningCenter_id: {
             type: DataTypes.INTEGER
         }
-    }
+    },{timestamps: false}
 )
 
 module.exports = Like

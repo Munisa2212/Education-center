@@ -120,7 +120,20 @@ router.get("/", async(req, res)=>{
     }
 })
 
-
+router.post("/", AuthMiddleware(), async(req, res)=>{
+    try {
+        
+        let { error } = CommentValidation.validate(req.body)
+        if (error) return res.status(400).send({ message: error.details[0].message})
+            
+        console.log("kirdi");
+        let { comment, star, learningCenter_id } = req.body;
+        let newComment = await Comment.create({comment, star, learningCenter_id, user_id: req.user.id});
+        res.send(newComment);
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
 
 router.get("/:id", async(req, res)=>{
     try {
@@ -132,18 +145,6 @@ router.get("/:id", async(req, res)=>{
     }
 })
 
-router.post("/", AuthMiddleware(), async(req, res)=>{
-    try {
-        let { error } = CommentValidation.validate(req.body)
-        if (error) return res.status(400).send({ message: error.details[0].message})
-
-        let { comment, star, learningCenter_id } = req.body;
-        let newComment = await Comment.create({comment, star, learningCenter_id, user_id: req.user.id});
-        res.send(newComment);
-    } catch (error) {
-        res.status(400).send(error)
-    }
-})
 
 router.patch("/:id", AuthMiddleware(), async(req, res)=>{
     try {

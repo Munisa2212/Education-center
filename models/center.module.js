@@ -33,16 +33,9 @@ const Center = db.define(
         },
         description: {
             type: DataTypes.STRING
-        },
-        subject_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        field_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
         }
-    }
+    },
+{timestamps: false}
 )
 
 module.exports = Center

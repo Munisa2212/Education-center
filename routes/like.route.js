@@ -1,6 +1,4 @@
-const {Like} = require("../models/index.module")
-const {User} = require("../models/index.module")
-const {Center} = require("../models/index.module")
+const {Like, Center, User} = require("../models/index.module")
 const router = require("express").Router()
 const { AuthMiddleware } = require("../middleware/auth.middleware")
 
@@ -77,6 +75,12 @@ router.post("/", AuthMiddleware(),async (req, res) => {
         let {learningCenter_id} = req.body
         let center = await Center.findByPk(learningCenter_id);
         if (!center) return res.status(404).send({ message: "Center not found" });
+
+        let existingLike = await Like.findOne({where: {user_id: req.user.id, learningCenter_id: learningCenter_id}})
+        console.log("reer");
+        
+        if(existingLike) return res.status(400).send({message: "You have already liked this learning center"})
+
         let like = await Like.create({user_id: req.user.id, learningCenter_id});
         res.send(like);
     } catch (error) {

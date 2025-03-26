@@ -1,10 +1,10 @@
 const { AuthMiddleware } = require("../middleware/auth.middleware");
-const {Like, Center} = require("../models/index.module");
+const {Like, Comment, Center} = require("../models/index.module");
 const app = require("express").Router()
 
 /**
  * @swagger
- * /rating/star ⭐:
+ * /rating/star:
  *   get:
  *     summary: Get centers with their star ratings
  *     tags:
@@ -40,7 +40,7 @@ const app = require("express").Router()
 
 /**
  * @swagger
- * /rating/comments 📝:
+ * /rating/comments:
  *   get:
  *     summary: Get the total number of comments for a learning center
  *     tags:
@@ -73,7 +73,7 @@ const app = require("express").Router()
 
 /**
  * @swagger
- * /rating/likes ❤️:
+ * /rating/likes:
  *   get:
  *     summary: Get the total number of likes for a learning center
  *     tags:
@@ -106,14 +106,17 @@ const app = require("express").Router()
 
 app.get("/star", async(req, res)=>{
     try {
-        let centers = await Center.findAll({attributes: ["name", "ceo_id", "subject_id", "field_id"]},{include: [{model: Comment, attributes: ["star"]}]})
+        let centers = await Center.findAll({attributes: ["name"], include: [{model: Comment, attributes: ["star"]}]})
+        for(let i of centers){ 
+            res.send(i.Comments.star)
+        }
         res.send(centers)
     } catch (error) {
         res.status(400).send(error) 
     }
 })
 
-app.get("/comments", AuthMiddleware, async(req,res)=>{
+app.get("/comments", async(req,res)=>{
     try {
         let {learningCenter_id} = req.query;
         if(!learningCenter_id){
@@ -122,7 +125,7 @@ app.get("/comments", AuthMiddleware, async(req,res)=>{
         let center_data = await Comment.findAll({where: {learningCenter_id: learningCenter_id}}); 
         if(!center_data) return res.status(404).send("Nothing found")
         
-        let totalComments = center_data.length()
+        let totalComments = center_data.length
         res.send({totalComments})
     } catch (error) {
         res.status(400).send(error)
@@ -130,7 +133,7 @@ app.get("/comments", AuthMiddleware, async(req,res)=>{
     }
 })
 
-app.get("/likes", AuthMiddleware, async(req, res)=>{
+app.get("/likes", async(req, res)=>{
     try {
         let {learningCenter_id} = req.query;
         if(!learningCenter_id){

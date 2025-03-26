@@ -15,7 +15,13 @@ const Subject = db.define(
         image: {
             type: DataTypes.STRING
         }
-    }
+    },{timestamps: false}
 )
+
+Subject.beforeCreate((subject) => {
+    if (!subject.image) {
+        subject.image = `${subject.name}.png`;
+    }
+});
 
 module.exports = Subject

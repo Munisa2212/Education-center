@@ -30,7 +30,7 @@ const Resource = db.define(
         link: {
             type: DataTypes.STRING
         }
-    }
+    },{timestamps: false}
 )
 
 module.exports = Resource

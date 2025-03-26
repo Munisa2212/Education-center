@@ -1,4 +1,4 @@
-const {User} = require("../models/index.module")
+const {User, Region} = require("../models/index.module")
 const {UserValidation, LoginValidation, AdminValidation} = require("../validation/user.validation")
 const router = require("express").Router()
 const bcrypt = require("bcrypt")
@@ -343,7 +343,7 @@ totp.options = { step: 300, digits: 5 };
  *       properties:
  *         email:
  *           type: string
- *           example: ibodullayevamunisa570@gmail.com
+ *           example: user@gmail.com
  *           format: email
  *           description: User email
  *         password:
@@ -511,7 +511,7 @@ router.post("/login", async (req, res) => {
         if (user.status != "ACTIVE") return res.status(401).send({ message: "Verify your email first!" });
 
         let refresh_token = jwt.sign({ id: user.id, role: user.role }, "refresh",{expiresIn: "1d"});
-        let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "15m" });
+        let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "1h" });
         res.send({ refresh_token: refresh_token, access_token: access_token });
     } catch (err) {
         res.status(400).send(err);
@@ -527,7 +527,7 @@ router.post("/refresh-token", async(req, res)=>{
         let user = await User.findByPk(decoded.id)
         if(!user) return res.status(404).send({message: "User not found"})
 
-        let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "15m" });
+        let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "1h" });
         res.send({access_token: access_token})
     } catch (error) {
         res.status(400).send({message: "Wrong refresh_token"})
@@ -571,9 +571,9 @@ router.post("/reset-password", async(req, res)=>{
     }
 })
 
-router.get("/", roleMiddleware(["ADMIN"]), async (req, res) => {
+router.get("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
     try {
-        let users = await User.findAll();
+        let users = await User.findAll({include: [{model: Region}]});
         res.send(users);
     } catch (error) {
         res.status(400).send(error);
@@ -606,7 +606,7 @@ router.patch("/:id", AuthMiddleware(), async(req, res)=>{
         if (!user) return res.status(404).send({ message: "User not found" });
 
         if(req.user.role !== "ADMIN" && req.user.id != user.id){
-            return res.status(403).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account. Only ADMIN can patch other's account` });
+            return res.status(403).send({ message: `You are not allowed to patch this user. ${req.user.role} can delete only his own account. Only ADMIN can patch other's account` });
         }
 
         let updated = await user.update(req.body)

@@ -2,6 +2,9 @@ const { Op } = require('sequelize')
 const { Branch, Center, Region, Field, Subject } = require('../models/index.module')
 const Branch_validation = require('../validation/branch.validation')
 const express = require('express')
+const { roleMiddleware } = require('../middleware/role.middleware')
+const BranchSubject = require('../models/branchSubject.module')
+const BranchField = require('../models/branchField.module')
 const route = express.Router()
 
 /**
@@ -17,6 +20,8 @@ const route = express.Router()
  *   get:
  *     summary: Get all branches
  *     tags: [Branch 🏢]
+ *     security: 
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: List of all branches
@@ -50,6 +55,8 @@ route.get("/:id", async (req, res) => {
  *   post:
  *     summary: Create a new branch
  *     tags: [Branch 🏢]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -99,16 +106,15 @@ route.get("/:id", async (req, res) => {
  *       400:
  *         description: Bad request
  */
-route.post('/', async (req, res) => {
+route.post('/', roleMiddleware(["ADMIN"]),async (req, res) => {
   try {
-    const { name, phone, image, location, region_id, learningCenter_id, field_id, subject_id } = req.body
-    
-    if (!learningCenter_id) return res.status(400).send({ message: 'learningCenter_id is required' });
-    if (!Array.isArray(subject_id) || subject_id.length === 0) return res.status(400).send({ message: 'subject_id must be a non-empty array' });
-    if (!Array.isArray(field_id) || field_id.length === 0) return res.status(400).send({ message: 'field_id must be a non-empty array' });
+    const { region_id, learningCenter_id, field_id, subject_id, ...rest} = req.body
 
     const { error } = Branch_validation.validate(req.body)
     if (error) return res.status(400).send({ message: error.details[0].message })
+    
+    const existingBranches = await Branch.findOne({where: {learningCenter_id: learningCenter_id, name: rest.name}})
+    if(existingBranches) return res.status(400).send({message: "This learning center already has a Branch with such a name!"})
 
     let center = await Center.findByPk(learningCenter_id)
     if (!center) return res.status(404).send({ message: 'Center not found' })
@@ -125,12 +131,34 @@ route.post('/', async (req, res) => {
       if (fields.length !== field_id.length) {
           return res.status(404).send({ message: 'One or more fields not found' });
       }
+    
+      
+      await center.update({ branch_number: center.branch_number + 1 });
 
-    await center.update({ branch_number: (center.branch_number || 0) + 1 });
-    let newBranch = await Branch.create(req.body)
+      const newBranch = await Branch.create({
+        ...rest,
+        region_id: region_id,
+        learningCenter_id: learningCenter_id
+      })
+
+      await BranchSubject.bulkCreate(
+        subject_id.map((subject_id) => ({
+            BranchId: newBranch.id,
+            SubjectId: subject_id,
+        }))
+    );
+    console.log("Subjects added to BranchSubject:", subject_id);
+    
+    await BranchField.bulkCreate(
+        field_id.map((field_id) => ({
+            BranchId: newBranch.id,
+            FieldId: field_id,
+        }))
+    );  
+      
     res.status(201).send({ newBranch })
-  } catch (err) {
-    console.error("Error in POST /branch:", err);
+    } catch (err) {
+      console.error("Error in POST /branch:", err);
     return res.status(400).json({ message: err.message })
   }
 })
@@ -151,41 +179,11 @@ route.patch('/:id', async (req, res) => {
 /**
  * @swagger
  * /branch/{id}:
- *   delete:
- *     summary: Delete a branch
- *     tags: [Branch 🏢]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Branch ID
- *     responses:
- *       200:
- *         description: Branch deleted successfully
- *       404:
- *         description: Branch not found
- */
-route.delete('/:id', async (req, res) => {
-  try {
-    let one = await Branch.findByPk(req.params.id)
-    if (!one) return res.status(404).send({ message: 'Not found' })
-    
-    await one.destroy()
-    res.send({ message: 'Deleted successfully' })
-  } catch (err) {
-    console.error("Error in DELETE /branch:", err)
-    return res.status(400).json({ message: 'Cannot delete this branch, it may be linked to other records' })
-  }
-})
-
-/**
- * @swagger
- * /branch/{id}:
  *   patch:
  *     summary: Update a branch
- *     tags: [Branch]
+ *     tags: [Branch 🏢]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -217,6 +215,7 @@ route.delete('/:id', async (req, res) => {
  *       404:
  *         description: Branch not found
  */
+
 route.patch("/:id", async(req, res)=>{
   const {id} = req.params
   try {
@@ -236,5 +235,40 @@ route.patch("/:id", async(req, res)=>{
       res.status(400).send({message: error})
   }
 })
+
+/**
+ * @swagger
+ * /branch/{id}:
+ *   delete:
+ *     summary: Delete a branch
+ *     tags: [Branch 🏢]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Branch ID
+ *     responses:
+ *       200:
+ *         description: Branch deleted successfully
+ *       404:
+ *         description: Branch not found
+ */
+route.delete('/:id', async (req, res) => {
+  try {
+    let one = await Branch.findByPk(req.params.id)
+    if (!one) return res.status(404).send({ message: 'Not found' })
+    
+    await one.destroy()
+    res.send({ message: 'Deleted successfully' })
+  } catch (err) {
+    console.error("Error in DELETE /branch:", err)
+    return res.status(400).json({ message: 'Cannot delete this branch, it may be linked to other records' })
+  }
+})
+
 
 module.exports = route
