@@ -202,14 +202,14 @@ app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
             return res.status(404).send({message: "Region not found"})
         }
 
-        for (let i of subject_id) {
-            let subject= await Subject.findByPk(i)
-            if (!subject) return res.status(404).send({ message: `Subject with ${i} id not found` })
+        const subjects = await Subject.findAll({ where: { id: subject_id } });
+        if (subjects.length !== subject_id.length) {
+            return res.status(404).send({ message: "Some subjects not found" });
         }
-        
-        for (let i of field_id) {
-            let field= await Field.findByPk(i)
-            if (!field) return res.status(404).send({ message: `Field with ${i} id not found` })
+
+        const fields = await Field.findAll({ where: { id: field_id } });
+        if (fields.length !== field_id.length) {
+            return res.status(404).send({ message: "Some fields not found" });
         }
 
         const newCenter = await Center.create({
@@ -223,7 +223,7 @@ app.post("/",roleMiddleware(["CEO"]), async(req, res)=>{
         res.send(newCenter)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error})
+        res.status(400).send({message: error.details[0]?.message})
     }
 })
 
@@ -250,10 +250,10 @@ app.get("/",AuthMiddleware(), async(req, res)=>{
             return res.status(203).send({message: "Nothing found"})
         }
 
-        res.send(centers.subject_id)
+        res.send(centers)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error})
+        res.status(400).send({message: error.details[0].message})
     }
 })
 
@@ -267,7 +267,7 @@ app.get("/students", async(req, res)=>{
         
         res.send(student)
     } catch (error) {
-        res.status(400).send(error)
+        res.status(400).send({message: error.details[0].message})
     }
 })
 
@@ -311,7 +311,7 @@ app.get("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
           res.send(center);
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error})
+        res.status(400).send({message: error.details[0].message})
     }
 })
 
@@ -330,7 +330,7 @@ app.patch("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
         res.send(center)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error})
+        res.status(400).send({message: error.details[0].message})
     }
 })
 
@@ -349,7 +349,7 @@ app.delete("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
         res.send(center)
     } catch (error) {
         console.log(error)
-        res.status(400).send({message: error})
+        res.status(400).send({message: error.details[0].message})
     }
 })
 
