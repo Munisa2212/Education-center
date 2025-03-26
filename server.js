@@ -11,6 +11,7 @@ const FieldRoute = require('./routes/field.route')
 const RegistrationsRoute = require('./routes/registration.route')
 const LikeRoute = require('./routes/like.route')
 const RatingRoute = require('./routes/rating.route')
+const SearchRoute = require("./routes/search.route")
 
 const setupSwagger = require("./swagger/swagger")
 require('dotenv').config()
@@ -32,6 +33,7 @@ app.use('/field', FieldRoute)
 app.use('/registration', RegistrationsRoute)
 app.use('/like', LikeRoute)
 app.use('/rating', RatingRoute)
+app.use("/search", SearchRoute)
 
 app.listen(process.env.PORT, () =>
   console.log(`server started on port ${process.env.PORT}`),

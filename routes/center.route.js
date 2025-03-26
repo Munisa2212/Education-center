@@ -260,15 +260,33 @@ app.get("/students", async(req, res)=>{
     }
 })
 
-
-app.get("/ratings/star", async(req, res)=>{
+app.get("/average-star", AuthMiddleware ,async(req, res)=>{
     try {
-        let centers = await Center.findAll({include: [{model: Comment, attributes: ["star"]}]})
-        let data = []
+        let {learningCenter_id} = req.query;
+
+        if(!learningCenter_id){
+            return res.status(400).send({message: "learningCenter_id is required"})
+        }
+        let center_data = await Comment.findAll({where: {learningCenter_id: learningCenter_id}});        
+        let average_star = 0
+        if(!center_data){
+            return res.send({average_star})
+        }
+
+        let count = 0
+        let star = 0
+
+        center_data.forEach(e => {
+            count++
+            star += e.star
+        });
+        let total = star / count;
+        res.send({average_star: total})
     } catch (error) {
-        res.status(400).send(error) 
+        res.status(400).send(error)
     }
 })
+
 app.get("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
     const {id} = req.params
     try {

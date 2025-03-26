@@ -4,262 +4,411 @@ const { roleMiddleware } = require("../middleware/role.middleware");
 const { Op } = require("sequelize");
 const { Comment, User, Center, Branch, Category, Field, Subject, Region } = require("../models/index.module");
 
-// openapi: 3.0.0
-// info:
-//   title: Learning Center API
-//   description: API for managing comments, users, centers, branches, categories, fields, subjects, and regions.
-//   version: 1.0.0
+/**
+ * @swagger
+ * /search/comment 📝:
+ *   get:
+ *     summary: Get comments with filtering, sorting, and pagination
+ *     tags:
+ *       - Search 🔍
+ *     parameters:
+ *       - name: user_id
+ *         in: query
+ *         description: Filter by user ID
+ *         schema:
+ *           type: integer
+ *       - name: comment
+ *         in: query
+ *         description: Filter by comment text
+ *         schema:
+ *           type: string
+ *       - name: star
+ *         in: query
+ *         description: Filter by star rating
+ *         schema:
+ *           type: integer
+ *       - name: learningCenter_id
+ *         in: query
+ *         description: Filter by learning center ID
+ *         schema:
+ *           type: integer
+ *       - name: take
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: sortOrder
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of comments
+ *       400:
+ *         description: Bad request
+ */
 
-// servers:
-//   - url: http://localhost:3000
-//     description: Local server
+/**
+ * @swagger
+ * /search/user 👤:
+ *   get:
+ *     summary: Get users with filtering
+ *     tags:
+ *       - Search 🔍
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by username
+ *         schema:
+ *           type: string
+ *       - name: email
+ *         in: query
+ *         description: Filter by email
+ *         schema:
+ *           type: string
+ *       - name: phone
+ *         in: query
+ *         description: Filter by phone number
+ *         schema:
+ *           type: string
+ *       - name: role
+ *         in: query
+ *         description: Filter by user role
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of users
+ *       400:
+ *         description: Bad request
+ */
 
-// paths:
-//   /comment:
-//     get:
-//       summary: Get comments
-//       description: Retrieve a list of comments with filtering and pagination.
-//       parameters:
-//         - name: user_id
-//           in: query
-//           schema:
-//             type: integer
-//           description: Filter comments by user ID.
-//         - name: comment
-//           in: query
-//           schema:
-//             type: string
-//           description: Search comments by text.
-//         - name: star
-//           in: query
-//           schema:
-//             type: integer
-//           description: Filter comments by star rating.
-//         - name: learningCenter_id
-//           in: query
-//           schema:
-//             type: integer
-//           description: Filter comments by learning center ID.
-//         - name: take
-//           in: query
-//           schema:
-//             type: integer
-//           description: Number of results per page.
-//         - name: page
-//           in: query
-//           schema:
-//             type: integer
-//           description: Page number.
-//         - name: sortBy
-//           in: query
-//           schema:
-//             type: string
-//           description: Field to sort by.
-//         - name: sortOrder
-//           in: query
-//           schema:
-//             type: string
-//             enum: [ASC, DESC]
-//           description: Sort order (ascending or descending).
-//       responses:
-//         "200":
-//           description: A list of comments
-//         "400":
-//           description: Bad request
+/**
+ * @swagger
+ * /search/center 🏬:
+ *   get:
+ *     summary: Get centers with filtering, sorting, and pagination
+ *     tags:
+ *       - Search 🔍
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by center name
+ *         schema:
+ *           type: string
+ *       - name: region_id
+ *         in: query
+ *         description: Filter by region ID
+ *         schema:
+ *           type: integer
+ *       - name: ceo_id
+ *         in: query
+ *         description: Filter by CEO ID
+ *         schema:
+ *           type: integer
+ *       - name: subject_id
+ *         in: query
+ *         description: Filter by subject ID
+ *         schema:
+ *           type: integer
+ *       - name: field_id
+ *         in: query
+ *         description: Filter by field ID
+ *         schema:
+ *           type: integer
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of centers
+ *       203:
+ *         description: No centers found
+ *       400:
+ *         description: Bad request
+ */
 
-//   /user:
-//     get:
-//       summary: Get users
-//       description: Retrieve a list of users with filtering.
-//       security:
-//         - BearerAuth: []
-//       parameters:
-//         - name: name
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter users by name.
-//         - name: email
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter users by email.
-//         - name: phone
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter users by phone number.
-//         - name: role
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter users by role.
-//       responses:
-//         "200":
-//           description: A list of users
-//         "400":
-//           description: Bad request
-//         "403":
-//           description: Forbidden
+/**
+ * @swagger
+ * /search/branch 🏢:
+ *   get:
+ *     summary: Get branches with filtering, sorting, and pagination
+ *     tags:
+ *       - Search 🔍
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by branch name
+ *         schema:
+ *           type: string
+ *       - name: location
+ *         in: query
+ *         description: Filter by branch location
+ *         schema:
+ *           type: string
+ *       - name: center_id
+ *         in: query
+ *         description: Filter by center ID
+ *         schema:
+ *           type: integer
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of branches
+ *       400:
+ *         description: Bad request
+ */
 
-//   /center:
-//     get:
-//       summary: Get centers
-//       description: Retrieve a list of learning centers.
-//       security:
-//         - BearerAuth: []
-//       parameters:
-//         - name: name
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter centers by name.
-//         - name: region_id
-//           in: query
-//           schema:
-//             type: integer
-//           description: Filter centers by region ID.
-//         - name: ceo_id
-//           in: query
-//           schema:
-//             type: integer
-//           description: Filter centers by CEO ID.
-//         - name: subject_id
-//           in: query
-//           schema:
-//             type: integer
-//           description: Filter centers by subject ID.
-//         - name: field_id
-//           in: query
-//           schema:
-//             type: integer
-//           description: Filter centers by field ID.
-//         - name: limit
-//           in: query
-//           schema:
-//             type: integer
-//           description: Number of results per page.
-//         - name: page
-//           in: query
-//           schema:
-//             type: integer
-//           description: Page number.
-//       responses:
-//         "200":
-//           description: A list of centers
-//         "203":
-//           description: No results found
-//         "400":
-//           description: Bad request
-//         "403":
-//           description: Forbidden
+/**
+ * @swagger
+ * /search/category 📂:
+ *   get:
+ *     summary: Get categories with filtering, sorting, and pagination
+ *     tags:
+ *       - Search 🔍
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by category name
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of categories
+ *       404:
+ *         description: Category not found
+ *       400:
+ *         description: Bad request
+ */
 
-//   /branch:
-//     get:
-//       summary: Get branches
-//       description: Retrieve a list of branches.
-//       parameters:
-//         - name: name
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter branches by name.
-//         - name: location
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter branches by location.
-//         - name: center_id
-//           in: query
-//           schema:
-//             type: integer
-//           description: Filter branches by center ID.
-//       responses:
-//         "200":
-//           description: A list of branches
-//         "400":
-//           description: Bad request
+/**
+ * @swagger
+ * /search/field 🏷️:
+ *   get:
+ *     summary: Get fields with filtering, sorting, and pagination
+ *     tags:
+ *       - Search 🔍
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by field name
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of fields
+ *       404:
+ *         description: Field not found
+ *       400:
+ *         description: Bad request
+ */
 
-//   /category:
-//     get:
-//       summary: Get categories
-//       description: Retrieve a list of categories.
-//       parameters:
-//         - name: name
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter categories by name.
-//       responses:
-//         "200":
-//           description: A list of categories
-//         "404":
-//           description: Category not found
-//         "400":
-//           description: Bad request
+/**
+ * @swagger
+ * /search/subject 📚:
+ *   get:
+ *     summary: Get subjects with filtering, sorting, and pagination
+ *     tags:
+ *       - Search 🔍
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by subject name
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of subjects
+ *       404:
+ *         description: Subject not found
+ *       400:
+ *         description: Bad request
+ */
 
-//   /field:
-//     get:
-//       summary: Get fields
-//       description: Retrieve a list of fields.
-//       parameters:
-//         - name: name
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter fields by name.
-//       responses:
-//         "200":
-//           description: A list of fields
-//         "404":
-//           description: Field not found
-//         "400":
-//           description: Bad request
+/**
+ * @swagger
+ * /search/region 🗺:
+ *   get:
+ *     summary: Get regions with filtering, sorting, and pagination
+ *     tags:
+ *       - Search 🔍
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by region name
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of regions
+ *       404:
+ *         description: Region not found
+ *       400:
+ *         description: Bad request
+ */
 
-//   /subject:
-//     get:
-//       summary: Get subjects
-//       description: Retrieve a list of subjects.
-//       parameters:
-//         - name: name
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter subjects by name.
-//       responses:
-//         "200":
-//           description: A list of subjects
-//         "404":
-//           description: Subject not found
-//         "400":
-//           description: Bad request
-
-//   /region:
-//     get:
-//       summary: Get regions
-//       description: Retrieve a list of regions.
-//       parameters:
-//         - name: name
-//           in: query
-//           schema:
-//             type: string
-//           description: Filter regions by name.
-//       responses:
-//         "200":
-//           description: A list of regions
-//         "404":
-//           description: Region not found
-//         "400":
-//           description: Bad request
-
-// components:
-//   securitySchemes:
-//     BearerAuth:
-//       type: http
-//       scheme: bearer
-//       bearerFormat: JWT
-
-    
 router.get("/comment", async (req, res) => {
     try {
         let { user_id, comment, star, learningCenter_id, take, page, sortBy, sortOrder } = req.query;

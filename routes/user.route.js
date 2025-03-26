@@ -1,5 +1,5 @@
 const {User} = require("../models/index.module")
-const {UserValidation, LoginValidation} = require("../validation/user.validation")
+const {UserValidation, LoginValidation, AdminValidation} = require("../validation/user.validation")
 const router = require("express").Router()
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
@@ -184,6 +184,73 @@ totp.options = { step: 300, digits: 5 };
  *       404:
  *         description: User not found
  *
+ * @swagger
+ * /user/{id}:
+ *   patch:
+ *     summary: Update user details
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the user to update
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Updated name of the user
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Updated email address of the user
+ *               phone:
+ *                 type: string
+ *                 description: Updated phone number of the user
+ *               role:
+ *                 type: string
+ *                 enum: [USER, ADMIN, SUPER-ADMIN, CEO]
+ *                 description: Updated role of the user
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: ID of the updated user
+ *                 name:
+ *                   type: string
+ *                   description: Updated name of the user
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   description: Updated email address of the user
+ *                 phone:
+ *                   type: string
+ *                   description: Updated phone number of the user
+ *                 role:
+ *                   type: string
+ *                   enum: [USER, ADMIN, SUPER-ADMIN, CEO]
+ *                   description: Updated role of the user
+ *       403:
+ *         description: Unauthorized to update this user
+ *       404:
+ *         description: User not found
+ *       400:
+ *         description: Bad request or validation error
  *   delete:
  *     summary: Delete a user (self or admin)
  *     security:
@@ -279,11 +346,11 @@ totp.options = { step: 300, digits: 5 };
 
 /**
  * @swagger
- * /user/request-reset:
+ * /user/request-reset 📩:
  *   post:
  *     summary: Request a password reset OTP
  *     tags:
- *       - Password Reset
+ *       - Password Reset 🔐
  *     requestBody:
  *       required: true
  *       content:
@@ -316,11 +383,11 @@ totp.options = { step: 300, digits: 5 };
  *       404:
  *         description: No account found with the provided email address
  *
- * /user/reset-password:
+ * /user/reset-password 🔑:
  *   post:
  *     summary: Reset the user's password using an OTP
  *     tags:
- *       - Password Reset
+ *       - Password Reset 🔐
  *     requestBody:
  *       required: true
  *       content:
@@ -351,11 +418,19 @@ totp.options = { step: 300, digits: 5 };
  *       404:
  *         description: No account found with the provided email address
  */
+
 router.post("/register", async (req, res) => {
     try {
-        let { error } = UserValidation.validate(req.body);
-        if (error) {
-            return res.status(400).send(error.details[0].message);
+        if(req.body.role == "ADMIN" || req.body.role == "CEO"){
+            let { error } = AdminValidation.validate(req.body);
+            if (error) {
+                return res.status(400).send(error.details[0].message);
+            }
+        }else{
+            let { error } = UserValidation.validate(req.body);
+            if (error) {
+                return res.status(400).send(error.details[0].message);
+            }
         }
         const { name, password, email, phone, ...rest } = req.body;
         let user = await User.findOne({ where: { email: email } });
@@ -506,13 +581,29 @@ router.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
     }
 });
 
+router.patch("/:id", AuthMiddleware(), async(req, res)=>{
+    try {
+        let user = await User.findByPk(req.params.id)
+        if (!user) return res.status(404).send({ message: "User not found" });
+
+        if(req.user.role !== "ADMIN" && req.user.id != user.id){
+            return res.status(403).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account. Only ADMIN can patch other's account` });
+        }
+
+        let updated = await user.update(req.body)
+        res.send(updated)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
 router.delete("/:id", AuthMiddleware(), async (req, res) => {
     try {
         let user = await User.findByPk(req.params.id);
         if (!user) return res.status(404).send({ message: "User not found" });
 
         if(req.user.role !== "ADMIN" && req.user.id != user.id){
-          return res.status(403).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account` });
+          return res.status(403).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account. Only ADMIN can delete other's account` });
         }
         let deleted = await user.destroy();
         res.send({deleted_data:  deleted, message: "User deleted successfully" });
