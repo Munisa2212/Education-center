@@ -35,14 +35,12 @@ const Center = db.define(
             type: DataTypes.STRING
         },
         subject_id: {
-            type: DataTypes.JSON,
+            type: DataTypes.INTEGER,
             allowNull: false,
-            defaultValue: []
         },
         field_id: {
-            type: DataTypes.JSON,
+            type: DataTypes.INTEGER,
             allowNull: false,
-            defaultValue: []
         }
     }
 )

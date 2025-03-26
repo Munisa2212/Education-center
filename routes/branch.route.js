@@ -61,7 +61,7 @@ route.get("/:id", async (req, res) => {
  *               - phone
  *               - location
  *               - region_id
- *               - learningCentre_id
+ *               - learningCenter_id
  *               - field_id
  *               - subject_id
  *             properties:
@@ -80,7 +80,7 @@ route.get("/:id", async (req, res) => {
  *               region_id:
  *                 type: integer
  *                 example: 2
- *               learningCentre_id:
+ *               learningCenter_id:
  *                 type: integer
  *                 example: 1
  *               field_id:
@@ -116,15 +116,15 @@ route.post('/', async (req, res) => {
     let region = await Region.findByPk(region_id)
     if (!region) return res.status(404).send({ message: 'Region not found' })
 
-    for (let id of subject_id) {
-      let subject = await Subject.findByPk(id)
-      if (!subject) return res.status(404).send({ message: `Subject with id ${id} not found` })
-    }
-
-    for (let id of field_id) {
-      let field = await Field.findByPk(id)
-      if (!field) return res.status(404).send({ message: `Field with id ${id} not found` })
-    }
+      const subjects = await Subject.findAll({ where: { id: subject_id } });
+      if (subjects.length !== subject_id.length) {
+          return res.status(404).send({ message: 'One or more subjects not found' });
+      }
+      
+      const fields = await Field.findAll({ where: { id: field_id } });
+      if (fields.length !== field_id.length) {
+          return res.status(404).send({ message: 'One or more fields not found' });
+      }
 
     await center.update({ branch_number: (center.branch_number || 0) + 1 });
     let newBranch = await Branch.create(req.body)

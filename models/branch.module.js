@@ -32,14 +32,12 @@ const Branch = db.define('Branch', {
     allowNull: false,
   },
   field_id: {
-    type: DataTypes.JSON,
+    type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: []
   },
   subject_id: {
-    type: DataTypes.JSON,
+    type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: []
   },
 })
 
