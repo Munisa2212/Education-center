@@ -175,8 +175,8 @@ app.post("/",AuthMiddleware(), async(req, res)=>{
         const newResource = await Resource.create({...data, user_id: id})
         res.send(newResource)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error.details[0].message || error})
     }
 })
 
@@ -202,8 +202,8 @@ app.get("/",AuthMiddleware(), async(req, res)=>{
         }
         res.send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error.details[0].message || error})
     }
 })
 
@@ -223,7 +223,7 @@ app.get("/:id", roleMiddleware(["ADMIN"]), async(req, res)=>{
         res.send(data)
     } catch (error) {
         console.log({message: error})
-        res.status(400).send({message: error.details[0].message})
+        res.status(400).send({message: error.details[0].message || error})
     }
 })
 
@@ -242,8 +242,8 @@ app.delete("/:id", roleMiddleware(["ADMIN"]), async(req, res)=>{
         await data.destroy()
         res.send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error.details[0].message || error})
     }
 })
 
@@ -262,8 +262,8 @@ app.patch("/:id", roleMiddleware(["SUPER-ADMIN", "ADMIN"]),  async(req, res)=>{
         await data.update(req.body)
         res.send(data)
     } catch (error) {
-        console.log({message: error.details[0].message})
-        res.status(400).send({message: error.details[0].message})
+        console.log({message: error})
+        res.status(400).send({message: error.details[0].message || error})
     }
 })
 

@@ -169,7 +169,9 @@ const { AuthMiddleware } = require("../middleware/auth.middleware")
 app.post("/", roleMiddleware(["ADMIN"]) , async(req, res)=>{
     try {
         let { error } = CategoryValidation.validate(req.body)
-        if (error) return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" })
+        if (error){
+            return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" })
+        }
 
         const newCategory = await Category.create(req.body)
         res.send(newCategory)
@@ -195,7 +197,7 @@ app.get("/", AuthMiddleware() , async(req, res)=>{
         });
 
         if(!data){
-            res.status(404).send("Category not found")
+            return res.status(404).send("Category not found")
         }
         res.send(data)
     } catch (error) {
@@ -215,7 +217,7 @@ app.get("/:id", roleMiddleware(["ADMIN"]) , async(req, res)=>{
             include: [{model: Resource, attributes: ["name", "description"]}]
         })
         if(!data){
-            res.status(404).send("Category not found")
+            return res.status(404).send("Category not found")
         }
         res.send(data)
     } catch (error) {
@@ -233,7 +235,7 @@ app.delete("/:id", roleMiddleware(["ADMIN"]) , async(req, res)=>{
         
         const data = await Category.findByPk(id)
         if(!data){
-            res.status(404).send("Category not found")
+            return res.status(404).send("Category not found")
         }
         await data.destroy()
         res.status(200).send(data)
@@ -252,7 +254,7 @@ app.patch("/:id", roleMiddleware(["ADMIN", "SUPER-ADMIN"]) , async(req, res)=>{
 
         const data = await Category.findByPk(id)
         if(!data){
-            res.status(404).send("Category not found")
+            return res.status(404).send("Category not found")
         }
         
         await data.update(req.body)
