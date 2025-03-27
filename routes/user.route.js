@@ -358,81 +358,6 @@ totp.options = { step: 300, digits: 5 }
  *           description: User password
  */
 
-/**
- * @swagger
- * /user/request-reset:
- *   post:
- *     summary: Request a password reset OTP
- *     tags:
- *       - Password Reset 🔐
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 description: The email address of the user requesting the password reset
- *     responses:
- *       200:
- *         description: OTP sent successfully to the user's email
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Success message
- *                 otp:
- *                   type: string
- *                   description: The OTP sent to the user's email
- *       400:
- *         description: Email is required or other validation error
- *       404:
- *         description: No account found with the provided email address
- *
- * /user/reset-password:
- *   post:
- *     summary: Reset the user's password using an OTP
- *     tags:
- *       - Password Reset 🔐
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - newPassword
- *               - otp
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 description: The email address of the user resetting the password
- *               newPassword:
- *                 type: string
- *                 format: password
- *                 description: The new password for the user
- *               otp:
- *                 type: string
- *                 description: The OTP sent to the user's email for verification
- *     responses:
- *       200:
- *         description: Password reset successfully
- *       400:
- *         description: Missing required fields, invalid OTP, or other validation error
- *       404:
- *         description: No account found with the provided email address
- */
-
 router.post('/register', async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = '/register'
@@ -484,6 +409,7 @@ router.post('/register', async (req, res) => {
     })
 
     let otp = totp.generate(email + 'email')
+    console.log(otp)
     sendLog(
       `✅ Foydalanuvchi yaratildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User: ${JSON.stringify(
         newUser,
@@ -707,119 +633,6 @@ router.post('/refresh-token', async (req, res) => {
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
     res.status(400).send({ message: 'Wrong refresh_token' })
-  }
-})
-
-router.post('/request-reset%20%F0%9F%93%A9', async (req, res) => {
-  const user = req.user ? req.user.username : 'Anonim'
-  const routePath = '/request-reset'
-
-  try {
-    sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
-        req.body,
-      )}`,
-    )
-
-    let { email } = req.body
-    if (!email) {
-      sendLog(`⚠️ Email yoq | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`)
-      return res.status(400).send({ message: 'Email is required' })
-    }
-
-    let user = await User.findOne({ where: { email: email } })
-    if (!user) {
-      sendLog(
-        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-      )
-      return res
-        .status(404)
-        .send({
-          message: 'No account found with the Email address you provided!',
-        })
-    }
-
-    let otp = totp.generate(email + 'reset_password')
-    sendEmail(email, otp)
-
-    sendLog(
-      `✅ OTP yuborildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email} | OTP: ${otp}`,
-    )
-
-    res.send({
-      message: `${user.name}, an OTP has been sent to your email (${user.email}). Please check and confirm it!`,
-      otp: otp,
-    })
-  } catch (error) {
-    sendLog(
-      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
-    )
-    res.status(400).send({error: error.message})
-  }
-})
-
-router.post('/reset-password', async (req, res) => {
-  const user = req.user ? req.user.username : 'Anonim'
-  const routePath = '/reset-password'
-
-  try {
-    sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
-        req.body,
-      )}`,
-    )
-
-    let { email, newPassword, otp } = req.body
-    if (!email || !newPassword || !otp) {
-      sendLog(
-        `⚠️ Zarur ma'lumotlar yetishmayapti | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
-      )
-      return res
-        .status(400)
-        .send({
-          message:
-            'email, newPassword, otp are required. Provide every detail!',
-        })
-    }
-
-    let user = await User.findOne({ where: { email } })
-    if (!user) {
-      sendLog(
-        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-      )
-      return res
-        .status(400)
-        .send({
-          message: 'No account found with the Email address you provided!',
-        })
-    }
-
-    let decode_otp = totp.verify({
-      token: otp,
-      secret: email + 'reset_password',
-    })
-    if (!decode_otp) {
-      sendLog(
-        `⚠️ OTP notogri | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 OTP: ${otp}`,
-      )
-      return res.status(400).send({ message: 'OTP is not valid' })
-    }
-
-    let hash = bcrypt.hashSync(newPassword, 10)
-    await user.update({ password: hash })
-
-    sendLog(
-      `✅ Yangi parol muvaffaqiyatli ornatildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-    )
-
-    res.send({
-      message: `New password set successfully🎉. Your newPassword🔑 - ${newPassword}`,
-    })
-  } catch (error) {
-    sendLog(
-      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
-    )
-    res.status(400).send({error: error.message})
   }
 })
 

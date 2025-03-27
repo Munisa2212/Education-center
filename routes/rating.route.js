@@ -2,7 +2,6 @@ const { AuthMiddleware } = require("../middleware/auth.middleware");
 const {Like, Comment, Center} = require("../models/index.module");
 const { description } = require("../validation/center.validation");
 const app = require("express").Router()
-
 /**
  * @swagger
  * /rating/star:
@@ -10,6 +9,12 @@ const app = require("express").Router()
  *     summary: Get centers with their star ratings
  *     tags:
  *       - Learning Center Ratings 🏆
+ *     parameters:
+ *       - in: query
+ *         name: top
+ *         schema:
+ *           type: integer
+ *         description: Number of top centers to retrieve (default is all centers).
  *     responses:
  *       200:
  *         description: List of centers with their star ratings
@@ -20,23 +25,22 @@ const app = require("express").Router()
  *               items:
  *                 type: object
  *                 properties:
- *                   name:
+ *                   LearnigCenterName:
  *                     type: string
- *                     description: Name of the center
- *                   ceo_id:
- *                     type: integer
- *                     description: ID of the CEO
- *                   subject_id:
- *                     type: integer
- *                     description: ID of the subject
- *                   field_id:
- *                     type: integer
- *                     description: ID of the field
+ *                     description: Name of the learning center.
+ *                   phone:
+ *                     type: string
+ *                     description: Phone number of the learning center.
+ *                   description:
+ *                     type: string
+ *                     description: Description of the learning center.
  *                   star:
- *                     type: integer
- *                     description: Star rating of the center
+ *                     type: number
+ *                     description: Average star rating of the learning center.
  *       400:
  *         description: Bad request
+ *       404:
+ *         description: No centers found
  */
 
 /**

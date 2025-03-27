@@ -13,20 +13,13 @@ const LikeRoute = require('./routes/like.route')
 const RatingRoute = require('./routes/rating.route')
 const SearchRoute = require("./routes/search.route")
 const CommentRoute = require("./routes/comment.route")
+const PasswordRoute = require("./routes/passwordReset.route")
+
 const sendLog = require("./logger")
 
 const setupSwagger = require("./swagger/swagger")
 require('dotenv').config()
 const app = express()
-
-app.get('/alert', (req, res) => {
-  const message = "Hello, this is an alert message!";
-  res.send(`
-      <script>
-          alert("${message}");
-      </script>
-  `);
-});
 
 app.use(express.json())
 const cors = require("cors");
@@ -49,6 +42,7 @@ app.use('/like', LikeRoute)
 app.use('/rating', RatingRoute)
 app.use("/search", SearchRoute)
 app.use("/comment", CommentRoute)
+app.use("/password", PasswordRoute)
 
 app.listen(process.env.PORT, () =>
   console.log(`server started on port ${process.env.PORT}`),
