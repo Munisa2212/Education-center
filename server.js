@@ -15,6 +15,8 @@ const SearchRoute = require("./routes/search.route")
 const CommentRoute = require("./routes/comment.route")
 const PasswordRoute = require("./routes/passwordReset.route")
 const AdminRegister = require("./routes/add.route")
+const path = require("path")
+const uploadRoute = require("./routes/upload.route")
 
 const sendLog = require("./logger")
 
@@ -30,7 +32,8 @@ connectDB()
 
 setupSwagger(app)
 
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/upload", uploadRoute);
 app.use("/admin",AdminRegister)
 app.use('/user', UserRoute)
 app.use('/branch', BranchRoute)
