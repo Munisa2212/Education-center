@@ -27,11 +27,7 @@ const route = express.Router()
  *       400:
  *         description: Bad request
  */
-<<<<<<< HEAD
-route.get("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
-=======
 route.get("/", async (req, res) => {
->>>>>>> ac9b4d8201948f08a543945e0638fab7939170ba
   try {
       const fields = await Field.findAll();
       sendLog("✅ GET sorovi muvaffaqiyatli bajarildi: fieldlar yuborildi.");
