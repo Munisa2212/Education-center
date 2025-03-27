@@ -33,7 +33,8 @@ const User = db.define('User', {
     },
     role: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        defaultValue: "USER"
     },
     region_id: {
         type: DataTypes.INTEGER,
