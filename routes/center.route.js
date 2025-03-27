@@ -155,6 +155,8 @@ const sendLog = require('../logger')
  *     summary: Get students registered in a center
  *     tags:
  *       - LearningCenters 🎓
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: learningCenter_id
  *         in: query

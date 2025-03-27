@@ -41,6 +41,8 @@ route.get('/', async (req, res) => {
  *   post:
  *     summary: Yangi region qo‘shish
  *     tags: [Region 📍]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

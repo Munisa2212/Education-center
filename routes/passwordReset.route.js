@@ -112,8 +112,7 @@ router.post('/request-reset' ,async (req, res) => {
       )
   
       res.send({
-        message: `${user.name}, an OTP has been sent to your email (${user.email}). Please check and confirm it!`,
-        otp: otp,
+        message: `${user.name}, an OTP has been sent to your email (${user.email}). Please check and confirm it!`
       })
     } catch (error) {
       sendLog(
