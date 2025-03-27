@@ -167,24 +167,36 @@ const app = require("express").Router()
  */
 
 
-app.post("/",AuthMiddleware(), async(req, res)=>{
-    const id = req.user.id
+app.post("/", AuthMiddleware(), async (req, res) => {
+    const userId = req.user.id;
     try {
-        let { error } = ResourceValidation.validate(req.body)
-        if (error) return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" })
-        
-        const {...data} = req.body
-        const newResource = await Resource.create({...data, user_id: id})
-        res.send(newResource)
+      sendLog(`📥 Sorov qabul qilindi | ➕ POST | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId} | 📂 Sorov malumoti: ${JSON.stringify(req.body)}`);
+  
+      let { error } = ResourceValidation.validate(req.body);
+      if (error) {
+        sendLog(`⚠️ Validatsiya xatosi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId} | 📝 Xabar: ${error.details?.[0]?.message}`);
+        return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" });
+      }
+  
+      const { ...data } = req.body;
+      const newResource = await Resource.create({ ...data, user_id: userId });
+  
+      sendLog(`✅ Yangi resurs yaratildi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId} | 🆕 Resource ID: ${newResource.id}`);
+  
+      res.send(newResource);
     } catch (error) {
-        console.log({message: error})
-        res.status(400).send({message: error.details[0].message || error})
+      sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId} | 🛠️ Stack: ${error.stack}`);
+      res.status(400).send({ message: error.details?.[0]?.message || error.message });
     }
-})
+  });
+  
 
-app.get("/",AuthMiddleware(), async(req, res)=>{
-    const {name, user_id, category_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query  
+  app.get("/", AuthMiddleware(), async (req, res) => {
+    const { name, user_id, category_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
+
     try {
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 📝 Filter: ${JSON.stringify(req.query)}`);
+
         const where = {};
 
         if (name) where.name = { [Op.like]: `%${name}%` };
@@ -196,77 +208,112 @@ app.get("/",AuthMiddleware(), async(req, res)=>{
             limit: parseInt(limit),
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
-            include: [{model: Category, attributes: ["name"]}]
+            include: [{ model: Category, attributes: ["name"] }]
         });
 
-        if(!data){
-            res.status(404).send("Resource not found")
+        if (!data || data.length === 0) {
+            sendLog(`⚠️ Resurs topilmadi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id}`);
+            return res.status(404).send({ message: "Resource not found" });
         }
-        res.send(data)
-    } catch (error) {
-        console.log({message: error})
-        res.status(400).send({message: error.details[0].message || error})
-    }
-})
 
-app.get("/:id", roleMiddleware(["ADMIN"]), async(req, res)=>{
-    const {id} = req.params
+        sendLog(`✅ Sorov bajarildi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🔢 Topilgan resurslar soni: ${data.length}`);
+
+        res.send(data);
+    } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🛠️ Stack: ${error.stack}`);
+        res.status(400).send({ message: error.details?.[0]?.message || error.message });
+    }
+});
+
+
+app.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
+    const { id } = req.params;
+
     try {
-        if(!id){
-            return res.status(400).send("Wrong id")
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 Resource ID: ${id}`);
+
+        if (!id) {
+            sendLog(`⚠️ Notogri ID | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id}`);
+            return res.status(400).send({ message: "Wrong ID" });
         }
 
         const data = await Resource.findByPk(id, {
-            include: [{model: Category, attributes: ["name"]}]
-        })
-        if(!data){
-            res.status(404).send("Resource not found")
-        }
-        res.send(data)
-    } catch (error) {
-        console.log({message: error})
-        res.status(400).send({message: error.details[0].message || error})
-    }
-})
+            include: [{ model: Category, attributes: ["name"] }]
+        });
 
-app.delete("/:id", roleMiddleware(["ADMIN"]), async(req, res)=>{
-    const {id} = req.params
+        if (!data) {
+            sendLog(`❌ Resurs topilmadi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 ID: ${id}`);
+            return res.status(404).send({ message: "Resource not found" });
+        }
+
+        sendLog(`✅ Resurs topildi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 ID: ${id} | 📂 Resource: ${JSON.stringify(data)}`);
+
+        res.send(data);
+    } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🛠️ Stack: ${error.stack}`);
+        res.status(400).send({ message: error.details?.[0]?.message || error.message });
+    }
+});
+
+app.delete("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
+    const { id } = req.params;
+
     try {
-        if(!id){
-            return res.status(400).send("Wrong id")
+        sendLog(`📥 Sorov qabul qilindi | 🗑 DELETE | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 Resource ID: ${id}`);
+
+        if (!id) {
+            sendLog(`⚠️ Notogri ID | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id}`);
+            return res.status(400).send({ message: "Wrong ID" });
         }
 
-        const data = await Resource.findByPk(id)
-        if(!data){
-            return res.status(404).send("Resource not found")
+        const data = await Resource.findByPk(id);
+
+        if (!data) {
+            sendLog(`❌ Resurs topilmadi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 ID: ${id}`);
+            return res.status(404).send({ message: "Resource not found" });
         }
 
-        await data.destroy()
-        res.send(data)
+        await data.destroy();
+
+        sendLog(`✅ Resurs ochirildi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 ID: ${id} | 📂 Deleted Data: ${JSON.stringify(data)}`);
+
+        res.send({ message: "Resource deleted successfully", deleted_data: data });
+
     } catch (error) {
-        console.log({message: error})
-        res.status(400).send({message: error.details[0].message || error})
+        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🛠️ Stack: ${error.stack}`);
+        res.status(400).send({ message: error.details?.[0]?.message || error.message });
     }
-})
+});
 
-app.patch("/:id", roleMiddleware(["SUPER-ADMIN", "ADMIN"]),  async(req, res)=>{
-    const {id} = req.params
+app.patch("/:id", roleMiddleware(["SUPER-ADMIN", "ADMIN"]), async (req, res) => {
+    const { id } = req.params;
+
     try {
-        if(!id){
-            return res.status(400).send("Wrong id")
+        sendLog(`📥 So‘rov qabul qilindi | ✏ PATCH | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 Resource ID: ${id} | 🔄 Update Data: ${JSON.stringify(req.body)}`);
+
+        if (!id) {
+            sendLog(`⚠️ Notogri ID | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id}`);
+            return res.status(400).send({ message: "Wrong ID" });
         }
 
-        const data = await Resource.findByPk(id)
-        if(!data){
-            return res.status(404).send("Resource not found")
+        const data = await Resource.findByPk(id);
+
+        if (!data) {
+            sendLog(`❌ Resurs topilmadi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 ID: ${id}`);
+            return res.status(404).send({ message: "Resource not found" });
         }
-        
-        await data.update(req.body)
-        res.send(data)
+
+        await data.update(req.body);
+
+        sendLog(`✅ Resurs yangilandi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 ID: ${id} | 🔄 Yangilangan Data: ${JSON.stringify(data)}`);
+
+        res.send({ message: "Resource updated successfully", updated_data: data });
+
     } catch (error) {
-        console.log({message: error})
-        res.status(400).send({message: error.details[0].message || error})
+        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🛠 Stack: ${error.stack}`);
+        res.status(400).send({ message: error.details?.[0]?.message || error.message });
     }
-})
+});
+
 
 module.exports = app

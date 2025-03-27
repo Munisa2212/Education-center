@@ -414,6 +414,8 @@ router.get("/comment", async (req, res) => {
         let { user_id, comment, star, learningCenter_id, take, page, sortBy, sortOrder } = req.query;
         const where = {};
 
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET /comment | 📌 Query Params: ${JSON.stringify(req.query)}`);
+
         if (user_id) where.user_id = user_id;
         if (comment) where.comment = { [Op.like]: `%${comment}%` };
         if (star) where.star = star;
@@ -422,6 +424,8 @@ router.get("/comment", async (req, res) => {
         const limit = parseInt(take) || 10;
         const offset = (parseInt(page) - 1) * limit;
         const order = [[sortBy || "id", (sortOrder || "ASC").toUpperCase()]];
+
+        sendLog(`🔄 Filtirlangan ma'lumotlar | 📌 Filter: ${JSON.stringify(where)} | 📊 Limit: ${limit} | 📍 Page: ${page} | 📌 Sort: ${JSON.stringify(order)}`);
 
         const comments = await Comment.findAll({
             where,
@@ -434,8 +438,16 @@ router.get("/comment", async (req, res) => {
             ],
         });
 
+        if (!comments.length) {
+            sendLog(`⚠️ Hech qanday izoh topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
+            return res.status(404).send({ message: "Comments not found" });
+        }
+
+        sendLog(`✅ ${comments.length} ta izoh topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(comments);
+
     } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /comment | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
 });
@@ -445,14 +457,27 @@ router.get("/user", roleMiddleware(["ADMIN"]), async (req, res) => {
         let { name, email, phone, role } = req.query;
         const where = {};
 
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET /user | 📌 Query Params: ${JSON.stringify(req.query)}`);
+
         if (name) where.username = { [Op.like]: `%${name}%` };
         if (email) where.email = { [Op.like]: `%${email}%` };
         if (phone) where.phone = { [Op.like]: `%${phone}%` };
         if (role) where.role = role;
 
+        sendLog(`🔄 Filtirlangan ma'lumotlar | 📌 Filter: ${JSON.stringify(where)}`);
+
         const users = await User.findAll({ where });
+
+        if (!users.length) {
+            sendLog(`⚠️ Hech qanday user topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
+            return res.status(404).send({ message: "Users not found" });
+        }
+
+        sendLog(`✅ ${users.length} ta user topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(users);
+
     } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /user | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
 });
@@ -462,11 +487,15 @@ router.get("/center", roleMiddleware(["ADMIN"]), async (req, res) => {
         let { name, region_id, ceo_id, subject_id, field_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
         const where = {};
 
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET /center | 📌 Query Params: ${JSON.stringify(req.query)}`);
+
         if (name) where.name = { [Op.like]: `%${name}%` };
         if (region_id) where.region_id = region_id;
         if (ceo_id) where.ceo_id = ceo_id;
         if (subject_id) where.subject_id = subject_id;
         if (field_id) where.field_id = field_id;
+
+        sendLog(`🔄 Filtirlangan ma'lumotlar | 📌 Filter: ${JSON.stringify(where)}`);
 
         const centers = await Center.findAll({
             where,
@@ -482,11 +511,15 @@ router.get("/center", roleMiddleware(["ADMIN"]), async (req, res) => {
         });
 
         if (!centers.length) {
+            sendLog(`⚠️ Hech qanday oquv markazi topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
             return res.status(203).send({ message: "Nothing found" });
         }
 
+        sendLog(`✅ ${centers.length} ta oquv markazi topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(centers);
+
     } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /center | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
 });
@@ -496,9 +529,13 @@ router.get("/branch", async (req, res) => {
         let { name, location, center_id, limit = 10, page = 1, sortBy = "id", order = "ASC" } = req.query;
         const where = {};
 
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET /branch | 📌 Query Params: ${JSON.stringify(req.query)}`);
+
         if (name) where.name = { [Op.like]: `%${name}%` };
         if (location) where.location = { [Op.like]: `%${location}%` };
         if (center_id) where.center_id = center_id;
+
+        sendLog(`🔄 Filtrlash qollandi | 📌 Filter: ${JSON.stringify(where)}`);
 
         const branches = await Branch.findAll({
             where,
@@ -507,18 +544,30 @@ router.get("/branch", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
+        if (!branches.length) {
+            sendLog(`⚠️ Hech qanday filial topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
+            return res.status(203).send({ message: "Nothing found" });
+        }
+
+        sendLog(`✅ ${branches.length} ta filial topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(branches);
+
     } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /branch | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
-})
+});
 
 router.get("/category", async (req, res) => {
     try {
         let { name, limit = 10, page = 1, sortBy = "id", order = "ASC" } = req.query;
         const where = {};
 
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET /category | 📌 Query Params: ${JSON.stringify(req.query)}`);
+
         if (name) where.name = { [Op.like]: `%${name}%` };
+
+        sendLog(`🔄 Filtrlash qollandi | 📌 Filter: ${JSON.stringify(where)}`);
 
         const categories = await Category.findAll({
             where,
@@ -529,21 +578,30 @@ router.get("/category", async (req, res) => {
         });
 
         if (!categories.length) {
+            sendLog(`⚠️ Kategoriya topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
             return res.status(404).send({ message: "Category not found" });
         }
 
+        sendLog(`✅ ${categories.length} ta kategoriya topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(categories);
+
     } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /category | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
-})
+});
+
 
 router.get("/field", async (req, res) => {
     try {
         let { name, limit = 10, page = 1, sortBy = "id", order = "ASC" } = req.query;
         const where = {};
 
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET /field | 📌 Query Params: ${JSON.stringify(req.query)}`);
+
         if (name) where.name = { [Op.like]: `%${name}%` };
+
+        sendLog(`🔄 Filtrlash qollandi | 📌 Filter: ${JSON.stringify(where)}`);
 
         const fields = await Field.findAll({
             where,
@@ -553,21 +611,30 @@ router.get("/field", async (req, res) => {
         });
 
         if (!fields.length) {
+            sendLog(`⚠️ Maydon topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
             return res.status(404).send({ message: "Field not found" });
         }
 
+        sendLog(`✅ ${fields.length} ta maydon topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(fields);
+
     } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /field | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
-})
+});
+
 
 router.get("/subject", async (req, res) => {
     try {
         let { name, limit = 10, page = 1, sortBy = "id", order = "ASC" } = req.query;
         const where = {};
 
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET /subject | 📌 Query Params: ${JSON.stringify(req.query)}`);
+
         if (name) where.name = { [Op.like]: `%${name}%` };
+
+        sendLog(`🔄 Filtrlash qollandi | 📌 Filter: ${JSON.stringify(where)}`);
 
         const subjects = await Subject.findAll({
             where,
@@ -577,21 +644,30 @@ router.get("/subject", async (req, res) => {
         });
 
         if (!subjects.length) {
+            sendLog(`⚠️ Fan topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
             return res.status(404).send({ message: "Subject not found" });
         }
 
+        sendLog(`✅ ${subjects.length} ta fan topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(subjects);
+
     } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /subject | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
-})
+});
+
 
 router.get("/region", async (req, res) => {
     try {
         let { name, limit = 10, page = 1, sortBy = "id", order = "ASC" } = req.query;
         const where = {};
 
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET /region | 📌 Query Params: ${JSON.stringify(req.query)}`);
+
         if (name) where.name = { [Op.like]: `%${name}%` };
+
+        sendLog(`🔄 Filtrlash qollandi | 📌 Filter: ${JSON.stringify(where)}`);
 
         const regions = await Region.findAll({
             where,
@@ -601,13 +677,18 @@ router.get("/region", async (req, res) => {
         });
 
         if (!regions.length) {
+            sendLog(`⚠️ Hudud topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
             return res.status(404).send({ message: "Region not found" });
         }
 
+        sendLog(`✅ ${regions.length} ta hudud topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(regions);
+
     } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /region | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
-})
+});
+
 
 module.exports = router;

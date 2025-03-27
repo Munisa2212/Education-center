@@ -1,17 +1,21 @@
-const {User, Region} = require("../models/index.module")
-const {UserValidation, LoginValidation, AdminValidation} = require("../validation/user.validation")
-const router = require("express").Router()
-const bcrypt = require("bcrypt")
-const jwt = require("jsonwebtoken")
-const {AuthMiddleware} = require("../middleware/auth.middleware")
-const {roleMiddleware} = require("../middleware/role.middleware")
-const { totp, authenticator } = require("otplib");
-const { sendEmail } = require("../config/transporter");
-const { Op } = require("sequelize");
-const DeviceDetector = require("device-detector-js");
+const { User, Region } = require('../models/index.module')
+const {
+  UserValidation,
+  LoginValidation,
+  AdminValidation,
+} = require('../validation/user.validation')
+const router = require('express').Router()
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const { AuthMiddleware } = require('../middleware/auth.middleware')
+const { roleMiddleware } = require('../middleware/role.middleware')
+const { totp, authenticator } = require('otplib')
+const { sendEmail } = require('../config/transporter')
+const { Op } = require('sequelize')
+const DeviceDetector = require('device-detector-js')
 const deviceDetector = new DeviceDetector()
 
-totp.options = { step: 300, digits: 5 };
+totp.options = { step: 300, digits: 5 }
 
 /**
  * @swagger
@@ -428,221 +432,620 @@ totp.options = { step: 300, digits: 5 };
  *         description: No account found with the provided email address
  */
 
-router.post("/register", async (req, res) => {
+router.post('/register', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/register'
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+        req.body,
+      )}`,
+    )
+
+    if (req.body.role == 'ADMIN' || req.body.role == 'CEO') {
+      let { error } = AdminValidation.validate(req.body)
+      if (error) {
+        sendLog(
+          `⚠️ Admin validation xatosi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Error: ${error.details[0].message}`,
+        )
+        return res.status(400).send(error.details[0].message)
+      }
+    } else {
+      let { error } = UserValidation.validate(req.body)
+      if (error) {
+        sendLog(
+          `⚠️ User validation xatosi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Error: ${error.details[0].message}`,
+        )
+        return res.status(400).send(error.details[0].message)
+      }
+    }
+
+    const { name, password, email, phone, ...rest } = req.body
+    let existingUser = await User.findOne({ where: { email: email } })
+
+    if (existingUser) {
+      sendLog(
+        `⚠️ Foydalanuvchi mavjud | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+      )
+      return res
+        .status(400)
+        .send({ message: 'User already exists, email exists' })
+    }
+
+    let hash = bcrypt.hashSync(password, 10)
+    let newUser = await User.create({
+      ...rest,
+      name: name,
+      phone: phone,
+      email: email,
+      password: hash,
+    })
+
+    let otp = totp.generate(email + 'email')
+    sendLog(
+      `✅ Foydalanuvchi yaratildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User: ${JSON.stringify(
+        newUser,
+      )}`,
+    )
+    sendEmail(email, otp)
+
+    res
+      .status(201)
+      .send({
+        user_data: newUser,
+        message: 'User created successfully, otp is sent to email and phone',
+      })
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send(error)
+  }
+})
+
+router.post('/verify', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/verify'
+
+  let { email, otp } = req.body
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+        req.body,
+      )}`,
+    )
+
+    let existingUser = await User.findOne({ where: { email: email } })
+
+    if (!existingUser) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+      )
+      return res.status(404).send({ message: 'User not found' })
+    }
+
+    let match = totp.verify({ token: otp, secret: email + 'email' })
+
+    if (!match) {
+      sendLog(
+        `⚠️ Otp notogri | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Otp: ${otp}`,
+      )
+      return res.status(404).send({ message: 'Otp is not valid' })
+    }
+
+    await existingUser.update({ status: 'ACTIVE' })
+
+    sendLog(
+      `✅ Email tasdiqlandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Foydalanuvchi: ${email}`,
+    )
+    res.send({ message: 'Email successfully verified! You can now log in.' })
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send(error)
+  }
+})
+
+router.post('/resend-otp', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/resend-otp'
+
+  let { email } = req.body
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+        req.body,
+      )}`,
+    )
+
+    let existingUser = await User.findOne({ where: { email } })
+
+    if (!existingUser) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+      )
+      return res.status(404).send({ message: 'User not found' })
+    }
+
+    const token = totp.generate(email + 'email')
+    sendLog(
+      `✅ OTP yaratilgan | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Otp: ${token} | Email: ${email}`,
+    )
+
+    sendEmail(email, token)
+    sendLog(
+      `✅ Otp yuborildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+    )
+
+    res.send({ message: `Otp sent to ${email}` })
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
+    )
+    console.log(error)
+    res.status(400).send(error)
+  }
+})
+
+router.post('/login', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/login'
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+        req.body,
+      )}`,
+    )
+
+    let { error } = LoginValidation.validate(req.body)
+    if (error) {
+      sendLog(
+        `⚠️ Validatsiya xatosi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Error: ${error.details[0].message}`,
+      )
+      return res.status(400).send(error.details[0].message)
+    }
+
+    let { password, email } = req.body
+    let existingUser = await User.findOne({ where: { email: email } })
+
+    if (!existingUser) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+      )
+      return res.status(404).send({ message: 'User not found' })
+    }
+
+    let match = bcrypt.compareSync(password, existingUser.password)
+    if (!match) {
+      sendLog(
+        `⚠️ Notogri parol | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+      )
+      return res.status(400).send({ message: 'Wrong password' })
+    }
+
+    if (existingUser.status !== 'ACTIVE') {
+      sendLog(
+        `⚠️ Email tasdiqlanmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+      )
+      return res.status(401).send({ message: 'Verify your email first!' })
+    }
+
+    let refresh_token = jwt.sign(
+      { id: existingUser.id, role: existingUser.role },
+      'refresh',
+      { expiresIn: '1d' },
+    )
+    let access_token = jwt.sign(
+      { id: existingUser.id, role: existingUser.role },
+      'sekret',
+      { expiresIn: '1h' },
+    )
+
+    sendLog(
+      `✅ Kirish muvaffaqiyatli | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email} | Rollar: ${existingUser.role}`,
+    )
+    res.send({ refresh_token: refresh_token, access_token: access_token })
+  } catch (err) {
+    sendLog(
+      `❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`,
+    )
+    res.status(400).send(err)
+  }
+})
+
+router.post('/refresh-token', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/refresh-token'
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+        req.body,
+      )}`,
+    )
+
+    let { refresh_token } = req.body
+    if (!refresh_token) {
+      sendLog(
+        `⚠️ Refresh token yoq | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
+      )
+      return res.status(400).send({ message: 'Refresh token is required' })
+    }
+
+    let decoded = jwt.verify(refresh_token, 'refresh')
+    if (!decoded) {
+      sendLog(
+        `⚠️ Notogri refresh token | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Token: ${refresh_token}`,
+      )
+      return res.status(400).send({ message: 'Invalid refresh token' })
+    }
+
+    let user = await User.findByPk(decoded.id)
+    if (!user) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User ID: ${decoded.id}`,
+      )
+      return res.status(404).send({ message: 'User not found' })
+    }
+
+    let access_token = jwt.sign({ id: user.id, role: user.role }, 'sekret', {
+      expiresIn: '1h',
+    })
+    sendLog(
+      `✅ Refresh token tasdiqlandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User ID: ${user.id} | Rollar: ${user.role}`,
+    )
+
+    res.send({ access_token: access_token })
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send({ message: 'Wrong refresh_token' })
+  }
+})
+
+router.post('/request-reset', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/request-reset'
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+        req.body,
+      )}`,
+    )
+
+    let { email } = req.body
+    if (!email) {
+      sendLog(`⚠️ Email yoq | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`)
+      return res.status(400).send({ message: 'Email is required' })
+    }
+
+    let user = await User.findOne({ where: { email: email } })
+    if (!user) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+      )
+      return res
+        .status(404)
+        .send({
+          message: 'No account found with the Email address you provided!',
+        })
+    }
+
+    let otp = totp.generate(email + 'reset_password')
+    sendEmail(email, otp)
+
+    sendLog(
+      `✅ OTP yuborildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email} | OTP: ${otp}`,
+    )
+
+    res.send({
+      message: `${user.name}, an OTP has been sent to your email (${user.email}). Please check and confirm it!`,
+      otp: otp,
+    })
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send(error)
+  }
+})
+
+router.post('/reset-password', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/reset-password'
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+        req.body,
+      )}`,
+    )
+
+    let { email, newPassword, otp } = req.body
+    if (!email || !newPassword || !otp) {
+      sendLog(
+        `⚠️ Zarur ma'lumotlar yetishmayapti | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
+      )
+      return res
+        .status(400)
+        .send({
+          message:
+            'email, newPassword, otp are required. Provide every detail!',
+        })
+    }
+
+    let user = await User.findOne({ where: { email } })
+    if (!user) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+      )
+      return res
+        .status(400)
+        .send({
+          message: 'No account found with the Email address you provided!',
+        })
+    }
+
+    let decode_otp = totp.verify({
+      token: otp,
+      secret: email + 'reset_password',
+    })
+    if (!decode_otp) {
+      sendLog(
+        `⚠️ OTP notogri | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 OTP: ${otp}`,
+      )
+      return res.status(400).send({ message: 'OTP is not valid' })
+    }
+
+    let hash = bcrypt.hashSync(newPassword, 10)
+    await user.update({ password: hash })
+
+    sendLog(
+      `✅ Yangi parol muvaffaqiyatli ornatildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
+    )
+
+    res.send({
+      message: `New password set successfully🎉. Your newPassword🔑 - ${newPassword}`,
+    })
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send(error)
+  }
+})
+
+router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/'
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Query Params: ${JSON.stringify(
+        req.query,
+      )}`,
+    )
+
+    let users = await User.findAll({ include: [{ model: Region }] })
+
+    sendLog(
+      `✅ ${users.length} ta foydalanuvchi topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
+    )
+    res.send(users)
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send(error)
+  }
+})
+
+router.get('/me', AuthMiddleware(), async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = '/me'
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Query Params: ${JSON.stringify(
+        req.query,
+      )} | 📱 Device Info: ${JSON.stringify(req.headers['user-agent'])}`,
+    )
+
+    let data = deviceDetector.parse(req.headers['user-agent'])
+    let userRecord = await User.findByPk(req.user.id)
+
+    if (!userRecord) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
+      )
+      return res.status(404).send({ message: 'User not found' })
+    }
+
+    sendLog(
+      `✅ Foydalanuvchi ma'lumotlari qaytarildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
+    )
+    res.send({ user: userRecord, device: data })
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(404).send(error)
+  }
+})
+
+router.get('/:id', roleMiddleware(['ADMIN']), async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = `/${req.params.id}`
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(
+        req.params,
+      )}`,
+    )
+
+    let userRecord = await User.findByPk(req.params.id)
+
+    if (!userRecord) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
+          req.params,
+        )}`,
+      )
+      return res.status(404).send({ message: 'User not found' })
+    }
+
+    sendLog(
+      `✅ Foydalanuvchi ma'lumotlari qaytarildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
+        req.params,
+      )}`,
+    )
+    res.send(userRecord)
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${
+        error.message
+      } | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
+        req.params,
+      )} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send(error)
+  }
+})
+
+router.patch('/:id', AuthMiddleware(), async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = `/${req.params.id}`
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(
+        req.params,
+      )}`,
+    )
+
+    let targetUser = await User.findByPk(req.params.id)
+
+    if (!targetUser) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
+          req.params,
+        )}`,
+      )
+      return res.status(404).send({ message: 'User not found' })
+    }
+
+    if (req.user.role !== 'ADMIN' && req.user.id != targetUser.id) {
+      sendLog(
+        `⚠️ Xatolik | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Xabar: "Ruxsat yoq | Faqat ADMIN boshqa foydalanuvchini ozgartira oladi."`,
+      )
+      return res.status(403).send({
+        message: `You are not allowed to patch this user. ${req.user.role} can update only his own account. Only ADMIN can update other's account`,
+      })
+    }
+
+    let updatedUser = await targetUser.update(req.body)
+
+    sendLog(
+      `✅ Foydalanuvchi muvaffaqiyatli yangilandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Yangilangan: ${JSON.stringify(
+        updatedUser,
+      )}`,
+    )
+    res.send(updatedUser)
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${
+        error.message
+      } | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
+        req.params,
+      )} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send(error)
+  }
+})
+
+router.delete('/:id', AuthMiddleware(), async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim'
+  const routePath = `/${req.params.id}`
+
+  try {
+    sendLog(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(
+        req.params,
+      )}`,
+    )
+
+    let targetUser = await User.findByPk(req.params.id)
+
+    if (!targetUser) {
+      sendLog(
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
+          req.params,
+        )}`,
+      )
+      return res.status(404).send({ message: 'User not found' })
+    }
+
+    if (req.user.role !== 'ADMIN' && req.user.id != targetUser.id) {
+      sendLog(
+        `⚠️ Xatolik | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Xabar: "Ruxsat yoq | Faqat ADMIN boshqa foydalanuvchini o‘chirishga ruxsat beradi."`,
+      )
+      return res.status(403).send({
+        message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account. Only ADMIN can delete other's account`,
+      })
+    }
+
+    let deletedUser = await targetUser.destroy()
+
+    sendLog(
+      `✅ Foydalanuvchi muvaffaqiyatli ochirildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | O‘chirildi: ${JSON.stringify(
+        deletedUser,
+      )}`,
+    )
+    res.send({
+      deleted_data: deletedUser,
+      message: 'User deleted successfully',
+    })
+  } catch (error) {
+    sendLog(
+      `❌ Xatolik: ${
+        error.message
+      } | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
+        req.params,
+      )} | 🛠 Stack: ${error.stack}`,
+    )
+    res.status(400).send(error)
+  }
+})
+
+router.get('/refresh', AuthMiddleware(), async (req, res) => {
+    const user = req.user ? req.user.username : 'Anonim';
+    const routePath = `/refresh`;
+
     try {
-        if(req.body.role == "ADMIN" || req.body.role == "CEO"){
-            let { error } = AdminValidation.validate(req.body);
-            if (error) {
-                return res.status(400).send(error.details[0].message);
-            }
-        }else{
-            let { error } = UserValidation.validate(req.body);
-            if (error) {
-                return res.status(400).send(error.details[0].message);
-            }
-        }
-        const { name, password, email, phone, ...rest } = req.body;
-        let user = await User.findOne({ where: { email: email } });
-        if (user) {
-            return res.status(400).send({ message: "User already exists, email exists" });
-        }
-        let hash = bcrypt.hashSync(password, 10);
-        let newUser = await User.create({
-            ...rest,
-            name: name,
-            phone: phone,
-            email: email,
-            password: hash
+        sendLog(`📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(req.user)}`);
+
+        let id = req.user.id;
+        let role = req.user.role;
+
+        let access_token = jwt.sign({ id: id, role: role }, 'sekret', {
+            expiresIn: '30m',
         });
-        let otp = totp.generate(email + "email");
-        console.log(otp);
-        sendEmail(email, otp);
-        res.status(201).send({user_data: newUser, message: "User created successfully otp is sended to email and phone"});
+
+        sendLog(`✅ Token muvaffaqiyatli yangilandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Yangi access_token: ${access_token}`);
+        res.send({ access_token: access_token });
     } catch (error) {
-        res.status(400).send(error);
-    }
-});
-
-router.post("/verify", async (req, res) => {
-    let { email, otp } = req.body;
-    try {
-        let user = await User.findOne({ where: { email: email } });
-        if (!user) return res.status(404).send({ message: "User not found" });
-
-        let match = totp.verify({ token: otp, secret: email + "email" });
-        if (!match) return res.status(404).send({ message: "Otp is not valid" });
-
-        await user.update({ status: "ACTIVE" });
-        res.send({ message: "Email successfully verified! You can now log in." });
-    } catch (error) {
-        res.status(400).send(error);
-    }
-});
-
-router.post("/resend-otp", async (req, res) => {
-    let { email } = req.body;
-    try {
-        let user = await User.findOne({ where: { email } });
-        if (!user) {
-            return res.status(404).send({ message: "User not found" });
-        }
-        console.log(email);
-        const token = totp.generate(email + "email");
-        console.log("OTP: ", token);
-        sendEmail(email, token);
-        res.send({ message: `Otp sent to ${email}` });
-    } catch (error) {
-        console.log(error);
-        res.status(400).send(error);
-    }
-});
-
-router.post("/login", async (req, res) => {
-    try {
-        let { error } = LoginValidation.validate(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-
-        let { password, email } = req.body;
-        let user = await User.findOne({ where: { email: email } });
-        if (!user) return res.status(404).send({ message: "User not found" });
-        let match = bcrypt.compareSync(password, user.password);
-        if (!match) return res.status(400).send({ message: "Wrong password" });
-
-        if (user.status != "ACTIVE") return res.status(401).send({ message: "Verify your email first!" });
-
-        let refresh_token = jwt.sign({ id: user.id, role: user.role }, "refresh",{expiresIn: "1d"});
-        let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "1h" });
-        res.send({ refresh_token: refresh_token, access_token: access_token });
-    } catch (err) {
-        res.status(400).send(err);
-    }
-});
-
-router.post("/refresh-token", async(req, res)=>{
-    try {
-        let {refresh_token} = req.body
-        if(!refresh_token) return res.status(400).send({message: "Refresh token is required"})
-        let decoded = jwt.verify(refresh_token, "refresh")
-        if(!decoded) return res.status(400).send({message: "Invalid refresh token"})
-        let user = await User.findByPk(decoded.id)
-        if(!user) return res.status(404).send({message: "User not found"})
-
-        let access_token = jwt.sign({ id: user.id, role: user.role }, "sekret", { expiresIn: "1h" });
-        res.send({access_token: access_token})
-    } catch (error) {
-        res.status(400).send({message: "Wrong refresh_token"})
-    }
-})
-
-router.post("/request-reset", async(req, res)=>{
-    try {
-        let {email} = req.body
-        if(!email) return res.status(400).send({message: "Email is required"})
-        let user = await User.findOne({where: {email: email}})
-        if(!user) return res.status(404).send({message: "No account found with the Email address you provided!"})
-        let otp = totp.generate(email + "reset_password")
-        sendEmail(email, otp)
-        res.send({
-            message: `${user.name}, an OTP has been sent to your email (${user.email}). Please check and confirm it!`,
-            otp: otp
-          })
-    } catch (error) {
-        res.status(400).send(error)
-    }
-})
-
-router.post("/reset-password", async(req, res)=>{
-    try {
-        let {email, newPassword, otp} = req.body
-        if(!email || !newPassword || !otp){
-            return res.status(400).send({message: "email, newPassword, otp are required. Provide every detail!"})
-        }
-        let user = await User.findOne({where: {email}})
-        if(!user) return res.status(400).send({message: "No account found with the Email address you provided!"})
-
-        let decode_otp = totp.verify({token: otp, secret: email + "reset_password"})
-        if(!decode_otp) return res.status(400).send({message: "OTP is not valid"})
-
-        let hash = bcrypt.hashSync(newPassword, 10)
-        user.update({password: hash})
-        res.send({message: `New password set successully🎉. Your newPassword🔑 - ${newPassword}`})
-    } catch (error) {
-        res.status(400).send(error)
-    }
-})
-
-router.get("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
-    try {
-        let users = await User.findAll({include: [{model: Region}]});
-        res.send(users);
-    } catch (error) {
-        res.status(400).send(error);
-    }
-});
-
-router.get("/me", AuthMiddleware(), async(req, res)=>{
-    try {
-        let data = deviceDetector.parse(req.headers["user-agent"])
-        let user = await User.findByPk(req.user.id)
-        res.send({user: user, device: data})
-    } catch (error) {
-        res.status(404).send(error)
-    }
-})
-
-router.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
-    try {
-        let user = await User.findByPk(req.params.id);
-        if (!user) return res.status(404).send({ message: "User not found" });
-        res.send(user);
-    } catch (error) {
-        res.status(400).send(error);
-    }
-});
-
-router.patch("/:id", AuthMiddleware(), async(req, res)=>{
-    try {
-        let user = await User.findByPk(req.params.id)
-        if (!user) return res.status(404).send({ message: "User not found" });
-
-        if(req.user.role !== "ADMIN" && req.user.id != user.id){
-            return res.status(403).send({ message: `You are not allowed to patch this user. ${req.user.role} can delete only his own account. Only ADMIN can patch other's account` });
-        }
-
-        let updated = await user.update(req.body)
-        res.send(updated)
-    } catch (error) {
-        res.status(400).send(error)
-    }
-})
-
-router.delete("/:id", AuthMiddleware(), async (req, res) => {
-    try {
-        let user = await User.findByPk(req.params.id);
-        if (!user) return res.status(404).send({ message: "User not found" });
-
-        if(req.user.role !== "ADMIN" && req.user.id != user.id){
-          return res.status(403).send({ message: `You are not allowed to delete this user. ${req.user.role} can delete only his own account. Only ADMIN can delete other's account` });
-        }
-        let deleted = await user.destroy();
-        res.send({deleted_data:  deleted, message: "User deleted successfully" });
-    } catch (error) {
+        sendLog(`❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(req.user)} | 🛠 Stack: ${error.stack}`);
         res.status(400).send(error);
     }
 });
 
 
-
-
-router.get("/refresh", AuthMiddleware(), async(req,res)=>{
-    try {
-        let id = req.user.id
-        let role = req.user.role
-        let access_token = jwt.sign({id: id,role: role},"sekret",{expiresIn: "30m"})
-        res.send({access_token: access_token})
-    } catch (error) {
-        res.status(400).send(error)
-    }
-})
-
-module.exports = router;
+module.exports = router

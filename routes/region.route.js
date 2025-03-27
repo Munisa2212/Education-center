@@ -1,6 +1,7 @@
 const { Region } = require('../models/index.module')
 const RegionValidation = require('../validation/region.valadation')
 const express = require('express')
+const sendLog = require("../logger")
 const route = express.Router()
 
 /**
@@ -17,12 +18,21 @@ const route = express.Router()
  */
 route.get('/', async (req, res) => {
   try {
-    const regions = await Region.findAll()
-    res.json(regions)
+    const regions = await Region.findAll();
+
+    if (!regions.length) {
+      sendLog(`⚠️ Xatolik: Hech qanday region topilmadi | 🌍 Route: ${req.originalUrl}`);
+      return res.status(404).json({ message: "No regions found" });
+    }
+
+    sendLog(`✅ Regionlar muvaffaqiyatli topildi | 🌍 Route: ${req.originalUrl} | 📌 Jami: ${regions.length}`);
+    res.json(regions);
   } catch (error) {
-    res.status(400).json({ error: error.message })
+    sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 🛠️ Stack: ${error.stack}`);
+    res.status(400).json({ error: error.message });
   }
-})
+});
+
 
 /**
  * @swagger
@@ -51,21 +61,29 @@ route.get('/', async (req, res) => {
  */
 route.post('/', async (req, res) => {
   try {
-    const { error } = RegionValidation.validate(req.body)
+    sendLog(`📥 So‘rov qabul qilindi | 🌍 Route: ${req.originalUrl} | 📌 Ma'lumot: ${JSON.stringify(req.body)}`);
+
+    const { error } = RegionValidation.validate(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message })
+      sendLog(`⚠️ Xatolik: Validatsiya muammosi | 🌍 Route: ${req.originalUrl} | ❗ Xato: ${error.details[0].message}`);
+      return res.status(400).json({ error: error.details[0].message });
     }
-    let one = await Region.findOne({ where: { name: req.body.name } })
+
+    let one = await Region.findOne({ where: { name: req.body.name } });
     if (one) {
-      return res.status(400).json({ error: 'Region already exists' })
+      sendLog(`⚠️ Xatolik: Region allaqachon mavjud | 🌍 Route: ${req.originalUrl} | 🔄 Region: ${req.body.name}`);
+      return res.status(400).json({ error: 'Region already exists' });
     }
-    const newRegion = await Region.create(req.body)
-    res.status(201).json({ newRegion })
+
+    const newRegion = await Region.create(req.body);
+    sendLog(`✅ Region muvaffaqiyatli yaratildi | 🌍 Route: ${req.originalUrl} | 🆕 Region: ${JSON.stringify(newRegion)}`);
+
+    res.status(201).json({ newRegion });
   } catch (err) {
-    console.error('Server error:', err.message)
-    res.status(400).json({ error: err.message })
+    sendLog(`❌ Xatolik: ${err.message} | 🌍 Route: ${req.originalUrl} | 🛠️ Stack: ${err.stack}`);
+    res.status(400).json({ error: err.message });
   }
-})
+});
 
 /**
  * @swagger
@@ -88,16 +106,21 @@ route.post('/', async (req, res) => {
  */
 route.get('/:id', async (req, res) => {
   try {
-    let one = await Region.findByPk(req.params.id)
+    sendLog(`📥 Sorov qabul qilindi | 🌍 Route: ${req.originalUrl} | 🆔 Region ID: ${req.params.id}`);
+
+    let one = await Region.findByPk(req.params.id);
     if (!one) {
-      return res.status(404).json({ error: 'Region not found' })
+      sendLog(`⚠️ Xatolik: Region topilmadi | 🌍 Route: ${req.originalUrl} | 🆔 Region ID: ${req.params.id}`);
+      return res.status(404).json({ error: 'Region not found' });
     }
-    res.send(one)
+
+    sendLog(`✅ Region topildi | 🌍 Route: ${req.originalUrl} | 📌 Ma'lumot: ${JSON.stringify(one)}`);
+    res.send(one);
   } catch (err) {
-    console.error('Server error:', err.message)
-    res.status(400).json({ error: err.message })
+    sendLog(`❌ Xatolik: ${err.message} | 🌍 Route: ${req.originalUrl} | 🛠️ Stack: ${err.stack}`);
+    res.status(400).json({ error: err.message });
   }
-})
+});
 
 /**
  * @swagger
@@ -132,19 +155,26 @@ route.get('/:id', async (req, res) => {
  */
 route.patch('/:id', async (req, res) => {
   try {
-    let one = await Region.findByPk(req.params.id)
-    if (!one) {
-      return res.status(404).json({ error: 'Region not found' })
-    }
-    await Region.update(req.body, { where: { id: req.params.id } })
+    sendLog(`📥 Sorov qabul qilindi | ✏️ PATCH | 🌍 Route: ${req.originalUrl} | 🆔 Region ID: ${req.params.id} | 📌 Yangilash ma'lumotlari: ${JSON.stringify(req.body)}`);
 
-    let updatedRegion = await Region.findByPk(req.params.id)
-    res.status(200).json(updatedRegion)
+    let one = await Region.findByPk(req.params.id);
+    if (!one) {
+      sendLog(`⚠️ Xatolik: Region topilmadi | 🌍 Route: ${req.originalUrl} | 🆔 Region ID: ${req.params.id}`);
+      return res.status(404).json({ error: 'Region not found' });
+    }
+
+    await Region.update(req.body, { where: { id: req.params.id } });
+
+    let updatedRegion = await Region.findByPk(req.params.id);
+    sendLog(`✅ Region muvaffaqiyatli yangilandi | 🌍 Route: ${req.originalUrl} | 📌 Yangilangan ma'lumot: ${JSON.stringify(updatedRegion)}`);
+
+    res.status(200).json(updatedRegion);
   } catch (err) {
-    console.error('Server error:', err.message)
-    res.status(400).json({ error: 'Internal Server Error' })
+    sendLog(`❌ Xatolik: ${err.message} | 🌍 Route: ${req.originalUrl} | 🛠️ Stack: ${err.stack}`);
+    res.status(400).json({ error: 'Internal Server Error' });
   }
-})
+});
+
 
 /**
  * @swagger
@@ -169,16 +199,24 @@ route.patch('/:id', async (req, res) => {
  */
 route.delete('/:id', async (req, res) => {
   try {
-    let one = await Region.findByPk(req.params.id)
+    sendLog(`📥 Sorov qabul qilindi | 🗑️ DELETE | 🌍 Route: ${req.originalUrl} | 🆔 Region ID: ${req.params.id}`);
+
+    let one = await Region.findByPk(req.params.id);
     if (!one) {
-      return res.status(404).json({ error: 'Region not found' })
+      sendLog(`⚠️ Xatolik: Region topilmadi | 🌍 Route: ${req.originalUrl} | 🆔 Region ID: ${req.params.id}`);
+      return res.status(404).json({ error: 'Region not found' });
     }
-    await Region.destroy({ where: { id: req.params.id } })
-    res.status(200).json({ message: 'Region deleted successfully' })
+
+    await Region.destroy({ where: { id: req.params.id } });
+
+    sendLog(`✅ Region muvaffaqiyatli ochirildi | 🌍 Route: ${req.originalUrl} | 🆔 O‘chirilgan ID: ${req.params.id}`);
+
+    res.status(200).json({ message: 'Region deleted successfully' });
   } catch (err) {
-    console.error('Server error:', err.message)
-    res.status(400).json({ error: 'Internal Server Error' })
+    sendLog(`❌ Xatolik: ${err.message} | 🌍 Route: ${req.originalUrl} | 🛠️ Stack: ${err.stack}`);
+    res.status(400).json({ error: 'Internal Server Error' });
   }
-})
+});
+
 
 module.exports = route
