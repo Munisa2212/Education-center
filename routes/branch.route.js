@@ -123,7 +123,7 @@ const route = express.Router()
  *               message: "Unexpected error occurred"
  */
 
-route.get('/',AuthMiddleware(), async (req, res) => {
+route.get('/', async (req, res) => {
   const {name, location, region_id, learningCenter_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
   try {
     const where = {};
@@ -157,6 +157,47 @@ route.get('/',AuthMiddleware(), async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /branch/{id}:
+ *   get:
+ *     summary: Get a branch by ID
+ *     description: Retrieve details of a specific branch using its unique ID.
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Branch 🏢
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the branch to retrieve
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved branch details
+ *         content:
+ *           application/json:
+ *             example:
+ *               id: 1
+ *               name: "Main Branch"
+ *               location: "Tashkent, Uzbekistan"
+ *               region_id: 1
+ *               branch_number: 3
+ *       404:
+ *         description: Branch not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Branch not found"
+ *       400:
+ *         description: Bad request or server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "An error occurred"
+ */
 
 
 route.get('/:id', async (req, res) => {

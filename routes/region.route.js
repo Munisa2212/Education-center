@@ -92,7 +92,7 @@ route.post('/', async (req, res) => {
  * /region/{id}:
  *   get:
  *     summary: ID bo‘yicha region olish
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -131,7 +131,7 @@ route.get('/:id', async (req, res) => {
  * /region/{id}:
  *   patch:
  *     summary: Region ma’lumotlarini yangilash
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -187,7 +187,7 @@ route.patch('/:id', roleMiddleware(["SUPER-ADMIN", "CEO"]), async (req, res) => 
  * /region/{id}:
  *   delete:
  *     summary: Regionni o‘chirish
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     security:
  *       - BearerAuth: []
  *     parameters:
