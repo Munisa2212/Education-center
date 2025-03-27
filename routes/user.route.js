@@ -360,7 +360,7 @@ totp.options = { step: 300, digits: 5 }
 
 /**
  * @swagger
- * /user/request-reset 📩:
+ * /user/request-reset:
  *   post:
  *     summary: Request a password reset OTP
  *     tags:
@@ -397,7 +397,7 @@ totp.options = { step: 300, digits: 5 }
  *       404:
  *         description: No account found with the provided email address
  *
- * /user/reset-password 🔑:
+ * /user/reset-password:
  *   post:
  *     summary: Reset the user's password using an OTP
  *     tags:

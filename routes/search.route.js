@@ -7,7 +7,7 @@ const sendLog = require("../logger")
 
 /**
  * @swagger
- * /search/comment 📝:
+ * /search/comment:
  *   get:
  *     summary: Get comments with filtering, sorting, and pagination
  *     tags:
@@ -67,7 +67,7 @@ const sendLog = require("../logger")
 
 /**
  * @swagger
- * /search/user 👤:
+ * /search/user:
  *   get:
  *     summary: Get users with filtering
  *     tags:
@@ -102,7 +102,7 @@ const sendLog = require("../logger")
 
 /**
  * @swagger
- * /search/center 🏬:
+ * /search/center :
  *   get:
  *     summary: Get centers with filtering, sorting, and pagination
  *     tags:
@@ -169,7 +169,7 @@ const sendLog = require("../logger")
 
 /**
  * @swagger
- * /search/branch 🏢:
+ * /search/branch :
  *   get:
  *     summary: Get branches with filtering, sorting, and pagination
  *     tags:
@@ -224,7 +224,7 @@ const sendLog = require("../logger")
 
 /**
  * @swagger
- * /search/category 📂:
+ * /search/category :
  *   get:
  *     summary: Get categories with filtering, sorting, and pagination
  *     tags:
@@ -271,7 +271,7 @@ const sendLog = require("../logger")
 
 /**
  * @swagger
- * /search/field 🏷️:
+ * /search/field :
  *   get:
  *     summary: Get fields with filtering, sorting, and pagination
  *     tags:
@@ -318,7 +318,7 @@ const sendLog = require("../logger")
 
 /**
  * @swagger
- * /search/subject 📚:
+ * /search/subject :
  *   get:
  *     summary: Get subjects with filtering, sorting, and pagination
  *     tags:
@@ -365,7 +365,7 @@ const sendLog = require("../logger")
 
 /**
  * @swagger
- * /search/region 🗺:
+ * /search/region :
  *   get:
  *     summary: Get regions with filtering, sorting, and pagination
  *     tags:
