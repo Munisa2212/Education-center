@@ -12,6 +12,7 @@ const { roleMiddleware } = require('../middleware/role.middleware')
 const BranchSubject = require('../models/branchSubject.module')
 const BranchField = require('../models/branchField.module')
 const sendLog = require('../logger')
+const AuthMiddleware = require('../middleware/auth.middleware')
 const route = express.Router()
 
 /**
@@ -122,7 +123,7 @@ const route = express.Router()
  *               message: "Unexpected error occurred"
  */
 
-route.get('/', async (req, res) => {
+route.get('/',AuthMiddleware(), async (req, res) => {
   const {name, location, region_id, learningCenter_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
   try {
     const where = {};

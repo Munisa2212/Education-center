@@ -242,7 +242,7 @@ app.get("/", AuthMiddleware(), async (req, res) => {
 });
 
 
-app.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
+app.get("/:id", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -287,7 +287,7 @@ app.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
 });
 
 
-app.delete("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
+app.delete("/:id", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -332,7 +332,7 @@ app.delete("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
 });
 
 
-app.patch("/:id", roleMiddleware(["ADMIN", "SUPER-ADMIN"]), async (req, res) => {
+app.patch("/:id", roleMiddleware(["ADMIN", "SUPER-ADMIN", "CEO"]), async (req, res) => {
     const { id } = req.params;
 
     try {
