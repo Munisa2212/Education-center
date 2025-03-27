@@ -66,7 +66,7 @@ const app = require("express").Router()
  */
 
 
-app.post("/", roleMiddleware(["ADMIN"]) , async(req, res)=>{
+app.post("/", roleMiddleware(["ADMIN", "CEO"]) , async(req, res)=>{
     const id = req.user.id
     try {
         let { error } = RegistrationValidation.validate(req.body)

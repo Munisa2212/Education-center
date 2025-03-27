@@ -165,7 +165,7 @@ const { AuthMiddleware } = require("../middleware/auth.middleware")
  *           description: Optional image URL for the category
  */
 
-app.post("/", roleMiddleware(["ADMIN"]) , async(req, res)=>{
+app.post("/", roleMiddleware(["ADMIN", "CEO"]) , async(req, res)=>{
     try {
         let { error } = CategoryValidation.validate(req.body)
         if (error){

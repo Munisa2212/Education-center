@@ -65,7 +65,7 @@ route.get('/', roleMiddleware(["ADMIN"]), async (req, res) => {
  *       400:
  *         description: Validation error
  */
-route.post('/', roleMiddleware(["ADMIN"]),async (req, res) => {
+route.post('/', roleMiddleware(["ADMIN", "CEO"]),async (req, res) => {
   try {
     const { error } = FieldValidation.validate(req.body)
     if (error) return res.status(400).send({ message: error.details[0].message })

@@ -106,7 +106,7 @@ route.get("/:id", async (req, res) => {
  *       400:
  *         description: Bad request
  */
-route.post('/', roleMiddleware(["ADMIN"]),async (req, res) => {
+route.post('/', roleMiddleware(["ADMIN", "CEO"]),async (req, res) => {
   try {
     const { region_id, learningCenter_id, field_id, subject_id, ...rest} = req.body
 

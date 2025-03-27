@@ -107,9 +107,8 @@ const app = require("express").Router()
 app.get("/star", async(req, res)=>{
     try {
         let centers = await Center.findAll({attributes: ["name"], include: [{model: Comment, attributes: ["star"]}]})
-        for(let i of centers){ 
-            res.send(i.Comments.star)
-        }
+        
+        
         res.send(centers)
     } catch (error) {
         res.status(400).send(error) 
