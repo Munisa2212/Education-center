@@ -284,7 +284,7 @@ route.patch('/:id', roleMiddleware(["ADMIN","SUPER-ADMIN"]), async (req, res) =>
  *       404:
  *         description: Field not found
  */
-route.delete('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
+route.delete('/:id', roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
   try {
     const userInfo = req.user 
       ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` 

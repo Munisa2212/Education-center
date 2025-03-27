@@ -155,6 +155,8 @@ const sendLog = require('../logger')
  *     summary: Get students registered in a center
  *     tags:
  *       - LearningCenters 🎓
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: learningCenter_id
  *         in: query
@@ -188,6 +190,58 @@ const sendLog = require('../logger')
  *       400:
  *         description: learningCenter_id is required
  */
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Center:
+ *       type: object
+ *       required:
+ *         - name
+ *         - phone
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: TEST
+ *           description: Name of the learning center
+ *         phone:
+ *           type: string
+ *           example: +998882452212
+ *           description: Contact phone number of the center
+ *         image:
+ *           type: string
+ *           example: photo
+ *           description: Image URL of the center
+ *         location:
+ *           type: string
+ *           example: Earth
+ *           description: Physical location of the center
+ *         region_id:
+ *           type: integer
+ *           example: 1
+ *           description: ID of the region where the center is located
+ *         branch_number:
+ *           type: integer
+ *           example: 3
+ *           description: Number of branches for this center
+ *         description:
+ *           type: string
+ *           example: Good
+ *           description: Short description of the center
+ *         subject_id:
+ *           type: array
+ *           items:
+ *             type: integer
+ *           example: [1, 2]
+ *           description: List of subject IDs taught in the center
+ *         field_id:
+ *           type: array
+ *           items:
+ *             type: integer
+ *           example: [1, 2]
+ *           description: List of field IDs related to the center
+ */
+
 
 
 app.post("/", roleMiddleware(["CEO"]), async (req, res) => {

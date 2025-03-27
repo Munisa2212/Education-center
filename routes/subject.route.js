@@ -50,6 +50,8 @@ route.get('/', async (req, res) => {
  *   post:
  *     summary: Create a new subject
  *     tags: [Subject 📚]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -141,6 +143,8 @@ route.get('/:id', async (req, res) => {
  *   patch:
  *     summary: Update a subject
  *     tags: [Subject 📚]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -199,6 +203,8 @@ route.patch('/:id',roleMiddleware(["ADMIN","SUPER-ADMIN"]), async (req, res) => 
  *   delete:
  *     summary: Delete a subject
  *     tags: [Subject 📚]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id

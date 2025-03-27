@@ -49,7 +49,7 @@ const {roleMiddleware} = require("../middleware/role.middleware")
  *     summary: Add a new admin
  *     tags: [Admin]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -62,7 +62,7 @@ const {roleMiddleware} = require("../middleware/role.middleware")
  *       400:
  *         description: Validation error
  */
-app.post("/admin", roleMiddleware(["ADMIN"]), async (req, res) => {
+app.post("/", roleMiddleware(["ADMIN"]), async (req, res) => {
     try {
         const { error } = AdminValidation.validate(req.body);
         if (error) {
