@@ -21,16 +21,16 @@ totp.options = { step: 300, digits: 5 }
 /**
  * @swagger
  * tags:
- *   - name: Authorization
+ *   - name: Authorization 🔑
  *     description: API endpoints for user authentication and authorization
- *   - name: User
+ *   - name: User 👤
  *     description: API endpoints for user management
  */
 
 /**
  * @swagger
  * tags:
- *   name: User
+ *   name: User 👤
  *   description: API endpoints for user management
  */
 
@@ -40,7 +40,7 @@ totp.options = { step: 300, digits: 5 }
  *   post:
  *     summary: Register a new user
  *     tags: 
- *       - Authorization
+ *       - Authorization 🔑
  *     requestBody:
  *       required: true
  *       content:
@@ -57,7 +57,7 @@ totp.options = { step: 300, digits: 5 }
  *   post:
  *     summary: Verify user email with OTP
  *     tags: 
- *       - Authorization
+ *       - Authorization 🔑
  *     requestBody:
  *       required: true
  *       content:
@@ -85,7 +85,7 @@ totp.options = { step: 300, digits: 5 }
  *   post:
  *     summary: Resend OTP to user email
  *     tags: 
- *       - Authorization
+ *       - Authorization 🔑
  *     requestBody:
  *       required: true
  *       content:
@@ -109,7 +109,7 @@ totp.options = { step: 300, digits: 5 }
  *   post:
  *     summary: Log in as a user
  *     tags: 
- *       - Authorization
+ *       - Authorization 🔑
  *     requestBody:
  *       required: true
  *       content:
@@ -131,7 +131,7 @@ totp.options = { step: 300, digits: 5 }
  *   post:
  *     summary: Refresh the access token using a refresh token
  *     tags:
- *       - Authorization
+ *       - Authorization 🔑
  *     requestBody:
  *       required: true
  *       content:
@@ -165,7 +165,7 @@ totp.options = { step: 300, digits: 5 }
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - User
+ *       - User 👤
  *     responses:
  *       200:
  *         description: List of all users
@@ -178,7 +178,7 @@ totp.options = { step: 300, digits: 5 }
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - User
+ *       - User 👤
  *     parameters:
  *       - name: id
  *         in: path
@@ -199,7 +199,7 @@ totp.options = { step: 300, digits: 5 }
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - User
+ *       - User 👤
  *     parameters:
  *       - name: id
  *         in: path
@@ -264,7 +264,7 @@ totp.options = { step: 300, digits: 5 }
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - User
+ *       - User 👤
  *     parameters:
  *       - name: id
  *         in: path
@@ -286,7 +286,7 @@ totp.options = { step: 300, digits: 5 }
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - User
+ *       - User 👤
  *     responses:
  *       200:
  *         description: User information along with device details

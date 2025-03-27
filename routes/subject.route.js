@@ -7,7 +7,7 @@ const route = express.Router()
 /**
  * @swagger
  * tags:
- *   name: Subject
+ *   name: Subject 📚
  *   description: Subject management API
  */
 
@@ -16,7 +16,7 @@ const route = express.Router()
  * /subject:
  *   get:
  *     summary: Get all subjects
- *     tags: [Subject]
+ *     tags: [Subject 📚]
  *     responses:
  *       200:
  *         description: List of all subjects
@@ -48,7 +48,7 @@ route.get('/', async (req, res) => {
  * /subject:
  *   post:
  *     summary: Create a new subject
- *     tags: [Subject]
+ *     tags: [Subject 📚]
  *     requestBody:
  *       required: true
  *       content:
@@ -97,7 +97,7 @@ route.post('/', async (req, res) => {
  * /subject/{id}:
  *   get:
  *     summary: Get a subject by ID
- *     tags: [Subject]
+ *     tags: [Subject 📚]
  *     parameters:
  *       - in: path
  *         name: id
@@ -139,7 +139,7 @@ route.get('/:id', async (req, res) => {
  * /subject/{id}:
  *   patch:
  *     summary: Update a subject
- *     tags: [Subject]
+ *     tags: [Subject 📚]
  *     parameters:
  *       - in: path
  *         name: id
@@ -197,7 +197,7 @@ route.patch('/:id', async (req, res) => {
  * /subject/{id}:
  *   delete:
  *     summary: Delete a subject
- *     tags: [Subject]
+ *     tags: [Subject 📚]
  *     parameters:
  *       - in: path
  *         name: id

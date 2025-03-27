@@ -6,14 +6,14 @@ const sendLog = require('../logger')
 /**
  * @swagger
  * tags:
- *   name: Like
+ *   name: Like 💘
  *   description: Likes management for learning centers
  * 
  * paths:
  *   /like:
  *     get:
  *       summary: Get all likes
- *       tags: [Like]
+ *       tags: [Like 💘]
  *       security:
  *         - BearerAuth: []
  *       responses:
@@ -24,7 +24,7 @@ const sendLog = require('../logger')
  *       summary: Like a learning center
  *       security:
  *         - BearerAuth: []
- *       tags: [Like]
+ *       tags: [Like 💘]
  *       requestBody:
  *         required: true
  *         content:
@@ -42,7 +42,7 @@ const sendLog = require('../logger')
  *       summary: Remove a like
  *       security:
  *         - BearerAuth: []
- *       tags: [Like]
+ *       tags: [Like 💘]
  *       requestBody:
  *         required: true
  *         content:

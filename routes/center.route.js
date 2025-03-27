@@ -18,7 +18,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - LearningCenters
+ *       - LearningCenters 🎓
  *     requestBody:
  *       required: true
  *       content:
@@ -36,7 +36,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - LearningCenters
+ *       - LearningCenters 🎓
  *     parameters:
  *       - name: name
  *         in: query
@@ -92,7 +92,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - LearningCenters
+ *       - LearningCenters 🎓
  *     parameters:
  *       - name: id
  *         in: path
@@ -111,7 +111,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - LearningCenters
+ *       - LearningCenters 🎓
  *     parameters:
  *       - name: id
  *         in: path
@@ -136,7 +136,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - LearningCenters
+ *       - LearningCenters 🎓
  *     parameters:
  *       - name: id
  *         in: path
@@ -154,7 +154,7 @@ const sendLog = require('../logger')
  *   get:
  *     summary: Get students registered in a center
  *     tags:
- *       - LearningCenters
+ *       - LearningCenters 🎓
  *     parameters:
  *       - name: learningCenter_id
  *         in: query
@@ -174,7 +174,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags:
- *       - LearningCenters
+ *       - LearningCenters 🎓
  *     parameters:
  *       - name: learningCenter_id
  *         in: query

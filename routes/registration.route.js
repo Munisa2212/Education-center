@@ -6,7 +6,7 @@ const app = require("express").Router()
 /**
  * @swagger
  * tags:
- *   name: Registration
+ *   name: Registration 📋
  *   description: User registration for learning centers
  * 
  * paths:
@@ -15,7 +15,7 @@ const app = require("express").Router()
  *       summary: Register a user for a course
  *       security:
  *         - BearerAuth: []
- *       tags: [Registration]
+ *       tags: [Registration 📋]
  *       requestBody:
  *         required: true
  *         content:
@@ -33,7 +33,7 @@ const app = require("express").Router()
  *       summary: Delete a registration
  *       security:
  *         - BearerAuth: []
- *       tags: [Registration]
+ *       tags: [Registration 📋]
  *       parameters:
  *         - in: path
  *           name: id

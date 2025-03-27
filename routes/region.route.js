@@ -11,7 +11,7 @@ const route = express.Router()
  * /region:
  *   get:
  *     summary: Barcha regionlarni olish
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     responses:
  *       200:
  *         description: Regionlar ro‘yxati
@@ -41,7 +41,7 @@ route.get('/', async (req, res) => {
  * /region:
  *   post:
  *     summary: Yangi region qo‘shish
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     requestBody:
  *       required: true
  *       content:
