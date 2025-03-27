@@ -1,3 +1,4 @@
+const sendLog = require('../logger')
 const { AuthMiddleware } = require('../middleware/auth.middleware')
 const { roleMiddleware } = require('../middleware/role.middleware')
 const { Field } = require('../models/index.module')
@@ -26,15 +27,21 @@ const route = express.Router()
  *       400:
  *         description: Bad request
  */
-route.get('/', roleMiddleware(["ADMIN"]), async (req, res) => {
+route.get("/", roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
-    const fields = await Field.findAll()
-    res.send(fields)
-  } catch (err) {
-    console.log(err)
-    return res.status(400).send({ message: err.message })
+      const fields = await Field.findAll();
+      sendLog("✅ GET sorovi muvaffaqiyatli bajarildi: fieldlar yuborildi.");
+      res.send(fields);
+  } catch (error) {
+      sendLog(`❌ Xatolik yuz berdi: ${error.message}
+          📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
+          📂 Route: ${req.originalUrl}
+          📥 Sorov: ${JSON.stringify(req.query)}
+          🛠️ Stack: ${error.stack}`);
+      res.status(400).send({ message: error.message });
   }
-})
+});
+
 
 /**
  * @swagger
@@ -65,22 +72,58 @@ route.get('/', roleMiddleware(["ADMIN"]), async (req, res) => {
  *       400:
  *         description: Validation error
  */
-route.post('/', roleMiddleware(["ADMIN", "CEO"]),async (req, res) => {
+route.post('/', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
-    const { error } = FieldValidation.validate(req.body)
-    if (error) return res.status(400).send({ message: error.details[0].message })
+    const userInfo = req.user ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` : "Noma'lum foydalanuvchi";
+    
+    sendLog(`📤 [POST] /fields sorovi boshlandi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.body)}`);
 
-    let field = await Field.findOne({where: {name: req.body.name}})
-    if(field){
-      return res.status(400).send({message: "Field already exists"})
+    const { error } = FieldValidation.validate(req.body);
+    if (error) {
+      sendLog(`❌ Validatsiya xatosi
+              📌 Foydalanuvchi: ${userInfo}
+              📂 Route: ${req.originalUrl}
+              📥 Sorov: ${JSON.stringify(req.body)}
+              ⚠️ Xato: ${error.details[0].message}`);
+      return res.status(400).send({ message: error.details[0].message });
     }
-    let newField = await Field.create(req.body)
-    res.status(201).send(newField)
-  } catch (err) {
-    console.log(err)
-    return res.status(400).send({ message: err.message })
+
+    let field = await Field.findOne({ where: { name: req.body.name } });
+    if (field) {
+      sendLog(`⚠️ Field allaqachon mavjud
+              📌 Foydalanuvchi: ${userInfo}
+              📂 Route: ${req.originalUrl}
+              📥 Sorov: ${JSON.stringify(req.body)}
+              🏷️ Field: ${req.body.name}`);
+      return res.status(400).send({ message: "Field already exists" });
+    }
+
+    let newField = await Field.create(req.body);
+    sendLog(`✅ Yangi field yaratildi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            🆕 Field ID: ${newField.id}
+            🏷️ Field nomi: ${newField.name}`);
+
+    sendLog(`📨 [POST] Sorov muvaffaqiyatli bajarildi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            🔍 Natija: ${JSON.stringify(newField)}`);
+    res.status(201).send(newField);
+  } catch (error) {
+    sendLog(`❌ Xatolik yuz berdi: ${error.message}
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.body)}
+            🛠️ Stack: ${error.stack}`);
+    console.log(error);
+    return res.status(400).send({ message: error.message });
   }
-})
+});
+
 
 /**
  * @swagger
@@ -105,16 +148,40 @@ route.post('/', roleMiddleware(["ADMIN", "CEO"]),async (req, res) => {
  */
 route.get('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
-    let one = await Field.findByPk(req.params.id)
+    const userInfo = req.user ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` : "Noma'lum foydalanuvchi";
+    const fieldId = req.params.id;
+
+    sendLog(`📤 [GET] /fields/${fieldId} sorovi boshlandi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}`);
+
+    let one = await Field.findByPk(fieldId);
+
     if (!one) {
-      return res.status(404).send({ message: 'Field not found' })
+      sendLog(`⚠️ Field topilmadi
+              📌 Foydalanuvchi: ${userInfo}
+              📂 Route: ${req.originalUrl}
+              🆔 Field ID: ${fieldId}`);
+      return res.status(404).send({ message: 'Field not found' });
     }
-    res.send(one)
+
+    sendLog(`✅ Field topildi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            🆔 Field ID: ${one.id}
+            🏷️ Field nomi: ${one.name}`);
+
+    res.send(one);
   } catch (err) {
-    console.log(err)
-    return res.status(400).send({ message: err.message })
+    sendLog(`❌ Xatolik yuz berdi: ${err.message}
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            🛠️ Stack: ${err.stack}`);
+
+    console.log(err);
+    return res.status(400).send({ message: err.message });
   }
-})
+});
 
 /**
  * @swagger
@@ -152,21 +219,49 @@ route.get('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
  */
 route.patch('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
-    let one = await Field.findByPk(req.params.id)
+    const userInfo = req.user 
+      ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` 
+      : "Noma'lum foydalanuvchi";
+    const fieldId = req.params.id;
+
+    sendLog(`🛠️ [PATCH] /fields/${fieldId} sorovi boshlandi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            📥 Sorov malumotlari: ${JSON.stringify(req.body)}`);
+
+    let one = await Field.findByPk(fieldId);
+
     if (!one) {
-      return res.status(404).json({ message: 'Field not found' })
+      sendLog(`⚠️ Field topilmadi
+              📌 Foydalanuvchi: ${userInfo}
+              📂 Route: ${req.originalUrl}
+              🆔 Field ID: ${fieldId}`);
+      return res.status(404).json({ message: 'Field not found' });
     }
 
     let updatedField = await one.update(req.body, {
       fields: Object.keys(req.body),
-    })
+    });
 
-    res.status(200).json(updatedField)
+    sendLog(`✅ Field muvaffaqiyatli yangilandi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            🆔 Field ID: ${updatedField.id}
+            🏷️ Yangilangan malumotlar: ${JSON.stringify(updatedField)}`);
+
+    res.status(200).json(updatedField);
   } catch (err) {
-    console.error(err)
-    res.status(400).json({ message: 'Internal Server Error' })
+    sendLog(`❌ Xatolik yuz berdi: ${err.message}
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            📥 Sorov malumotlari: ${JSON.stringify(req.body)}
+            🛠️ Stack: ${err.stack}`);
+
+    console.error(err);
+    res.status(400).json({ message: err.message });
   }
-})
+});
+
 
 /**
  * @swagger
@@ -189,18 +284,45 @@ route.patch('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
  *       404:
  *         description: Field not found
  */
-route.delete('/:id', roleMiddleware(["ADMIN"]),async (req, res) => {
+route.delete('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
-    let one = await Field.findByPk(req.params.id)
+    const userInfo = req.user 
+      ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` 
+      : "Noma'lum foydalanuvchi";
+    const fieldId = req.params.id;
+
+    sendLog(`🗑️ [DELETE] /fields/${fieldId} sorovi boshlandi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}`);
+
+    let one = await Field.findByPk(fieldId);
+
     if (!one) {
-      return res.status(404).send({ message: 'Field not found' })
+      sendLog(`⚠️ Field topilmadi
+              📌 Foydalanuvchi: ${userInfo}
+              📂 Route: ${req.originalUrl}
+              🆔 Field ID: ${fieldId}`);
+      return res.status(404).send({ message: 'Field not found' });
     }
-    await one.destroy()
-    res.send({ message: 'Deleted successfully' })
+
+    await one.destroy();
+
+    sendLog(`✅ Field muvaffaqiyatli ochirildi
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            🆔 Field ID: ${fieldId}`);
+
+    res.send({ message: 'Deleted successfully' });
   } catch (err) {
-    console.log(err)
-    return res.status(400).send({ message: err.message })
+    sendLog(`❌ Xatolik yuz berdi: ${err.message}
+            📌 Foydalanuvchi: ${userInfo}
+            📂 Route: ${req.originalUrl}
+            🛠️ Stack: ${err.stack}`);
+
+    console.error(err);
+    res.status(400).send({ message: err.message });
   }
-})
+});
+
 
 module.exports = route

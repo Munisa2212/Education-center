@@ -1,5 +1,6 @@
 const { AuthMiddleware } = require("../middleware/auth.middleware");
 const {Like, Comment, Center} = require("../models/index.module");
+const { description } = require("../validation/center.validation");
 const app = require("express").Router()
 
 /**
@@ -47,13 +48,6 @@ const app = require("express").Router()
  *       - Learning Center Ratings 🏆
  *     security:
  *       - BearerAuth: []
- *     parameters:
- *       - name: learningCenter_id
- *         in: query
- *         required: true
- *         description: ID of the learning center
- *         schema:
- *           type: integer
  *     responses:
  *       200:
  *         description: Total number of comments for the learning center
@@ -80,13 +74,6 @@ const app = require("express").Router()
  *       - Learning Center Ratings 🏆
  *     security:
  *       - BearerAuth: []
- *     parameters:
- *       - name: learningCenter_id
- *         in: query
- *         required: true
- *         description: ID of the learning center
- *         schema:
- *           type: integer
  *     responses:
  *       200:
  *         description: Total number of likes for the learning center
@@ -106,44 +93,73 @@ const app = require("express").Router()
 
 app.get("/star", async(req, res)=>{
     try {
-        let centers = await Center.findAll({attributes: ["name"], include: [{model: Comment, attributes: ["star"]}]})
-        
-        
-        res.send(centers)
+        let {top} = req.query
+        let centers = await Center.findAll({attributes: ["name", "phone", "description"], include: [{model: Comment, attributes: ["star"]}]})
+        let arr = []
+        centers.map(e => {
+            if(!e.dataValues.Comments.length){
+                arr.push({LearnigCenterName: e.dataValues.name, phone: e.dataValues.phone, description: e.dataValues.description, star: 0})
+            }else{
+                let star = 0
+                let length = 0
+                e.dataValues.Comments.forEach(star_data => {
+                    console.log(e.dataValues.name, star_data.dataValues.star);
+                    star += star_data.dataValues.star
+                    length++
+                });
+                console.log(star, length);
+                
+                arr.push({LearnigCenterName: e.dataValues.name, phone: e.dataValues.phone, description: e.dataValues.description, star: star/length})
+            }
+        })
+        res.send(arr.sort((a, b) => b.star - a.star).splice(0, top || 100))
     } catch (error) {
         res.status(400).send(error) 
     }
 })
 
-app.get("/comments", async(req,res)=>{
+app.get("/comments", async (req, res) => {
     try {
-        let {learningCenter_id} = req.query;
-        if(!learningCenter_id){
-            return res.status(400).send({message: "learningCenter_id is required"})
-        }
-        let center_data = await Comment.findAll({where: {learningCenter_id: learningCenter_id}}); 
-        if(!center_data) return res.status(404).send("Nothing found")
-        
-        let totalComments = center_data.length
-        res.send({totalComments})
+        let center_data = await Center.findAll({
+            attributes: ["name"],
+            include: [{ model: Comment, attributes: ["comment"] }]
+        });
+
+        if (!center_data) return res.status(404).send("Nothing found");
+
+        let sorted = center_data.map(e => {
+            if(!e.Comments.length){
+                return {
+                    name: e.name,
+                    totalComments: e.Comments.length,
+                };
+            }else{
+                return {
+                    name: e.name,
+                    totalComments: e.Comments.length,
+                    Comments: e.Comments
+                };
+            }
+        });
+
+        res.send(sorted.sort((a, b)=> b.totalComments - a.totalComments));
     } catch (error) {
-        res.status(400).send(error)
-        
+        res.status(400).send(error);
     }
-})
+});
 
 app.get("/likes", async(req, res)=>{
     try {
-        let {learningCenter_id} = req.query;
-        if(!learningCenter_id){
-            return res.status(400).send({message: "learningCenter_id is required"})
-        }
+        let center_data = await Center.findAll({attributes: ["name"], include: [{model: Like}]}); 
+        if(!center_data) return res.status(404).send("Nothing found")
         
-        let center_data = await Like.findAll({where: {learningCenter_id: learningCenter_id}}); 
-        if(!center_data)    return res.status(404).send("Nothing found")
-
-        let totalLikes = center_data.length
-        res.send({totalLikes})
+        let sorted = center_data.map(e =>{
+            return {
+                name: e.name,
+                totalLikes: e.Likes.length
+            }
+        })
+        res.send(sorted.sort((a,b)=> b.totalLikes - a.totalLikes))
     } catch (error) {
         res.status(400).send(error)
         

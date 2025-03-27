@@ -1,10 +1,17 @@
 const { Op } = require('sequelize')
-const { Branch, Center, Region, Field, Subject } = require('../models/index.module')
+const {
+  Branch,
+  Center,
+  Region,
+  Field,
+  Subject,
+} = require('../models/index.module')
 const Branch_validation = require('../validation/branch.validation')
 const express = require('express')
 const { roleMiddleware } = require('../middleware/role.middleware')
 const BranchSubject = require('../models/branchSubject.module')
 const BranchField = require('../models/branchField.module')
+const sendLog = require('../logger')
 const route = express.Router()
 
 /**
@@ -20,7 +27,7 @@ const route = express.Router()
  *   get:
  *     summary: Get all branches
  *     tags: [Branch 🏢]
- *     security: 
+ *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
@@ -32,20 +39,36 @@ route.get('/', async (req, res) => {
   try {
     const branches = await Branch.findAll()
     res.json(branches)
+    sendLog('Muvaffaqiyatli branchlar GET qilindi✅')
   } catch (error) {
-    console.error("Error in GET /branch:", error)
+    console.error('Error in GET /branch:', error)
+    sendLog(`❌ Xatolik yuz berdi: ${error.message}
+      📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+      📂 Route: ${req.originalUrl}
+      📥 Sorov: ${JSON.stringify(req.body)}
+      🛠️ Stack: ${error.stack}`);
     res.status(400).send({ message: error.message })
   }
 })
 
-route.get("/:id", async (req, res) => {
+route.get('/:id', async (req, res) => {
   try {
     const branch = await Branch.findByPk(req.params.id)
-    if (!branch) return res.status(404).send({ message: 'Branch not found' })
+    if (!branch) {
+      sendLog('🚨 Branch not found')
+      return res.status(404).send({ message: 'Branch not found' })
+    }
+    sendLog('Muvaffaqiyatli branch GET qilindi✅')
     res.json(branch)
   } catch (error) {
-    console.error("Error in GET /branch/:id:", error)
+    sendLog(`❌ Xatolik yuz berdi: ${error.message}
+      📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
+      📂 Route: ${req.originalUrl}
+      📥 Sorov: ${req.body ? JSON.stringify(req.body) : 'Body yoq'}
+      🛠️ Stack: ${error.stack}`);
+    console.error('Error in GET /branch/:id:', error)
     res.status(400).send({ message: error.message })
+    return
   }
 })
 
@@ -106,59 +129,101 @@ route.get("/:id", async (req, res) => {
  *       400:
  *         description: Bad request
  */
-route.post('/', roleMiddleware(["ADMIN", "CEO"]),async (req, res) => {
+route.post('/', roleMiddleware(['ADMIN']), async (req, res) => {
   try {
-    const { region_id, learningCenter_id, field_id, subject_id, ...rest} = req.body
+    const { region_id, learningCenter_id, field_id, subject_id, ...rest } =
+      req.body
 
     const { error } = Branch_validation.validate(req.body)
-    if (error) return res.status(400).send({ message: error.details[0].message })
-    
-    const existingBranches = await Branch.findOne({where: {learningCenter_id: learningCenter_id, name: rest.name}})
-    if(existingBranches) return res.status(400).send({message: "This learning center already has a Branch with such a name!"})
+    if (error) {
+      sendLog(`🚨 Foydalanuvchi xato kiritdi: ${error.details[0].message}`)
+      return res.status(400).send({ message: error.details[0].message })
+    }
 
-    let center = await Center.findByPk(learningCenter_id)
-    if (!center) return res.status(404).send({ message: 'Center not found' })
-
-    let region = await Region.findByPk(region_id)
-    if (!region) return res.status(404).send({ message: 'Region not found' })
-
-      const subjects = await Subject.findAll({ where: { id: subject_id } });
-      if (subjects.length !== subject_id.length) {
-          return res.status(404).send({ message: 'One or more subjects not found' });
-      }
-      
-      const fields = await Field.findAll({ where: { id: field_id } });
-      if (fields.length !== field_id.length) {
-          return res.status(404).send({ message: 'One or more fields not found' });
-      }
-    
-      
-      await center.update({ branch_number: center.branch_number + 1 });
-
-      const newBranch = await Branch.create({
-        ...rest,
-        region_id: region_id,
-        learningCenter_id: learningCenter_id
+    const existingBranches = await Branch.findOne({
+      where: { learningCenter_id: learningCenter_id, name: rest.name },
+    })
+    if (existingBranches) {
+      sendLog(
+        `🚨 Xatolik: Foydalanuvchi (${req.user?.id} - ${req.user?.name}) "${req.body.name}" nomli filialni qoshmoqchi boldi, lekin bunday nom allaqachon mavjud!`,
+      )
+      return res.status(400).send({
+        message: 'This learning center already has a Branch with such a name!',
       })
+    }
+    let center = await Center.findByPk(learningCenter_id)
+    if (!center) {
+      sendLog(
+        `🚨 Xatolik: Foydalanuvchi (${req.user?.id} - ${req.user?.name}) learning center (${learningCenter_id}) ni topa olmadi!`,
+      )
+      return res.status(404).send({ message: 'Center not found' })
+    }
+    let region = await Region.findByPk(region_id)
+    if (!region) {
+      sendLog(
+        `🚨 Xatolik: Foydalanuvchi (${req.user?.id} - ${req.user?.name}) region (${region_id}) ni topa olmadi!`,
+      )
+      return res.status(404).send({ message: 'Region not found' })
+    }
 
-      await BranchSubject.bulkCreate(
-        subject_id.map((subject_id) => ({
-            BranchId: newBranch.id,
-            SubjectId: subject_id,
-        }))
-    );
-    console.log("Subjects added to BranchSubject:", subject_id);
-    
+    const subjects = await Subject.findAll({ where: { id: subject_id } })
+
+    if (subjects.length !== subject_id.length) {
+      sendLog(`🚨 Xatolik: Foydalanuvchi (${req.user?.id} - ${
+        req.user?.name
+      }) quyidagi subject ID larni izladi: ${subject_id}. 
+    Topilganlari: ${subjects.map((s) => s.id)}.
+    Qolganlari topilmadi!`)
+      return res.status(404).send({ message: 'One or more subjects not found' })
+    }
+
+    const fields = await Field.findAll({ where: { id: field_id } })
+
+    if (fields.length !== field_id.length) {
+      sendLog(`🚨 Xatolik: Foydalanuvchi (${req.user?.id} - ${
+        req.user?.name
+      }) quyidagi field ID larni izladi: ${field_id}. 
+    Topilganlari: ${fields.map((f) => f.id)}.
+    Qolganlari topilmadi!`)
+
+      return res.status(404).send({ message: 'One or more fields not found' })
+    }
+
+    await center.update({ branch_number: center.branch_number + 1 })
+
+    const newBranch = await Branch.create({
+      ...rest,
+      region_id: region_id,
+      learningCenter_id: learningCenter_id,
+    })
+
+    await BranchSubject.bulkCreate(
+      subject_id.map((subject_id) => ({
+        BranchId: newBranch.id,
+        SubjectId: subject_id,
+      })),
+    )
+    console.log('Subjects added to BranchSubject:', subject_id)
+
     await BranchField.bulkCreate(
-        field_id.map((field_id) => ({
-            BranchId: newBranch.id,
-            FieldId: field_id,
-        }))
-    );  
-      
+      field_id.map((field_id) => ({
+        BranchId: newBranch.id,
+        FieldId: field_id,
+      })),
+    )
+
     res.status(201).send({ newBranch })
-    } catch (err) {
-      console.error("Error in POST /branch:", err);
+    sendLog(`✅ Foydalanuvchi (${req.user?.id} - ${req.user?.name}) yangi branch yaratdi: 
+🆔 ID: ${newBranch.id}
+📍 Nomi: ${newBranch.name}
+🏢 Learning Center ID: ${newBranch.learningCenter_id}`)
+  } catch (err) {
+    sendLog(`❌ Xatolik yuz berdi: ${error.message}
+      📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
+      📂 Route: ${req.originalUrl}
+      📥 Sorov: ${req.body ? JSON.stringify(req.body) : 'Body yoq'}
+      🛠️ Stack: ${error.stack}`);
+    console.error('Error in POST /branch:', err)
     return res.status(400).json({ message: err.message })
   }
 })
@@ -171,7 +236,12 @@ route.patch('/:id', async (req, res) => {
     await one.update(req.body)
     res.send({ message: 'Updated successfully' })
   } catch (err) {
-    console.error("Error in PATCH /branch:", err)
+    sendLog(`❌ Xatolik yuz berdi: ${error.message}
+      📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
+      📂 Route: ${req.originalUrl}
+      📥 Sorov: ${req.body ? JSON.stringify(req.body) : 'Body yoq'}
+      🛠️ Stack: ${error.stack}`);
+    console.error('Error in PATCH /branch:', err)
     return res.status(400).json({ message: err.message })
   }
 })
@@ -216,23 +286,28 @@ route.patch('/:id', async (req, res) => {
  *         description: Branch not found
  */
 
-route.patch("/:id", async(req, res)=>{
-  const {id} = req.params
+route.patch('/:id', async (req, res) => {
+  const { id } = req.params
   try {
-      if(!id){
-        return res.status(400).send({message: "Wrong id"})
-      }
+    if (!id) {
+      return res.status(400).send({ message: 'Wrong id' })
+    }
 
-      const data = await Branch.findByPk(id)
-      if(!data){
-          return res.status(404).send("Branch not found")
-      }
-        
-      await data.update(req.body)
-      res.status(200).send(data)
+    const data = await Branch.findByPk(id)
+    if (!data) {
+      return res.status(404).send('Branch not found')
+    }
+
+    await data.update(req.body)
+    res.status(200).send(data)
   } catch (error) {
-      console.log(error)
-      res.status(400).send({message: error})
+    sendLog(`❌ Xatolik yuz berdi: ${error.message}
+      📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
+      📂 Route: ${req.originalUrl}
+      📥 Sorov: ${req.body ? JSON.stringify(req.body) : 'Body yoq'}
+      🛠️ Stack: ${error.stack}`);
+    console.log(error)
+    res.status(400).send({ message: error })
   }
 })
 
@@ -261,14 +336,20 @@ route.delete('/:id', async (req, res) => {
   try {
     let one = await Branch.findByPk(req.params.id)
     if (!one) return res.status(404).send({ message: 'Not found' })
-    
+
     await one.destroy()
     res.send({ message: 'Deleted successfully' })
   } catch (err) {
-    console.error("Error in DELETE /branch:", err)
-    return res.status(400).json({ message: 'Cannot delete this branch, it may be linked to other records' })
+    sendLog(`❌ Xatolik yuz berdi: ${error.message}
+      📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
+      📂 Route: ${req.originalUrl}
+      📥 Sorov: ${req.body ? JSON.stringify(req.body) : 'Body yoq'}
+      🛠️ Stack: ${error.stack}`);
+    console.error('Error in DELETE /branch:', err)
+    return res.status(400).json({
+      message: 'Cannot delete this branch, it may be linked to other records',
+    })
   }
 })
-
 
 module.exports = route

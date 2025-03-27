@@ -1,6 +1,7 @@
 const { Subject } = require('../models/index.module')
 const express = require('express')
 const SubjectValidation = require('../validation/subject.validation')
+const sendLog = require("../logger")
 const route = express.Router()
 
 /**
@@ -23,14 +24,24 @@ const route = express.Router()
  *         description: Bad request
  */
 route.get('/', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim';
+  const routePath = '/';
+
   try {
-    let subject = await Subject.findAll()
-    res.send(subject)
+    sendLog(`📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Query Parametrlar: ${JSON.stringify(req.query)}`);
+
+    let subject = await Subject.findAll();
+
+    sendLog(`✅ ${subject.length} ta subject topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Natija: ${JSON.stringify(subject)}`);
+
+    res.send(subject);
   } catch (err) {
-    res.status(400).send({ message: err.message })
-    console.log(err)
+    sendLog(`❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`);
+
+    res.status(400).send({ message: err.message });
   }
-})
+});
+
 
 /**
  * @swagger
@@ -60,18 +71,26 @@ route.get('/', async (req, res) => {
  *         description: Validation error
  */
 route.post('/', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim';
+  const routePath = '/';
+
   try {
-    const { error } = SubjectValidation.validate(req.body)
+    sendLog(`📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(req.body)}`);
+
+    const { error } = SubjectValidation.validate(req.body);
     if (error) {
-      return res.status(400).send({ message: error.details[0].message })
+      sendLog(`⚠️ Xato validatsiyada | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Xatolik: ${error.details[0].message}`);
+      return res.status(400).send({ message: error.details[0].message });
     }
-    let subject = await Subject.create(req.body)
-    res.status(201).send(subject)
+
+    let subject = await Subject.create(req.body);
+    sendLog(`✅ Yangi subject yaratildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Subject: ${JSON.stringify(subject)}`);
+    res.status(201).send(subject);
   } catch (err) {
-    console.log(err)
-    res.status(400).send(err)
+    sendLog(`❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`);
+    res.status(400).send(err);
   }
-})
+});
 
 /**
  * @swagger
@@ -93,17 +112,27 @@ route.post('/', async (req, res) => {
  *         description: Subject not found
  */
 route.get('/:id', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim';
+  const routePath = `/${req.params.id}`;
+
   try {
-    let one = await Subject.findByPk(req.params.id)
+    sendLog(`📥 So‘rov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(req.params)}`);
+
+    let one = await Subject.findByPk(req.params.id);
+    
     if (!one) {
-      return res.status(404).send({ message: 'Subject not found' })
+      sendLog(`⚠️ Subject topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 ID: ${req.params.id}`);
+      return res.status(404).send({ message: 'Subject not found' });
     }
-    res.send(one)
+
+    sendLog(`✅ Subject topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Subject: ${JSON.stringify(one)}`);
+    res.send(one);
   } catch (err) {
-    res.status(400).send({ message: err.message })
-    console.log(err)
+    sendLog(`❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`);
+    res.status(400).send({ message: err.message });
   }
-})
+});
+
 
 /**
  * @swagger
@@ -138,20 +167,30 @@ route.get('/:id', async (req, res) => {
  *         description: Subject not found
  */
 route.patch('/:id', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim';
+  const routePath = `/${req.params.id}`;
+
   try {
-    let one = await Subject.findByPk(req.params.id)
+    sendLog(`📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(req.params)} | 📋 Yangi ma'lumotlar: ${JSON.stringify(req.body)}`);
+
+    let one = await Subject.findByPk(req.params.id);
     if (!one) {
-      return res.status(404).send({ message: 'Subject not found' })
+      sendLog(`⚠️ Subject topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 ID: ${req.params.id}`);
+      return res.status(404).send({ message: 'Subject not found' });
     }
+
     let updatedSubject = await one.update(req.body, {
       fields: Object.keys(req.body),
-    })
-    res.send(updatedSubject)
+    });
+
+    sendLog(`✅ Subject yangilandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Yangilangan Subject: ${JSON.stringify(updatedSubject)}`);
+    res.send(updatedSubject);
   } catch (err) {
-    console.log(err)
-    return res.status(400).send({ message: err.message })
+    sendLog(`❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`);
+    return res.status(400).send({ message: err.message });
   }
-})
+});
+
 
 /**
  * @swagger
@@ -173,17 +212,27 @@ route.patch('/:id', async (req, res) => {
  *         description: Subject not found
  */
 route.delete('/:id', async (req, res) => {
+  const user = req.user ? req.user.username : 'Anonim';
+  const routePath = `/${req.params.id}`;
+
   try {
-    let one = await Subject.findByPk(req.params.id)
+    sendLog(`📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(req.params)}`);
+
+    let one = await Subject.findByPk(req.params.id);
     if (!one) {
-      return res.status(404).send({ message: 'Subject not found' })
+      sendLog(`⚠️ Subject topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 ID: ${req.params.id}`);
+      return res.status(404).send({ message: 'Subject not found' });
     }
-    await one.destroy()
-    res.send({ message: 'Deleted successfully' })
+
+    await one.destroy();
+    sendLog(`✅ Subject ochirilgan | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 ID: ${req.params.id}`);
+
+    res.send({ message: 'Deleted successfully' });
   } catch (err) {
-    console.log(err)
-    return res.status(400).send({ message: err.message })
+    sendLog(`❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`);
+    return res.status(400).send({ message: err.message });
   }
-})
+});
+
 
 module.exports = route

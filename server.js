@@ -13,12 +13,25 @@ const LikeRoute = require('./routes/like.route')
 const RatingRoute = require('./routes/rating.route')
 const SearchRoute = require("./routes/search.route")
 const CommentRoute = require("./routes/comment.route")
+const sendLog = require("./logger")
 
 const setupSwagger = require("./swagger/swagger")
 require('dotenv').config()
 const app = express()
 
+app.get('/alert', (req, res) => {
+  const message = "Hello, this is an alert message!";
+  res.send(`
+      <script>
+          alert("${message}");
+      </script>
+  `);
+});
+
 app.use(express.json())
+const cors = require("cors");
+app.use(cors({ origin: "*" })); 
+
 connectDB()
 
 setupSwagger(app)

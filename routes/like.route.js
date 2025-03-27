@@ -1,6 +1,7 @@
 const {Like, Center, User} = require("../models/index.module")
 const router = require("express").Router()
 const { AuthMiddleware } = require("../middleware/auth.middleware")
+const sendLog = require('../logger')
 
 /**
  * @swagger
@@ -34,17 +35,18 @@ const { AuthMiddleware } = require("../middleware/auth.middleware")
  *         404:
  *           description: Center not found
  * 
- *   /like/{id}:
+ *   /like/:
  *     delete:
  *       summary: Remove a like
+ *       security:
+ *         - BearerAuth: []
  *       tags: [Like]
- *       parameters:
- *         - in: path
- *           name: id
- *           required: true
- *           schema:
- *             type: integer
- *           description: Like ID
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Like'
  *       responses:
  *         200:
  *           description: Like deleted successfully
@@ -61,42 +63,90 @@ const { AuthMiddleware } = require("../middleware/auth.middleware")
  *           example: 3
  */
 
-router.get("/", async (req, res) => {
+router.get("/",  async (req, res) => {
     try {
-        let likes = await Like.findAll();
+        const userInfo = req.user
+            ? `👤 Foydalanuvchi: ID: ${req.user.id}, Role: ${req.user.role}`
+            : "👤 Noma'lum foydalanuvchi";
+
+        const routeInfo = `🛤️ Route: ${req.method} ${req.originalUrl}`;
+
+        sendLog(`📥 Sorov boshlandi
+                 ${routeInfo}
+                 ${userInfo}`);
+
+        let likes = await Like.findAll({
+            include: [
+                { model: User, attributes: ["id", "name", "email"] },
+                { model: Center, attributes: ["id", "name", "region_id"] }
+            ]
+        });
+
+        if (likes.length === 0) {
+            sendLog(`⚠️ Natija: Hech qanday like topilmadi
+                     ${routeInfo}`);
+            return res.status(404).send({ message: "No likes found" });
+        }
+
+        sendLog(`✅ Sorov muvaffaqiyatli bajarildi
+                 ${routeInfo}
+                 🔢 Jami like: ${likes.length}
+                 📊 Sorov natijasi: ${JSON.stringify(likes, null, 2)}`);
+
         res.send(likes);
     } catch (error) {
-        res.status(400).send(error)
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+                 ${routeInfo}
+                 🛠️ Stack: ${error.stack}`);
+        res.status(400).send({ message: error.message });
     }
-})
+});
 
-router.post("/", AuthMiddleware(),async (req, res) => {
+
+router.post("/", AuthMiddleware(), async (req, res) => {
     try {
-        let {learningCenter_id} = req.body
+        const userInfo = `👤 Foydalanuvchi: ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}`;
+        const routeInfo = `🛤️ Route: ${req.method} ${req.originalUrl}`;
+
+        sendLog(`📥 So‘rov boshlandi
+                 ${routeInfo}
+                 ${userInfo}
+                 📩 Yuborilgan ma’lumotlar: ${JSON.stringify(req.body)}`);
+
+        let { learningCenter_id } = req.body;
         let center = await Center.findByPk(learningCenter_id);
-        if (!center) return res.status(404).send({ message: "Center not found" });
 
         let existingLike = await Like.findOne({where: {user_id: req.user.id, learningCenter_id: learningCenter_id}})
-        console.log("reer");
         
         if(existingLike) return res.status(400).send({message: "You have already liked this learning center"})
 
+        console.log(req.user.id);
+        
+        if (!await User.findOne({where: {id: req.user.id}})) return res.status(400).send({message: `User with ${req.user.id} id not found`})
         let like = await Like.create({user_id: req.user.id, learningCenter_id});
         res.send(like);
     } catch (error) {
-        res.status(400).send(error)
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+                 ${routeInfo}
+                 🛠️ Stack: ${error.stack}`);
+        res.status(400).send({ message: error.message });
     }
-})
+});
 
-router.delete("/:id", async (req, res) => {
+router.delete("/", AuthMiddleware(),async (req, res) => {
     try {
-        let like = await Like.findByPk(req.params.id);
-        if (!like) return res.status(404).send({ message: "Like not found" });
+        let {learningCenter_id} = req.body
+        let like = await Like.findOne({where: {user_id: req.user.id, learningCenter_id: learningCenter_id}});
+        if (!like) return res.status(404).send({ message: "You have not liked this learning center yet" });
         let deleted = await like.destroy();
         res.send({deleted_data:  deleted, message: "Like deleted successfully" });
     } catch (error) {
-        res.status(400).send(error)
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+                 ${routeInfo}
+                 🛠️ Stack: ${error.stack}`);
+        res.status(400).send({ message: error.message });
     }
-})
+});
+
 
 module.exports = router

@@ -7,6 +7,7 @@ const BranchField = require("../models/branchField.module");
 const CenterField = require("../models/centerField.module");
 const CenterSubject = require("../models/centerSubject.module");
 const app = require("express").Router()
+const sendLog = require('../logger')
 
 
 /**
@@ -193,29 +194,60 @@ app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
     try {
         let { error } = CenterValidation.validate(req.body);
         if (error) {
+            sendLog(`⚠️ Xato: ${error.details[0].message}
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                📥 Sorov: ${JSON.stringify(req.body)}
+            `);
             return res.status(400).send({ message: error.details[0].message });
         }
-        const ceo_id = req.user.id;
 
+        const ceo_id = req.user.id;
         if (!ceo_id) {
+            sendLog(`⚠️ CEO topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+            `);
             return res.status(404).send("CEO not found");
         }
+
         let { subject_id, field_id, region_id, ...rest } = req.body;
 
-        let existingCenter = await Center.findOne({where: {name: rest.name}})
-        if(existingCenter) return res.status(400).send({message: "The learning center with such a name already exists!"})
+        let existingCenter = await Center.findOne({ where: { name: rest.name } });
+        if (existingCenter) {
+            sendLog(`⚠️ Ushbu nomdagi markaz allaqachon mavjud: ${rest.name}
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+            `);
+            return res.status(400).send({ message: "The learning center with such a name already exists!" });
+        }
+
         const region = await Region.findByPk(region_id);
         if (!region) {
+            sendLog(`⚠️ Region topilmadi: ID ${region_id}
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+            `);
             return res.status(404).send({ message: "Region not found" });
         }
 
         const fields = await Field.findAll({ where: { id: field_id } });
         if (fields.length !== field_id.length) {
+            sendLog(`⚠️ Bazi field_id topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 Kiritilgan field_id: ${JSON.stringify(field_id)}
+            `);
             return res.status(404).send({ message: "Some fields_id not found" });
         }
 
         const subjects = await Subject.findAll({ where: { id: subject_id } });
         if (subjects.length !== subject_id.length) {
+            sendLog(`⚠️ Bazi subject_id topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 Kiritilgan subject_id: ${JSON.stringify(subject_id)}
+            `);
             return res.status(404).send({ message: "Some subjects_id not found" });
         }
 
@@ -231,146 +263,314 @@ app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
                 SubjectId: subject_id,
             }))
         );
-        console.log("Subjects added to CenterSubject:", subject_id);
-        
+        sendLog(`✅ Subjects boglandi: ${JSON.stringify(subject_id)}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            🏢 Markaz: ${newCenter.id} - ${newCenter.name}
+        `);
+
         await CenterField.bulkCreate(
             field_id.map((field_id) => ({
                 CenterId: newCenter.id,
                 FieldId: field_id,
             }))
         );
-        console.log("Fields added to CenterField:", field_id);
-        req.body.ceo_id = ceo_id
-        
+        sendLog(`✅ Fields boglandi: ${JSON.stringify(field_id)}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            🏢 Markaz: ${newCenter.id} - ${newCenter.name}
+        `);
+
+        req.body.ceo_id = ceo_id;
+
+        sendLog(`🏢 Yangi oquv markazi yaratildi: ${newCenter.name}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            🔍 Region ID: ${region_id}
+            🔍 Subjects: ${JSON.stringify(subject_id)}
+            🔍 Fields: ${JSON.stringify(field_id)}
+        `);
+
         res.send(req.body);
     } catch (error) {
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.body)}
+            🛠️ Stack: ${error.stack}
+        `);
         console.log(error);
         res.status(400).send({ message: error.message });
     }
 });
 
-app.get("/",AuthMiddleware(), async(req, res)=>{
-    const {name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
+
+app.get("/", AuthMiddleware(), async (req, res) => {
+    const { name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
     try {
         const where = {};
 
         if (name) where.name = { [Op.like]: `%${name}%` };
         if (region_id) where.region_id = { [Op.like]: `%${region_id}%` };
         if (ceo_id) where.ceo_id = { [Op.like]: `%${ceo_id}%` };
-        
+
         const centers = await Center.findAll({
             where,
             limit: parseInt(limit),
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
-            include: [{ model: Subject, through: { attributes: [] } }, { model: Field, through: { attributes: [] } },{model: Region, attributes: ["name"]}, {model: User, attributes: ["email", "name"]}, {model: Branch, attributes: ["name", "location"]}, {model: Comment, attributes: ["star", "comment"]}]
+            include: [
+                { model: Subject, through: { attributes: [] } },
+                { model: Field, through: { attributes: [] } },
+                { model: Region, attributes: ["name"] },
+                { model: User, attributes: ["email", "name"] },
+                { model: Branch, attributes: ["name", "location"] },
+                { model: Comment, attributes: ["star", "comment"] }
+            ]
         });
 
-        if(!centers){
-            return res.status(203).send({message: "Nothing found"})
+        if (!centers.length) {
+            sendLog(`⚠️ Markaz topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 Sorov: ${JSON.stringify(req.query)}
+            `);
+            return res.status(204).send({ message: "Nothing found" });
         }
 
-        res.send(centers)
+        sendLog(`✅ Markazlar topildi
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            🔍 Natija: ${centers.length} ta markaz
+        `);
+
+        res.send(centers);
     } catch (error) {
-        console.log(error)
-        res.status(400).send({message: error})
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.query)}
+            🛠️ Stack: ${error.stack}
+        `);
+        res.status(400).send({ message: error.message });
     }
-})
+});
 
-app.get("/students", async(req, res)=>{
+
+app.get("/students", async (req, res) => {
     try {
-        if(!req.query.learningCenter_id){
-            return res.status(400).send({message: "learningCenter_id is required"})
+        if (!req.query.learningCenter_id) {
+            sendLog(`⚠️ Xato sorov: learningCenter_id kiritilmagan
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                📥 Sorov: ${JSON.stringify(req.query)}
+            `);
+            return res.status(400).send({ message: "learningCenter_id is required" });
         }
 
-        let student = await Registration.findAll({where: {learningCenter_id: req.query.learningCenter_id}})
-        
-        res.send(student)
+        let students = await Registration.findAll({ where: { learningCenter_id: req.query.learningCenter_id } });
+
+        if (!students.length) {
+            sendLog(`⚠️ Oquvchilar topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 learningCenter_id: ${req.query.learningCenter_id}
+            `);
+            return res.status(204).send({ message: "No students found" });
+        }
+
+        sendLog(`✅ ${students.length} ta oquvchi topildi
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            🔍 learningCenter_id: ${req.query.learningCenter_id}
+        `);
+
+        res.send(students);
     } catch (error) {
-        res.status(400).send({message: error})
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.query)}
+            🛠️ Stack: ${error.stack}
+        `);
+        res.status(400).send({ message: error.message });
     }
-})
+});
 
-app.get("/average-star", AuthMiddleware ,async(req, res)=>{
+
+app.get("/average-star", AuthMiddleware, async (req, res) => {
     try {
-        let {learningCenter_id} = req.query;
+        let { learningCenter_id } = req.query;
 
-        if(!learningCenter_id){
-            return res.status(400).send({message: "learningCenter_id is required"})
+        if (!learningCenter_id) {
+            sendLog(`⚠️ Xato sorov: learningCenter_id kiritilmagan
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                📥 Sorov: ${JSON.stringify(req.query)}
+            `);
+            return res.status(400).send({ message: "learningCenter_id is required" });
         }
-        let center_data = await Comment.findAll({where: {learningCenter_id: learningCenter_id}});        
-        let average_star = 0
-        if(!center_data){
-            return res.send({average_star})
+
+        let center_data = await Comment.findAll({ where: { learningCenter_id } });
+
+        if (!center_data.length) {
+            sendLog(`⚠️ Ushbu oquv markazida sharhlar topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 learningCenter_id: ${learningCenter_id}
+            `);
+            return res.send({ average_star: 0 });
         }
 
-        let count = 0
-        let star = 0
+        let totalStars = center_data.reduce((sum, comment) => sum + comment.star, 0);
+        let average_star = totalStars / center_data.length;
 
-        center_data.forEach(e => {
-            count++
-            star += e.star
-        });
-        let total = star / count;
-        res.send({average_star: total})
+        sendLog(`✅ Ortacha baho hisoblandi: ${average_star.toFixed(2)}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            🔍 learningCenter_id: ${learningCenter_id}
+            ⭐ Sharhlar soni: ${center_data.length}
+        `);
+
+        res.send({ average_star: average_star.toFixed(2) });
     } catch (error) {
-        res.status(400).send(error)
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.query)}
+            🛠️ Stack: ${error.stack}
+        `);
+        res.status(400).send({ message: error.message });
     }
-})
+});
 
-app.get("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
-    const {id} = req.params
+
+app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
+    const { id } = req.params;
     try {
-        if(!id){
-            return res.status(400).send({message: "Wrong ID"})
+        if (!id) {
+            sendLog(`⚠️ Xato sorov: ID kiritilmagan
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                📥 Sorov: ${JSON.stringify(req.params)}
+            `);
+            return res.status(400).send({ message: "Notogri ID" });
         }
+
         let center = await Center.findByPk(id, {
-            include: [{model: Region, attributes: ["name"]}, {model: User, attributes: ["email", "name"]}]
-          });
-          if (!center) return res.status(404).send({ message: "Center not found" });
-          res.send(center);
-    } catch (error) {
-        console.log(error)
-        res.status(400).send({message: error})
-    }
-})
+            include: [
+                { model: Region, attributes: ["name"] },
+                { model: User, attributes: ["email", "name"] }
+            ]
+        });
 
-app.patch("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
-    const {id} = req.params
+        if (!center) {
+            sendLog(`⚠️ Oquv markazi topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 ID: ${id}
+            `);
+            return res.status(404).send({ message: "Oquv markazi topilmadi" });
+        }
+
+        sendLog(`✅ Oquv markazi topildi
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            🔍 ID: ${id}
+        `);
+        res.send(center);
+    } catch (error) {
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.params)}
+            🛠️ Stack: ${error.stack}
+        `);
+        res.status(400).send({ message: error.message });
+    }
+});
+
+
+app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
+    const { id } = req.params;
     try {
-        if(!id){
-            return res.status(400).send({message: "Wrong ID"})
-        }
-        let center = await Center.findByPk(id)
-        if(!center){
-            return res.status(404).send({message: "Center not found"})
+        if (!id) {
+            sendLog(`⚠️ Xato sorov: ID kiritilmagan
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                📥 Sorov: ${JSON.stringify(req.params)}
+            `);
+            return res.status(400).send({ message: "Notogri ID" });
         }
 
-        await center.update(req.body)
-        res.send(center)
+        let center = await Center.findByPk(id);
+        if (!center) {
+            sendLog(`⚠️ Oquv markazi topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 ID: ${id}
+            `);
+            return res.status(404).send({ message: "Oquv markazi topilmadi" });
+        }
+
+        await center.update(req.body);
+
+        sendLog(`✅ O‘quv markazi yangilandi
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            🔍 ID: ${id}
+            🔄 Yangilangan ma'lumot: ${JSON.stringify(req.body)}
+        `);
+        res.send(center);
     } catch (error) {
-        console.log(error)
-        res.status(400).send({message: error})
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.body)}
+            🛠️ Stack: ${error.stack}
+        `);
+        res.status(400).send({ message: error.message });
     }
-})
+});
 
-app.delete("/:id",roleMiddleware(["CEO"]),  async(req, res)=>{
-    const {id} = req.params
+
+app.delete("/:id", roleMiddleware(["CEO"]), async (req, res) => {
+    const { id } = req.params;
     try {
-        if(!id){
-            return res.status(400).send({message: "Wrong ID"})
+        if (!id) {
+            sendLog(`⚠️ Xato sorov: ID kiritilmagan
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                📥 Sorov: ${JSON.stringify(req.params)}
+            `);
+            return res.status(400).send({ message: "Notogri ID" });
         }
 
-        let center = await Center.findByPk(id)
-        if(!center){
-            return res.status(404).send({message: "Center not found"})
+        let center = await Center.findByPk(id);
+        if (!center) {
+            sendLog(`⚠️ Oquv markazi topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 ID: ${id}
+            `);
+            return res.status(404).send({ message: "Oquv markazi topilmadi" });
         }
-        await center.destroy()
-        res.send(center)
+
+        await center.destroy();
+
+        sendLog(`🗑️ Oquv markazi ochirildi
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            🔍 ID: ${id}
+        `);
+        res.send({ message: "Oquv markazi muvaffaqiyatli ochirildi", center });
     } catch (error) {
-        console.log(error)
-        res.status(400).send({message: error})
+        sendLog(`❌ Xatolik yuz berdi: ${error.message}
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            📥 Sorov: ${JSON.stringify(req.params)}
+            🛠️ Stack: ${error.stack}
+        `);
+        res.status(400).send({ message: error.message });
     }
-})
+});
+
 
 module.exports = app
