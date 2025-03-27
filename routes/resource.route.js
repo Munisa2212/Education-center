@@ -192,7 +192,7 @@ app.post("/", AuthMiddleware(), async (req, res) => {
   });
   
 
-  app.get("/", AuthMiddleware(), async (req, res) => {
+  app.get("/", async (req, res) => {
     const { name, user_id, category_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
 
     try {
@@ -227,7 +227,7 @@ app.post("/", AuthMiddleware(), async (req, res) => {
 });
 
 
-app.get("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
+app.get("/:id", async (req, res) => {
     const { id } = req.params;
 
     try {

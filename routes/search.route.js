@@ -483,7 +483,7 @@ router.get("/user", roleMiddleware(["ADMIN"]), async (req, res) => {
     }
 });
 
-router.get("/center", roleMiddleware(["ADMIN"]), async (req, res) => {
+router.get("/center", async (req, res) => {
     try {
         let { name, region_id, ceo_id, subject_id, field_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
         const where = {};

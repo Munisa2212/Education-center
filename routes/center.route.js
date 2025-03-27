@@ -302,7 +302,7 @@ app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
 });
 
 
-app.get("/", AuthMiddleware(), async (req, res) => {
+app.get("/", async (req, res) => {
     const { name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
     try {
         const where = {};
@@ -354,7 +354,7 @@ app.get("/", AuthMiddleware(), async (req, res) => {
 });
 
 
-app.get("/students", async (req, res) => {
+app.get("/students",roleMiddleware(["ADMIN","CEO"]), async (req, res) => {
     try {
         if (!req.query.learningCenter_id) {
             sendLog(`⚠️ Xato sorov: learningCenter_id kiritilmagan

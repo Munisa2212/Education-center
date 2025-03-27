@@ -2,6 +2,7 @@ const { Region } = require('../models/index.module')
 const RegionValidation = require('../validation/region.valadation')
 const express = require('express')
 const sendLog = require("../logger")
+const { roleMiddleware } = require('../middleware/role.middleware')
 const route = express.Router()
 
 /**
@@ -59,9 +60,9 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Xatolik yoki region allaqachon mavjud
  */
-route.post('/', async (req, res) => {
+route.post('/',roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
-    sendLog(`📥 So‘rov qabul qilindi | 🌍 Route: ${req.originalUrl} | 📌 Ma'lumot: ${JSON.stringify(req.body)}`);
+    sendLog(`📥 Sorov qabul qilindi | 🌍 Route: ${req.originalUrl} | 📌 Ma'lumot: ${JSON.stringify(req.body)}`);
 
     const { error } = RegionValidation.validate(req.body);
     if (error) {
@@ -153,7 +154,7 @@ route.get('/:id', async (req, res) => {
  *       400:
  *         description: Xatolik yuz berdi
  */
-route.patch('/:id', async (req, res) => {
+route.patch('/:id',roleMiddleware(["ADMIN","SUPER-ADMIN"]), async (req, res) => {
   try {
     sendLog(`📥 Sorov qabul qilindi | ✏️ PATCH | 🌍 Route: ${req.originalUrl} | 🆔 Region ID: ${req.params.id} | 📌 Yangilash ma'lumotlari: ${JSON.stringify(req.body)}`);
 
@@ -197,7 +198,7 @@ route.patch('/:id', async (req, res) => {
  *       400:
  *         description: Xatolik yuz berdi
  */
-route.delete('/:id', async (req, res) => {
+route.delete('/:id',roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     sendLog(`📥 Sorov qabul qilindi | 🗑️ DELETE | 🌍 Route: ${req.originalUrl} | 🆔 Region ID: ${req.params.id}`);
 

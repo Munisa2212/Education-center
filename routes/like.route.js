@@ -1,7 +1,8 @@
 const {Like, Center, User} = require("../models/index.module")
 const router = require("express").Router()
 const AuthMiddleware = require("../middleware/auth.middleware")
-const sendLog = require('../logger')
+const sendLog = require('../logger');
+const { roleMiddleware } = require("../middleware/role.middleware");
 
 /**
  * @swagger
@@ -65,7 +66,7 @@ const sendLog = require('../logger')
  *           example: 3
  */
 
-router.get("/", AuthMiddleware(), async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const userInfo = req.user
 
@@ -136,7 +137,7 @@ router.post("/", AuthMiddleware(), async (req, res) => {
     }
 });
 
-router.delete("/", AuthMiddleware(),async (req, res) => {
+router.delete("/",roleMiddleware(["ADMIN"]),async (req, res) => {
     try {
         let {learningCenter_id} = req.body
         let like = await Like.findOne({where: {user_id: req.user.id, learningCenter_id: learningCenter_id}});

@@ -1,4 +1,5 @@
 const { roleMiddleware } = require("../middleware/role.middleware")
+const AuthMiddleware = require("../middleware/auth.middleware")
 const {Registration, User} = require("../models/index.module")
 const RegistrationValidation = require("../validation/registration.validation")
 const sendLog = require("../logger")
@@ -67,7 +68,7 @@ const app = require("express").Router()
  */
 
 
-app.post("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+app.post("/",AuthMiddleware(), async (req, res) => {
     const id = req.user.id;
     try {
       sendLog(`📥 Sorov qabul qilindi | ✏️ POST | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${id} | 📝 Malumot: ${JSON.stringify(req.body)}`);
