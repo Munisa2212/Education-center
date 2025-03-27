@@ -3,7 +3,7 @@ const app = require("express").Router()
 const {Category, Resource} = require("../models/index.module")
 const { Op } = require("sequelize")
 const { roleMiddleware } = require("../middleware/role.middleware")
-const { AuthMiddleware } = require("../middleware/auth.middleware")
+const AuthMiddleware = require("../middleware/auth.middleware")
 const sendLog = require('../logger')
 
 
@@ -166,7 +166,7 @@ const sendLog = require('../logger')
  *           description: Optional image URL for the category
  */
 
-app.post("/", roleMiddleware(["ADMIN"]), async (req, res) => {
+app.post("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
     try {
         let { error } = CategoryValidation.validate(req.body);
         if (error) {

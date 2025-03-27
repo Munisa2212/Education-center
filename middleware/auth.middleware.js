@@ -19,4 +19,4 @@ function AuthMiddleware(){
     }
 }
 
-module.exports = {AuthMiddleware}
+module.exports = AuthMiddleware

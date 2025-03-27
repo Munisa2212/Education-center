@@ -25,19 +25,124 @@ const route = express.Router()
  * @swagger
  * /branch:
  *   get:
- *     summary: Get all branches
+ *     summary: Retrieve a list of branches
  *     tags: [Branch 🏢]
- *     security:
- *       - BearerAuth: []
+ *     description: Fetches branches with optional filtering, sorting, and pagination.
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filter branches by name (partial match)
+ *       - in: query
+ *         name: location
+ *         schema:
+ *           type: string
+ *         description: Filter branches by location (partial match)
+ *       - in: query
+ *         name: region_id
+ *         schema:
+ *           type: string
+ *         description: Filter branches by region ID (partial match)
+ *       - in: query
+ *         name: learningCenter_id
+ *         schema:
+ *           type: string
+ *         description: Filter branches by learning center ID (partial match)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of results per page (pagination)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *         description: Order of sorting (ascending or descending)
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: id
+ *         description: Field to sort results by
  *     responses:
  *       200:
- *         description: List of all branches
+ *         description: Successfully retrieved a list of branches
+ *         content:
+ *           application/json:
+ *             example:
+ *               - id: 1
+ *                 name: "Tech Academy"
+ *                 location: "Downtown"
+ *                 region_id: 5
+ *                 learningCenter_id: 2
+ *                 subjects:
+ *                   - id: 3
+ *                     name: "Mathematics"
+ *                   - id: 7
+ *                     name: "Computer Science"
+ *                 fields:
+ *                   - id: 1
+ *                     name: "Engineering"
+ *                 region:
+ *                   name: "Tashkent"
+ *               - id: 2
+ *                 name: "Code Hub"
+ *                 location: "City Center"
+ *                 region_id: 2
+ *                 learningCenter_id: 3
+ *                 subjects:
+ *                   - id: 4
+ *                     name: "Physics"
+ *                 fields:
+ *                   - id: 2
+ *                     name: "Science"
+ *                 region:
+ *                   name: "Samarkand"
  *       400:
- *         description: Bad request
+ *         description: Bad request due to validation error or server issue.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Invalid request parameters"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Unexpected error occurred"
  */
+
 route.get('/', async (req, res) => {
+  const {name, location, region_id, learningCenter_id, limit = 10, page = 1, order = "ASC", sortBy = "id"} = req.query
   try {
-    const branches = await Branch.findAll()
+    const where = {};
+
+    if (name) where.name = { [Op.like]: `%${name}%` };
+    if (location) where.location = { [Op.like]: `%${location}%` };
+    if (region_id) where.region_id = { [Op.like]: `%${region_id}%` };
+    if (learningCenter_id) where.learningCenter_id = { [Op.like]: `%${learningCenter_id}%` };
+
+    const branches = await Branch.findAll({
+      where,
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit),
+      order: [[sortBy, order.toUpperCase()]],
+      include: [
+          { model: Subject, through: { attributes: [] } },
+          { model: Field, through: { attributes: [] } },
+          { model: Region, attributes: ["name"] }
+      ]
+  })
     res.json(branches)
     sendLog('Muvaffaqiyatli branchlar GET qilindi✅')
   } catch (error) {
@@ -50,6 +155,8 @@ route.get('/', async (req, res) => {
     res.status(400).send({ message: error.message })
   }
 })
+
+
 
 route.get('/:id', async (req, res) => {
   try {
@@ -71,6 +178,7 @@ route.get('/:id', async (req, res) => {
     return
   }
 })
+
 
 /**
  * @swagger
@@ -129,7 +237,7 @@ route.get('/:id', async (req, res) => {
  *       400:
  *         description: Bad request
  */
-route.post('/', roleMiddleware(['ADMIN']), async (req, res) => {
+route.post('/', roleMiddleware(['ADMIN', "CEO"]), async (req, res) => {
   try {
     const { region_id, learningCenter_id, field_id, subject_id, ...rest } =
       req.body

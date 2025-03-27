@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { AuthMiddleware } = require("../middleware/auth.middleware");
+const AuthMiddleware = require("../middleware/auth.middleware");
 const { roleMiddleware } = require("../middleware/role.middleware");
 const { Op } = require("sequelize");
 const { Comment, User, Center, Branch, Category, Field, Subject, Region } = require("../models/index.module");

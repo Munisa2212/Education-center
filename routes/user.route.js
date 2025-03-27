@@ -7,7 +7,7 @@ const {
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const { AuthMiddleware } = require('../middleware/auth.middleware')
+const AuthMiddleware = require('../middleware/auth.middleware')
 const { roleMiddleware } = require('../middleware/role.middleware')
 const { totp, authenticator } = require('otplib')
 const { sendEmail } = require('../config/transporter')
@@ -710,7 +710,7 @@ router.post('/refresh-token', async (req, res) => {
   }
 })
 
-router.post('/request-reset', async (req, res) => {
+router.post('/request-reset%20%F0%9F%93%A9', async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = '/request-reset'
 

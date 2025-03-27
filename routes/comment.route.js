@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const {Comment, User, Center} = require("../models/index.module")
-const { AuthMiddleware } = require("../middleware/auth.middleware")
+const AuthMiddleware = require("../middleware/auth.middleware")
 const { Op } = require("sequelize");
 const CommentValidation = require("../validation/comment.validation");
 const sendLog = require('../logger')

@@ -2,7 +2,7 @@ const { Op } = require("sequelize");
 const {Center, Region, User, Branch, Comment, Registration, Subject, Field} = require("../models/index.module");
 const CenterValidation = require("../validation/center.validation");
 const { roleMiddleware } = require("../middleware/role.middleware");
-const { AuthMiddleware } = require("../middleware/auth.middleware");
+const AuthMiddleware = require("../middleware/auth.middleware");
 const BranchField = require("../models/branchField.module");
 const CenterField = require("../models/centerField.module");
 const CenterSubject = require("../models/centerSubject.module");
@@ -364,10 +364,10 @@ app.get("/students", async (req, res) => {
             `);
             return res.status(400).send({ message: "learningCenter_id is required" });
         }
-
+        
         let students = await Registration.findAll({ where: { learningCenter_id: req.query.learningCenter_id } });
 
-        if (!students.length) {
+        if (!students) {
             sendLog(`⚠️ Oquvchilar topilmadi
                 📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
                 📂 Route: ${req.originalUrl}
@@ -395,7 +395,7 @@ app.get("/students", async (req, res) => {
 });
 
 
-app.get("/average-star", AuthMiddleware, async (req, res) => {
+app.get("/average-star", AuthMiddleware(), async (req, res) => {
     try {
         let { learningCenter_id } = req.query;
 
@@ -410,7 +410,7 @@ app.get("/average-star", AuthMiddleware, async (req, res) => {
 
         let center_data = await Comment.findAll({ where: { learningCenter_id } });
 
-        if (!center_data.length) {
+        if (!center_data) {
             sendLog(`⚠️ Ushbu oquv markazida sharhlar topilmadi
                 📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
                 📂 Route: ${req.originalUrl}
@@ -420,6 +420,9 @@ app.get("/average-star", AuthMiddleware, async (req, res) => {
         }
 
         let totalStars = center_data.reduce((sum, comment) => sum + comment.star, 0);
+        if(totalStars == 0){
+            return res.send({ average_star: 0 })
+        }
         let average_star = totalStars / center_data.length;
 
         sendLog(`✅ Ortacha baho hisoblandi: ${average_star.toFixed(2)}
@@ -428,7 +431,7 @@ app.get("/average-star", AuthMiddleware, async (req, res) => {
             🔍 learningCenter_id: ${learningCenter_id}
             ⭐ Sharhlar soni: ${center_data.length}
         `);
-
+        
         res.send({ average_star: average_star.toFixed(2) });
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
@@ -451,7 +454,7 @@ app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
                 📂 Route: ${req.originalUrl}
                 📥 Sorov: ${JSON.stringify(req.params)}
             `);
-            return res.status(400).send({ message: "Notogri ID" });
+            return res.status(400).send({ message: "Wrong ID" });
         }
 
         let center = await Center.findByPk(id, {
@@ -467,7 +470,7 @@ app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
                 📂 Route: ${req.originalUrl}
                 🔍 ID: ${id}
             `);
-            return res.status(404).send({ message: "Oquv markazi topilmadi" });
+            return res.status(404).send({ message: "No Center found" });
         }
 
         sendLog(`✅ Oquv markazi topildi
@@ -497,7 +500,7 @@ app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
                 📂 Route: ${req.originalUrl}
                 📥 Sorov: ${JSON.stringify(req.params)}
             `);
-            return res.status(400).send({ message: "Notogri ID" });
+            return res.status(400).send({ message: "Wrong ID" });
         }
 
         let center = await Center.findByPk(id);
@@ -507,7 +510,7 @@ app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
                 📂 Route: ${req.originalUrl}
                 🔍 ID: ${id}
             `);
-            return res.status(404).send({ message: "Oquv markazi topilmadi" });
+            return res.status(404).send({ message: "No Center found" });
         }
 
         await center.update(req.body);
@@ -540,7 +543,7 @@ app.delete("/:id", roleMiddleware(["CEO"]), async (req, res) => {
                 📂 Route: ${req.originalUrl}
                 📥 Sorov: ${JSON.stringify(req.params)}
             `);
-            return res.status(400).send({ message: "Notogri ID" });
+            return res.status(400).send({ message: "Wrong ID" });
         }
 
         let center = await Center.findByPk(id);
@@ -550,7 +553,7 @@ app.delete("/:id", roleMiddleware(["CEO"]), async (req, res) => {
                 📂 Route: ${req.originalUrl}
                 🔍 ID: ${id}
             `);
-            return res.status(404).send({ message: "Oquv markazi topilmadi" });
+            return res.status(404).send({ message: "No Center found" });
         }
 
         await center.destroy();
