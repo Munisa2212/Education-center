@@ -1,6 +1,6 @@
 const {Like, Center, User} = require("../models/index.module")
 const router = require("express").Router()
-const { AuthMiddleware } = require("../middleware/auth.middleware")
+const AuthMiddleware = require("../middleware/auth.middleware")
 const sendLog = require('../logger')
 
 /**
@@ -14,6 +14,8 @@ const sendLog = require('../logger')
  *     get:
  *       summary: Get all likes
  *       tags: [Like]
+ *       security:
+ *         - BearerAuth: []
  *       responses:
  *         200:
  *           description: List of all likes
@@ -63,9 +65,10 @@ const sendLog = require('../logger')
  *           example: 3
  */
 
-router.get("/",  async (req, res) => {
+router.get("/", AuthMiddleware(), async (req, res) => {
     try {
         const userInfo = req.user
+
             ? `👤 Foydalanuvchi: ID: ${req.user.id}, Role: ${req.user.role}`
             : "👤 Noma'lum foydalanuvchi";
 
@@ -108,10 +111,10 @@ router.post("/", AuthMiddleware(), async (req, res) => {
         const userInfo = `👤 Foydalanuvchi: ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}`;
         const routeInfo = `🛤️ Route: ${req.method} ${req.originalUrl}`;
 
-        sendLog(`📥 So‘rov boshlandi
+        sendLog(`📥 Sorov boshlandi
                  ${routeInfo}
                  ${userInfo}
-                 📩 Yuborilgan ma’lumotlar: ${JSON.stringify(req.body)}`);
+                 📩 Yuborilgan malumotlar: ${JSON.stringify(req.body)}`);
 
         let { learningCenter_id } = req.body;
         let center = await Center.findByPk(learningCenter_id);

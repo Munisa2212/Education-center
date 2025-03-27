@@ -1,5 +1,5 @@
 const sendLog = require('../logger')
-const { AuthMiddleware } = require('../middleware/auth.middleware')
+const AuthMiddleware = require('../middleware/auth.middleware')
 const { roleMiddleware } = require('../middleware/role.middleware')
 const { Field } = require('../models/index.module')
 const FieldValidation = require('../validation/field.validation')
@@ -72,7 +72,7 @@ route.get("/", roleMiddleware(["ADMIN"]), async (req, res) => {
  *       400:
  *         description: Validation error
  */
-route.post('/', roleMiddleware(["ADMIN"]), async (req, res) => {
+route.post('/', roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
   try {
     const userInfo = req.user ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` : "Noma'lum foydalanuvchi";
     

@@ -7,7 +7,7 @@ const {
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const { AuthMiddleware } = require('../middleware/auth.middleware')
+const AuthMiddleware = require('../middleware/auth.middleware')
 const { roleMiddleware } = require('../middleware/role.middleware')
 const { totp, authenticator } = require('otplib')
 const { sendEmail } = require('../config/transporter')
