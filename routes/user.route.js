@@ -417,17 +417,12 @@ router.post('/register', async (req, res) => {
     )
     sendEmail(email, otp)
 
-    res
-      .status(201)
-      .send({
-        user_data: newUser,
-        message: 'User created successfully, otp is sent to email and phone',
-      })
+    res.status(201).send({ user_data: newUser, message: 'User created successfully, otp is sent to email and phone',})
   } catch (error) {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -861,5 +856,7 @@ router.get('/refresh', AuthMiddleware(), async (req, res) => {
     }
 });
 
+const PromoteRouter = require("./promotion.route")
+router.use("/promotion", PromoteRouter)
 
 module.exports = router
