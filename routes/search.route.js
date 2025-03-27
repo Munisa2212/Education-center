@@ -11,7 +11,7 @@ const sendLog = require("../logger")
  *   get:
  *     summary: Get comments with filtering, sorting, and pagination
  *     tags:
- *       - Search 🔍
+ *       - Search
  *     parameters:
  *       - name: user_id
  *         in: query
@@ -71,7 +71,7 @@ const sendLog = require("../logger")
  *   get:
  *     summary: Get users with filtering
  *     tags:
- *       - Search 🔍
+ *       - Search
  *     parameters:
  *       - name: name
  *         in: query
@@ -106,7 +106,7 @@ const sendLog = require("../logger")
  *   get:
  *     summary: Get centers with filtering, sorting, and pagination
  *     tags:
- *       - Search 🔍
+ *       - Search
  *     parameters:
  *       - name: name
  *         in: query
@@ -173,7 +173,7 @@ const sendLog = require("../logger")
  *   get:
  *     summary: Get branches with filtering, sorting, and pagination
  *     tags:
- *       - Search 🔍
+ *       - Search
  *     parameters:
  *       - name: name
  *         in: query
@@ -228,7 +228,7 @@ const sendLog = require("../logger")
  *   get:
  *     summary: Get categories with filtering, sorting, and pagination
  *     tags:
- *       - Search 🔍
+ *       - Search
  *     parameters:
  *       - name: name
  *         in: query
@@ -275,7 +275,7 @@ const sendLog = require("../logger")
  *   get:
  *     summary: Get fields with filtering, sorting, and pagination
  *     tags:
- *       - Search 🔍
+ *       - Search
  *     parameters:
  *       - name: name
  *         in: query
@@ -322,7 +322,7 @@ const sendLog = require("../logger")
  *   get:
  *     summary: Get subjects with filtering, sorting, and pagination
  *     tags:
- *       - Search 🔍
+ *       - Search
  *     parameters:
  *       - name: name
  *         in: query
@@ -369,7 +369,7 @@ const sendLog = require("../logger")
  *   get:
  *     summary: Get regions with filtering, sorting, and pagination
  *     tags:
- *       - Search 🔍
+ *       - Search
  *     parameters:
  *       - name: name
  *         in: query
