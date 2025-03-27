@@ -186,7 +186,7 @@ app.post("/", AuthMiddleware(), async (req, res) => {
   
       res.send(newResource);
     } catch (error) {
-      sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId} | 🛠️ Stack: ${error.stack}`);
+      sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId || "nomalum"} | 🛠️ Stack: ${error.stack}`);
       res.status(400).send({ message: error.details?.[0]?.message || error.message });
     }
   });
@@ -196,7 +196,7 @@ app.post("/", AuthMiddleware(), async (req, res) => {
     const { name, user_id, category_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
 
     try {
-        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 📝 Filter: ${JSON.stringify(req.query)}`);
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id || "nomalum"} | 📝 Filter: ${JSON.stringify(req.query)}`);
 
         const where = {};
 
@@ -213,15 +213,15 @@ app.post("/", AuthMiddleware(), async (req, res) => {
         });
 
         if (!data || data.length === 0) {
-            sendLog(`⚠️ Resurs topilmadi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id}`);
+            sendLog(`⚠️ Resurs topilmadi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id || "nomalum"}`);
             return res.status(404).send({ message: "Resource not found" });
         }
 
-        sendLog(`✅ Sorov bajarildi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🔢 Topilgan resurslar soni: ${data.length}`);
+        sendLog(`✅ Sorov bajarildi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id || "nomalum"} | 🔢 Topilgan resurslar soni: ${data.length}`);
 
         res.send(data);
     } catch (error) {
-        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🛠️ Stack: ${error.stack}`);
+        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id || "nomalum"} | 🛠️ Stack: ${error.stack}`);
         res.status(400).send({ message: error.details?.[0]?.message || error.message });
     }
 });
@@ -231,7 +231,7 @@ app.get("/:id", async (req, res) => {
     const { id } = req.params;
 
     try {
-        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 Resource ID: ${id}`);
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id|| "nomalum"} | 🆔 Resource ID: ${id}`);
 
         if (!id) {
             sendLog(`⚠️ Notogri ID | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id}`);
@@ -281,7 +281,7 @@ app.delete("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
         res.send({ message: "Resource deleted successfully", deleted_data: data });
 
     } catch (error) {
-        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🛠️ Stack: ${error.stack}`);
+        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id || "nomalum"} | 🛠️ Stack: ${error.stack}`);
         res.status(400).send({ message: error.details?.[0]?.message || error.message });
     }
 });
@@ -311,7 +311,7 @@ app.patch("/:id", roleMiddleware(["SUPER-ADMIN", "ADMIN"]), async (req, res) => 
         res.send({ message: "Resource updated successfully", updated_data: data });
 
     } catch (error) {
-        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🛠 Stack: ${error.stack}`);
+        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id  || "nomalum"} | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.details?.[0]?.message || error.message });
     }
 });
