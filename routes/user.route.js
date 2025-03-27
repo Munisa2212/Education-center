@@ -348,7 +348,7 @@ totp.options = { step: 300, digits: 5 }
  *       properties:
  *         email:
  *           type: string
- *           example: user@gmail.com
+ *           example: ibodullayevamunisa570@gmail.com
  *           format: email
  *           description: User email
  *         password:
