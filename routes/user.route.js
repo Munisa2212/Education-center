@@ -14,6 +14,7 @@ const { sendEmail } = require('../config/transporter')
 const { Op } = require('sequelize')
 const DeviceDetector = require('device-detector-js')
 const deviceDetector = new DeviceDetector()
+const sendLog = require("../logger")
 
 totp.options = { step: 300, digits: 5 }
 

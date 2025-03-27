@@ -3,6 +3,7 @@ const { AuthMiddleware } = require("../middleware/auth.middleware");
 const { roleMiddleware } = require("../middleware/role.middleware");
 const { Op } = require("sequelize");
 const { Comment, User, Center, Branch, Category, Field, Subject, Region } = require("../models/index.module");
+const sendLog = require("../logger")
 
 /**
  * @swagger

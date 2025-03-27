@@ -3,6 +3,7 @@ const {Resource, Category} = require("../models/index.module")
 const ResourceValidation = require("../validation/resource.validation")
 const { roleMiddleware } = require("../middleware/role.middleware")
 const { AuthMiddleware } = require("../middleware/auth.middleware")
+const sendLog = require("../logger")
 const app = require("express").Router()
 /**
  * @swagger

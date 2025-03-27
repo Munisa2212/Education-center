@@ -1,6 +1,7 @@
 const { AuthMiddleware } = require("../middleware/auth.middleware");
 const {Like, Comment, Center} = require("../models/index.module");
 const app = require("express").Router()
+const sendLog = require("../logger")
 
 /**
  * @swagger
