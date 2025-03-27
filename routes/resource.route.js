@@ -8,7 +8,7 @@ const app = require("express").Router()
 /**
  * @swagger
  * tags:
- *   name: Resource
+ *   name: Resource 🛠️
  *   description: Resource management API
  * 
  * paths:
@@ -17,7 +17,7 @@ const app = require("express").Router()
  *       summary: Create a new resource
  *       security:
  *         - BearerAuth: []
- *       tags: [Resource]
+ *       tags: [Resource 🛠️]
  *       requestBody:
  *         required: true
  *         content:
@@ -34,7 +34,7 @@ const app = require("express").Router()
  *       summary: Get a list of resources
  *       security:
  *         - BearerAuth: []
- *       tags: [Resource]
+ *       tags: [Resource 🛠️]
  *       parameters:
  *         - in: query
  *           name: name
@@ -87,7 +87,7 @@ const app = require("express").Router()
  *       summary: Get a resource by ID
  *       security:
  *         - BearerAuth: []
- *       tags: [Resource]
+ *       tags: [Resource 🛠️]
  *       parameters:
  *         - in: path
  *           name: id
@@ -105,7 +105,7 @@ const app = require("express").Router()
  *       summary: Delete a resource
  *       security:
  *         - BearerAuth: []
- *       tags: [Resource]
+ *       tags: [Resource 🛠️]
  *       parameters:
  *         - in: path
  *           name: id
@@ -123,7 +123,7 @@ const app = require("express").Router()
  *       summary: Update a resource
  *       security:
  *         - BearerAuth: []
- *       tags: [Resource]
+ *       tags: [Resource 🛠️]
  *       parameters:
  *         - in: path
  *           name: id

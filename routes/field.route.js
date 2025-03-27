@@ -9,7 +9,7 @@ const route = express.Router()
 /**
  * @swagger
  * tags:
- *   name: Field
+ *   name: Field 💼
  *   description: Field management API
  */
 
@@ -18,7 +18,7 @@ const route = express.Router()
  * /field:
  *   get:
  *     summary: Get all fields
- *     tags: [Field]
+ *     tags: [Field 💼]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -48,7 +48,7 @@ route.get("/", roleMiddleware(["ADMIN"]), async (req, res) => {
  * /field:
  *   post:
  *     summary: Create a new field
- *     tags: [Field]
+ *     tags: [Field 💼]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -130,7 +130,7 @@ route.post('/', roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
  * /field/{id}:
  *   get:
  *     summary: Get a field by ID
- *     tags: [Field]
+ *     tags: [Field 💼]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -188,7 +188,7 @@ route.get('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
  * /field/{id}:
  *   patch:
  *     summary: Update a field
- *     tags: [Field]
+ *     tags: [Field 💼]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -268,7 +268,7 @@ route.patch('/:id', roleMiddleware(["ADMIN"]), async (req, res) => {
  * /field/{id}:
  *   delete:
  *     summary: Delete a field
- *     tags: [Field]
+ *     tags: [Field 💼]
  *     security:
  *       - BearerAuth: []
  *     parameters:

@@ -10,7 +10,7 @@ const sendLog = require('../logger')
 /**
  * @swagger
  * tags:
- *   name: Category
+ *   name: Category 📂
  *   description: API endpoints for managing categories
  */
 
@@ -22,7 +22,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - Category
+ *       - Category 📂
  *     requestBody:
  *       required: true
  *       content:
@@ -42,7 +42,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - Category
+ *       - Category 📂
  *     parameters:
  *       - name: name
  *         in: query
@@ -88,7 +88,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - Category
+ *       - Category 📂
  *     parameters:
  *       - name: id
  *         in: path
@@ -107,7 +107,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - Category
+ *       - Category 📂
  *     parameters:
  *       - name: id
  *         in: path
@@ -132,7 +132,7 @@ const sendLog = require('../logger')
  *     security:
  *       - BearerAuth: []
  *     tags: 
- *       - Category
+ *       - Category 📂
  *     parameters:
  *       - name: id
  *         in: path

@@ -9,7 +9,7 @@ const route = express.Router()
  * /region:
  *   get:
  *     summary: Barcha regionlarni olish
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     responses:
  *       200:
  *         description: Regionlar ro‘yxati
@@ -39,7 +39,7 @@ route.get('/', async (req, res) => {
  * /region:
  *   post:
  *     summary: Yangi region qo‘shish
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     requestBody:
  *       required: true
  *       content:
@@ -90,7 +90,7 @@ route.post('/', async (req, res) => {
  * /region/{id}:
  *   get:
  *     summary: ID bo‘yicha region olish
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     parameters:
  *       - in: path
  *         name: id
@@ -127,7 +127,7 @@ route.get('/:id', async (req, res) => {
  * /region/{id}:
  *   patch:
  *     summary: Region ma’lumotlarini yangilash
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     parameters:
  *       - in: path
  *         name: id
@@ -181,7 +181,7 @@ route.patch('/:id', async (req, res) => {
  * /region/{id}:
  *   delete:
  *     summary: Regionni o‘chirish
- *     tags: [Region]
+ *     tags: [Region 📍]
  *     parameters:
  *       - in: path
  *         name: id

@@ -8,14 +8,14 @@ const sendLog = require('../logger')
 /**
  * @swagger
  * tags:
- *   name: Comment
+ *   name: Comment 💬
  *   description: Comments management for learning centers
  * 
  * paths:
  *   /comment:
  *     get:
  *       summary: Get all comments
- *       tags: [Comment]
+ *       tags: [Comment 💬]
  *       responses:
  *         200:
  *           description: List of all comments
@@ -24,7 +24,7 @@ const sendLog = require('../logger')
  *       summary: Add a new comment
  *       security:
  *         - BearerAuth: []
- *       tags: [Comment]
+ *       tags: [Comment 💬]
  *       requestBody:
  *         required: true
  *         content:
@@ -39,7 +39,7 @@ const sendLog = require('../logger')
  *   /comment/{id}:
  *     get:
  *       summary: Get a comment by ID
- *       tags: [Comment]
+ *       tags: [Comment 💬]
  *       parameters:
  *         - in: path
  *           name: id
@@ -57,7 +57,7 @@ const sendLog = require('../logger')
  *       summary: Update a comment
  *       security:
  *         - BearerAuth: []
- *       tags: [Comment]
+ *       tags: [Comment 💬]
  *       parameters:
  *         - in: path
  *           name: id
@@ -81,7 +81,7 @@ const sendLog = require('../logger')
  *       summary: Delete a comment
  *       security:
  *         - BearerAuth: []
- *       tags: [Comment]
+ *       tags: [Comment 💬]
  *       parameters:
  *         - in: path
  *           name: id
