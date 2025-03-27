@@ -501,7 +501,7 @@ router.post('/register', async (req, res) => {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -546,7 +546,7 @@ router.post('/verify', async (req, res) => {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -588,7 +588,7 @@ router.post('/resend-otp', async (req, res) => {
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
     console.log(error)
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -655,7 +655,7 @@ router.post('/login', async (req, res) => {
     sendLog(
       `❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`,
     )
-    res.status(400).send(err)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -754,7 +754,7 @@ router.post('/request-reset%20%F0%9F%93%A9', async (req, res) => {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -819,7 +819,7 @@ router.post('/reset-password', async (req, res) => {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -844,7 +844,7 @@ router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -877,7 +877,7 @@ router.get('/me', AuthMiddleware(), async (req, res) => {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(404).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -917,7 +917,7 @@ router.get('/:id', roleMiddleware(['ADMIN']), async (req, res) => {
         req.params,
       )} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -968,7 +968,7 @@ router.patch('/:id', AuthMiddleware(), async (req, res) => {
         req.params,
       )} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -1022,7 +1022,7 @@ router.delete('/:id', AuthMiddleware(), async (req, res) => {
         req.params,
       )} | 🛠 Stack: ${error.stack}`,
     )
-    res.status(400).send(error)
+    res.status(400).send({error: error.message})
   }
 })
 
@@ -1044,7 +1044,7 @@ router.get('/refresh', AuthMiddleware(), async (req, res) => {
         res.send({ access_token: access_token });
     } catch (error) {
         sendLog(`❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(req.user)} | 🛠 Stack: ${error.stack}`);
-        res.status(400).send(error);
+        res.status(400).send({error: error.message})
     }
 });
 
