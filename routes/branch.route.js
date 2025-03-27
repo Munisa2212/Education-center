@@ -436,7 +436,7 @@ route.patch('/:id', async (req, res) => {
  *         description: Branch not found
  */
 
-route.patch('/:id', async (req, res) => {
+route.patch('/:id',roleMiddleware(["SUPER-ADMIN","ADMIN"]), async (req, res) => {
   const { id } = req.params
   try {
     if (!id) {
@@ -482,7 +482,7 @@ route.patch('/:id', async (req, res) => {
  *       404:
  *         description: Branch not found
  */
-route.delete('/:id', async (req, res) => {
+route.delete('/:id',roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     let one = await Branch.findByPk(req.params.id)
     if (!one) return res.status(404).send({ message: 'Not found' })

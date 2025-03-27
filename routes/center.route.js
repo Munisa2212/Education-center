@@ -406,7 +406,7 @@ app.get("/", async (req, res) => {
 });
 
 
-app.get("/students", async (req, res) => {
+app.get("/students",roleMiddleware(["ADMIN","CEO"]), async (req, res) => {
     try {
         if (!req.query.learningCenter_id) {
             sendLog(`⚠️ Xato sorov: learningCenter_id kiritilmagan

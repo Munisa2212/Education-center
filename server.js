@@ -14,6 +14,7 @@ const RatingRoute = require('./routes/rating.route')
 const SearchRoute = require("./routes/search.route")
 const CommentRoute = require("./routes/comment.route")
 const PasswordRoute = require("./routes/passwordReset.route")
+const AdminRegister = require("./routes/add.route")
 
 const sendLog = require("./logger")
 
@@ -29,6 +30,8 @@ connectDB()
 
 setupSwagger(app)
 
+
+app.use("/admin",AdminRegister)
 app.use('/user', UserRoute)
 app.use('/branch', BranchRoute)
 app.use('/region', RegionRoute)

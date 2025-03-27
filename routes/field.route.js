@@ -27,7 +27,11 @@ const route = express.Router()
  *       400:
  *         description: Bad request
  */
+<<<<<<< HEAD
 route.get("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+=======
+route.get("/", async (req, res) => {
+>>>>>>> ac9b4d8201948f08a543945e0638fab7939170ba
   try {
       const fields = await Field.findAll();
       sendLog("✅ GET sorovi muvaffaqiyatli bajarildi: fieldlar yuborildi.");
@@ -146,7 +150,7 @@ route.post('/', roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
  *       404:
  *         description: Field not found
  */
-route.get('/:id', roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+route.get('/:id', async (req, res) => {
   try {
     const userInfo = req.user ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` : "Noma'lum foydalanuvchi";
     const fieldId = req.params.id;
@@ -217,7 +221,7 @@ route.get('/:id', roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
  *       404:
  *         description: Field not found
  */
-route.patch('/:id', roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+route.patch('/:id', roleMiddleware(["ADMIN","SUPER-ADMIN"]), async (req, res) => {
   try {
     const userInfo = req.user 
       ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` 

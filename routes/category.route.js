@@ -242,7 +242,7 @@ app.get("/", async (req, res) => {
 });
 
 
-app.get("/:id", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+app.get("/:id", async (req, res) => {
     const { id } = req.params;
 
     try {

@@ -2,6 +2,7 @@ const { Subject } = require('../models/index.module')
 const express = require('express')
 const SubjectValidation = require('../validation/subject.validation')
 const sendLog = require("../logger")
+const { roleMiddleware } = require('../middleware/role.middleware')
 const route = express.Router()
 
 /**
@@ -70,7 +71,7 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Validation error
  */
-route.post('/', async (req, res) => {
+route.post('/',roleMiddleware(["ADMIN"]), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim';
   const routePath = '/';
 
@@ -116,7 +117,7 @@ route.get('/:id', async (req, res) => {
   const routePath = `/${req.params.id}`;
 
   try {
-    sendLog(`📥 So‘rov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(req.params)}`);
+    sendLog(`📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Parametrlar: ${JSON.stringify(req.params)}`);
 
     let one = await Subject.findByPk(req.params.id);
     
@@ -166,7 +167,7 @@ route.get('/:id', async (req, res) => {
  *       404:
  *         description: Subject not found
  */
-route.patch('/:id', async (req, res) => {
+route.patch('/:id',roleMiddleware(["ADMIN","SUPER-ADMIN"]), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim';
   const routePath = `/${req.params.id}`;
 
@@ -211,7 +212,7 @@ route.patch('/:id', async (req, res) => {
  *       404:
  *         description: Subject not found
  */
-route.delete('/:id', async (req, res) => {
+route.delete('/:id',roleMiddleware(["ADMIN"]), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim';
   const routePath = `/${req.params.id}`;
 
