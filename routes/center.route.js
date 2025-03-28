@@ -241,7 +241,106 @@ const sendLog = require('../logger')
  *           example: [1, 2]
  *           description: List of field IDs related to the center
  */
-
+/**
+ * @swagger
+ * /center/my-learning-centers:
+ *   get:
+ *     summary: Get learning centers managed by the current user
+ *     tags:
+ *       - My LearningCenters 🎓
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of learning centers managed by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID of the learning center
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     description: Name of the learning center
+ *                     example: "Tech Academy"
+ *                   phone:
+ *                     type: string
+ *                     description: Phone number of the learning center
+ *                     example: "+998901234567"
+ *                   location:
+ *                     type: string
+ *                     description: Location of the learning center
+ *                     example: "Tashkent, Uzbekistan"
+ *                   Branches:
+ *                     type: array
+ *                     description: List of branches under the learning center
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           description: ID of the branch
+ *                           example: 1
+ *                         name:
+ *                           type: string
+ *                           description: Name of the branch
+ *                           example: "Downtown Branch"
+ *                   Region:
+ *                     type: object
+ *                     description: Region where the learning center is located
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: ID of the region
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         description: Name of the region
+ *                         example: "Tashkent"
+ *                   Comments:
+ *                     type: array
+ *                     description: List of comments for the learning center
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           description: ID of the comment
+ *                           example: 1
+ *                         comment:
+ *                           type: string
+ *                           description: The comment text
+ *                           example: "Great learning center!"
+ *                         star:
+ *                           type: integer
+ *                           description: Star rating of the comment
+ *                           example: 5
+ *       204:
+ *         description: No learning centers found for the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "You have no learning-centers yet"
+ *       400:
+ *         description: Bad request or server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "An error occurred while fetching learning centers"
+ */
 
 
 app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
@@ -386,16 +485,26 @@ app.get("/", async (req, res) => {
                 📂 Route: ${req.originalUrl}
                 🔍 Sorov: ${JSON.stringify(req.query)}
             `);
-            return res.status(204).send({ message: "Nothing found" });
+            return res.send({ message: "No Center found" });
         }
+
+        const centersWithAverageStar = centers.map(center => {
+            const comments = center.Comments || [];
+            const totalStars = comments.reduce((sum, comment) => sum + comment.star, 0);
+            const average_star = comments.length > 0 ? (totalStars / comments.length).toFixed(2) : 0;
+
+            return {
+                ...center.toJSON(),
+                average_star
+            };
+        });
 
         sendLog(`✅ Markazlar topildi
             📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
             📂 Route: ${req.originalUrl}
             🔍 Natija: ${centers.length} ta markaz
         `);
-
-        res.send(centers);
+        res.send(centersWithAverageStar);
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
             📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
@@ -407,6 +516,18 @@ app.get("/", async (req, res) => {
     }
 });
 
+app.get("/my-learning-centers", roleMiddleware(["CEO"]), async (req, res)=>{
+    try {
+        let user_id = req.user.id
+        let centers = await Center.findAll({where: {ceo_id: user_id}, include: [{model: Branch}, {model: User}, {model: Region}, {model: Comment}]})
+        if(!centers){
+            return res.send({message: "You have no learning-centers yet"})
+        }
+        res.send(centers)
+    } catch (error) {   
+        res.status(400).send({error: error.message})
+    }
+})
 
 app.get("/students",roleMiddleware(["ADMIN","CEO"]), async (req, res) => {
     try {
@@ -421,15 +542,14 @@ app.get("/students",roleMiddleware(["ADMIN","CEO"]), async (req, res) => {
         
         let students = await Registration.findAll({ where: { learningCenter_id: req.query.learningCenter_id } });
 
-        if (!students) {
+        if (!students.length) {
             sendLog(`⚠️ Oquvchilar topilmadi
                 📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
                 📂 Route: ${req.originalUrl}
                 🔍 learningCenter_id: ${req.query.learningCenter_id}
             `);
-            return res.status(204).send({ message: "No students found" });
+            return res.send({ message: "No students found" });
         }
-
         sendLog(`✅ ${students.length} ta oquvchi topildi
             📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
             📂 Route: ${req.originalUrl}
@@ -543,7 +663,6 @@ app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
         res.status(400).send({ message: error.message });
     }
 });
-
 
 app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
     const { id } = req.params;

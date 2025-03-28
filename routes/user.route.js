@@ -171,7 +171,7 @@ totp.options = { step: 300, digits: 5 }
  *         description: User not found
  * /user:
  *   get:
- *     summary: Get all users (Admin only)
+ *     summary: Get all users
  *     security:
  *       - BearerAuth: []
  *     tags: 
@@ -184,7 +184,7 @@ totp.options = { step: 300, digits: 5 }
  *
  * /user/{id}:
  *   get:
- *     summary: Get a user by ID (Admin only)
+ *     summary: Get a user by ID
  *     security:
  *       - BearerAuth: []
  *     tags: 
@@ -379,7 +379,7 @@ router.post('/register', async (req, res) => {
       )}`,
     )
 
-    if (req.body.role == 'ADMIN' || req.body.role == 'CEO') {
+    if (req.body.role == 'CEO') {
       let { error } = AdminValidation.validate(req.body)
       if (error) {
         sendLog(
