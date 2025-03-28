@@ -99,6 +99,9 @@ app.get("/star", async(req, res)=>{
     try {
         let {top} = req.query
         let centers = await Center.findAll({attributes: ["name", "phone", "description"], include: [{model: Comment, attributes: ["star"]}]})
+        if(centers.length==0){
+            return res.status(404).send({message: "No centers found"})
+        }
         let arr = []
         centers.map(e => {
             if(!e.dataValues.Comments.length){

@@ -439,10 +439,6 @@ router.get("/comment", async (req, res) => {
             ],
         });
 
-        if (!comments.length) {
-            sendLog(`⚠️ Hech qanday izoh topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
-            return res.status(404).send({ message: "Comments not found" });
-        }
 
         sendLog(`✅ ${comments.length} ta izoh topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(comments);
@@ -469,10 +465,6 @@ router.get("/user", roleMiddleware(["ADMIN"]), async (req, res) => {
 
         const users = await User.findAll({ where });
 
-        if (!users.length) {
-            sendLog(`⚠️ Hech qanday user topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
-            return res.status(404).send({ message: "Users not found" });
-        }
 
         sendLog(`✅ ${users.length} ta user topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(users);
@@ -511,10 +503,6 @@ router.get("/center", async (req, res) => {
             ],
         });
 
-        if (!centers.length) {
-            sendLog(`⚠️ Hech qanday oquv markazi topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
-            return res.status(203).send({ message: "Nothing found" });
-        }
 
         sendLog(`✅ ${centers.length} ta oquv markazi topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(centers);
@@ -545,10 +533,6 @@ router.get("/branch", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
-        if (!branches.length) {
-            sendLog(`⚠️ Hech qanday filial topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
-            return res.status(203).send({ message: "Nothing found" });
-        }
 
         sendLog(`✅ ${branches.length} ta filial topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(branches);
@@ -578,10 +562,6 @@ router.get("/category", async (req, res) => {
             include: [{ model: Resource, attributes: ["name", "description"] }],
         });
 
-        if (!categories.length) {
-            sendLog(`⚠️ Kategoriya topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
-            return res.status(404).send({ message: "Category not found" });
-        }
 
         sendLog(`✅ ${categories.length} ta kategoriya topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(categories);
@@ -611,10 +591,6 @@ router.get("/field", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
-        if (!fields.length) {
-            sendLog(`⚠️ Maydon topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
-            return res.status(404).send({ message: "Field not found" });
-        }
 
         sendLog(`✅ ${fields.length} ta maydon topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(fields);
@@ -644,10 +620,6 @@ router.get("/subject", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
-        if (!subjects.length) {
-            sendLog(`⚠️ Fan topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
-            return res.status(404).send({ message: "Subject not found" });
-        }
 
         sendLog(`✅ ${subjects.length} ta fan topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(subjects);
@@ -677,10 +649,6 @@ router.get("/region", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
-        if (!regions.length) {
-            sendLog(`⚠️ Hudud topilmadi | 🔍 Query: ${JSON.stringify(req.query)}`);
-            return res.status(404).send({ message: "Region not found" });
-        }
 
         sendLog(`✅ ${regions.length} ta hudud topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(regions);

@@ -20,12 +20,6 @@ const route = express.Router()
 route.get('/', async (req, res) => {
   try {
     const regions = await Region.findAll();
-
-    if (!regions.length) {
-      sendLog(`⚠️ Xatolik: Hech qanday region topilmadi | 🌍 Route: ${req.originalUrl}`);
-      return res.status(404).json({ message: "No regions found" });
-    }
-
     sendLog(`✅ Regionlar muvaffaqiyatli topildi | 🌍 Route: ${req.originalUrl} | 📌 Jami: ${regions.length}`);
     res.json(regions);
   } catch (error) {

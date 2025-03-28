@@ -196,7 +196,7 @@ app.post("/", AuthMiddleware(), async (req, res) => {
     const { name, user_id, category_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
 
     try {
-        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 📝 Filter: ${JSON.stringify(req.query)}`);
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} |  📝 Filter: ${JSON.stringify(req.query)}`);
 
         const where = {};
 
@@ -212,16 +212,11 @@ app.post("/", AuthMiddleware(), async (req, res) => {
             include: [{ model: Category, attributes: ["name"] }]
         });
 
-        if (!data || data.length === 0) {
-            sendLog(`⚠️ Resurs topilmadi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id}`);
-            return res.status(404).send({ message: "Resource not found" });
-        }
-
-        sendLog(`✅ Sorov bajarildi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🔢 Topilgan resurslar soni: ${data.length}`);
+        sendLog(`✅ Sorov bajarildi | 🌍 Route: ${req.originalUrl} | 🔢 Topilgan resurslar soni: ${data.length}`);
 
         res.send(data);
     } catch (error) {
-        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🛠️ Stack: ${error.stack}`);
+        sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤  🛠️ Stack: ${error.stack}`);
         res.status(400).send({ message: error.details?.[0]?.message || error.message });
     }
 });

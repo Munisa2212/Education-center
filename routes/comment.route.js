@@ -149,9 +149,9 @@ router.post("/", AuthMiddleware(), async (req, res) => {
 
         let { comment, star, learningCenter_id } = req.body;
         let newComment = await Comment.create({
-            comment,
-            star,
-            learningCenter_id,
+            comment: comment,
+            star: star,
+            learningCenter_id: learningCenter_id,
             user_id: req.user.id
         });
 

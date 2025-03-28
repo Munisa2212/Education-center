@@ -85,13 +85,6 @@ router.get("/", async (req, res) => {
                 { model: Center, attributes: ["id", "name", "region_id"] }
             ]
         });
-
-        if (likes.length === 0) {
-            sendLog(`⚠️ Natija: Hech qanday like topilmadi
-                     ${routeInfo}`);
-            return res.status(404).send({ message: "No likes found" });
-        }
-
         sendLog(`✅ Sorov muvaffaqiyatli bajarildi
                  ${routeInfo}
                  🔢 Jami like: ${likes.length}

@@ -211,16 +211,6 @@ app.get("/", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
             include: [{ model: Resource, attributes: ["name", "description"] }]
         });
-
-        if (!data || data.length === 0) {
-            sendLog(`⚠️ Kategoriya topilmadi
-                📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
-                🔍 Qidiruv: ${name || "Hamma"}
-                📂 Route: ${req.originalUrl}
-            `);
-            return res.status(404).send({ message: "Category not found" });
-        }
-
         sendLog(`📋 Kategoriya royxati olindi (${data.length} ta)
             📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
             🔍 Qidiruv: ${name || "Hamma"}
