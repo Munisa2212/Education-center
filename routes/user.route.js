@@ -15,6 +15,7 @@ const { Op } = require('sequelize')
 const DeviceDetector = require('device-detector-js')
 const deviceDetector = new DeviceDetector()
 const sendLog = require("../logger")
+const sendSMS = require("../config/eskiz")
 
 totp.options = { step: 300, digits: 5 }
 
@@ -249,9 +250,10 @@ router.post('/register', async (req, res) => {
         newUser,
       )}`,
     )
+    sendSMS(phone,otp)
     sendEmail(email, otp)
 
-    res.status(201).send({ user_data: newUser, message: 'User created successfully, otp is sent to email and phone',})
+    res.status(201).send({message: 'User created successfully, otp is sent to email and phone', user_data: newUser,})
   } catch (error) {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
@@ -657,12 +659,11 @@ router.post('/login', async (req, res) => {
  *                   example: "User not found"
  */
 router.post('/refresh-token', async (req, res) => {
-  const user = req.user ? req.user.username : 'Anonim'
   const routePath = '/refresh-token'
 
   try {
     sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${"anonim"} | 📌 Body: ${JSON.stringify(
         req.body,
       )}`,
     )
@@ -670,7 +671,7 @@ router.post('/refresh-token', async (req, res) => {
     let { refresh_token } = req.body
     if (!refresh_token) {
       sendLog(
-        `⚠️ Refresh token yoq | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
+        `⚠️ Refresh token yoq | 🔍 ${routePath} | 👤 Kim tomonidan: anonim`,
       )
       return res.status(400).send({ message: 'Refresh token is required' })
     }
