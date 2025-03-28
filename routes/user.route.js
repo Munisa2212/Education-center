@@ -9,7 +9,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const AuthMiddleware = require('../middleware/auth.middleware')
 const { roleMiddleware } = require('../middleware/role.middleware')
-const { totp, authenticator } = require('otplib')
+const { totp } = require('otplib')
 const { sendEmail } = require('../config/transporter')
 const { Op } = require('sequelize')
 const DeviceDetector = require('device-detector-js')
@@ -320,6 +320,7 @@ totp.options = { step: 300, digits: 5 }
  *         - password
  *         - phone
  *         - role
+ *         - region_id
  *       properties:
  *         name:
  *           type: string
@@ -335,9 +336,12 @@ totp.options = { step: 300, digits: 5 }
  *           format: password
  *           example: hello22
  *           description: User's password
+ *         region_id:
+ *           type: integer
+ *           example: 1
  *         phone:
  *           type: string
- *           example: +998882452212
+ *           example: "+998882452212"
  *           description: User's phone number
  *         image:
  *           type: string
@@ -376,6 +380,8 @@ router.post('/register', async (req, res) => {
   const routePath = '/register'
 
   try {
+    console.log("adee");
+    
     sendLog(
       `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
         req.body,
@@ -388,6 +394,8 @@ router.post('/register', async (req, res) => {
         sendLog(
           `⚠️ Admin validation xatosi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Error: ${error.details[0].message}`,
         )
+        console.log(req.body);
+        
         return res.status(400).send(error.details[0].message)
       }
     } else {
