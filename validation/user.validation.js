@@ -19,7 +19,6 @@ const AdminValidation = joi.object({
     phone: joi.string().length(13).required(),
     role: joi.string().valid("CEO").required(),
     image: joi.string().required(),
-    region_id: joi.number().required()
 })
 
 const LoginValidation = joi.object({
