@@ -12,6 +12,7 @@ const UserValidation = joi.object({
 })
 
 const AdminValidation = joi.object({
+    name: joi.string().required(),
     year: joi.number().min(1950).max(new Date().getFullYear()).required(),
     email: joi.string().email().required(),
     password: joi.string().required(),
