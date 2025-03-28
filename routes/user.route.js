@@ -397,9 +397,13 @@ router.post('/register', async (req, res) => {
       }
     }
 
-    const { name, password, email, phone, ...rest } = req.body
+    const { name, password, email, phone,region_id, ...rest } = req.body
     let existingUser = await User.findOne({ where: { email: email } })
 
+    const reg = await Region.findByPk(region_id)
+    if(!reg){
+      return res.status(404).send({message: "Region not found"})
+    }
     if (existingUser) {
       sendLog(
         `⚠️ Foydalanuvchi mavjud | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
