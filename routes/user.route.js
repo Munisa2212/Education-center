@@ -20,203 +20,14 @@ totp.options = { step: 300, digits: 5 }
 
 /**
  * @swagger
- * tags:
- *   - name: Authorization 🔑
- *     description: API endpoints for user authentication and authorization
- *   - name: User 👤
- *     description: API endpoints for user management
- */
-
-/**
- * @swagger
- * tags:
- *   name: User 👤
- *   description: API endpoints for user management
- */
-
-/**
- * @swagger
  * /user/register:
  *   post:
  *     summary: Register a new user
- *     tags: 
- *       - Authorization 🔑
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/User'
- *     responses:
- *       201:
- *         description: User created successfully, OTP sent to email
- *       400:
- *         description: Validation error or user already exists
- *
- * /user/verify:
- *   post:
- *     summary: Verify user email with OTP
- *     tags: 
- *       - Authorization 🔑
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - otp
- *             properties:
- *               email:
- *                 type: string
- *                 example: ibodullayevamunisa570@gmail.com
- *                 format: email
- *               otp:
- *                 type: string
- *                 example: 11111
- *     responses:
- *       200:
- *         description: Email successfully verified
- *       404:
- *         description: User not found or invalid OTP
- *
- * /user/resend-otp:
- *   post:
- *     summary: Resend OTP to user email
- *     tags: 
- *       - Authorization 🔑
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 example: ibodullayevamunisa570@gmail.com
- *                 format: email
- *     responses:
- *       200:
- *         description: OTP sent successfully
- *       404:
- *         description: User not found
- *
- * /user/login:
- *   post:
- *     summary: Log in as a user
- *     tags: 
- *       - Authorization 🔑
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Login'
- *     responses:
- *       200:
- *         description: User logged in successfully, access and refresh tokens returned
- *       400:
- *         description: Validation error or incorrect password
- *       401:
- *         description: User needs to verify email first
- *       404:
- *         description: User not found
- *
- * @swagger
- * /user/refresh-token:
- *   post:
- *     summary: Refresh the access token using a refresh token
+ *     description: Creates a new user and sends an OTP to their email.
  *     tags:
- *       - Authorization 🔑
+ *       - AUTH
  *     security:
  *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - refresh_token
- *             properties:
- *               refresh_token:
- *                 type: string
- *                 description: The refresh token used to generate a new access token
- *     responses:
- *       200:
- *         description: New access token generated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 access_token:
- *                   type: string
- *                   description: The newly generated access token
- *       400:
- *         description: Refresh token is missing or invalid
- *       404:
- *         description: User not found
- * /user:
- *   get:
- *     summary: Get all users
- *     security:
- *       - BearerAuth: []
- *     tags: 
- *       - User 👤
- *     responses:
- *       200:
- *         description: List of all users
- *       400:
- *         description: Bad request
- *
- * /user/{id}:
- *   get:
- *     summary: Get a user by ID
- *     security:
- *       - BearerAuth: []
- *     tags: 
- *       - User 👤
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: User ID
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: User retrieved successfully
- *       404:
- *         description: User not found
- *
- * @swagger
- * /user/{id}:
- *   patch:
- *     summary: Update user details
- *     security:
- *       - BearerAuth: []
- *     tags:
- *       - User 👤
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: ID of the user to update
- *         schema:
- *           type: integer
  *     requestBody:
  *       required: true
  *       content:
@@ -226,149 +37,81 @@ totp.options = { step: 300, digits: 5 }
  *             properties:
  *               name:
  *                 type: string
- *                 description: Updated name of the user
+ *                 example: "Munisa"
  *               email:
  *                 type: string
  *                 format: email
- *                 description: Updated email address of the user
+ *                 example: "ibodullayevamunisa570@example.com"
  *               phone:
  *                 type: string
- *                 description: Updated phone number of the user
+ *                 example: "+998882452212"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: "SecurePass123!"
  *               role:
  *                 type: string
- *                 enum: [USER, ADMIN, SUPER-ADMIN, CEO]
- *                 description: Updated role of the user
+ *                 enum: [ADMIN, CEO, USER]
+ *                 example: "USER"
  *               region_id:
  *                 type: integer
  *                 example: 1
+ *             required:
+ *               - name
+ *               - email
+ *               - phone
+ *               - password
+ *               - role
+ *               - region_id
  *     responses:
- *       200:
- *         description: User updated successfully
+ *       201:
+ *         description: User created successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: integer
- *                   description: ID of the updated user
- *                 name:
+ *                 user_data:
+ *                   type: object
+ *                   example:
+ *                     id: 1
+ *                     name: "John Doe"
+ *                     email: "johndoe@example.com"
+ *                     phone: "+998901234567"
+ *                     role: "USER"
+ *                 message:
  *                   type: string
- *                   description: Updated name of the user
- *                 email:
- *                   type: string
- *                   format: email
- *                   description: Updated email address of the user
- *                 phone:
- *                   type: string
- *                   description: Updated phone number of the user
- *                 role:
- *                   type: string
- *                   enum: [USER, ADMIN, SUPER-ADMIN, CEO]
- *                   description: Updated role of the user
- *       403:
- *         description: Unauthorized to update this user
- *       404:
- *         description: User not found
+ *                   example: "User created successfully, OTP is sent to email and phone"
  *       400:
- *         description: Bad request or validation error
- *   delete:
- *     summary: Delete a user (self or admin)
- *     security:
- *       - BearerAuth: []
- *     tags: 
- *       - User 👤
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: User ID
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: User deleted successfully
- *       403:
- *         description: Unauthorized to delete this user
+ *         description: Bad request (Validation error or user already exists)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User already exists, email exists"
  *       404:
- *         description: User not found
- *
- * /user/me:
- *   get:
- *     summary: Get current authenticated user info
- *     security:
- *       - BearerAuth: []
- *     tags: 
- *       - User 👤
- *     responses:
- *       200:
- *         description: User information along with device details
- *       404:
- *         description: User not found
- *
-
- */
-/**
- * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       required:
- *         - name
- *         - email
- *         - password
- *         - phone
- *         - role
- *       properties:
- *         name:
- *           type: string
- *           example: Munisa
- *           description: Full name of the user
- *         email:
- *           type: string
- *           format: email
- *           example: ibodullayevamunisa570@gmail.com
- *           description: Email address of the user
- *         password:
- *           type: string
- *           format: password
- *           example: hello22
- *           description: User's password
- *         phone:
- *           type: string
- *           example: +998882452212
- *           description: User's phone number
- *         image:
- *           type: string
- *           example: photo
- *           description: Profile image URL
- *         role:
- *           type: string
- *           enum: [USER, ADMIN, SUPER-ADMIN, CEO]
- *           example: CEO
- *           description: Role of the user
- *         year:
- *           type: integer
- *           example: 2005
- *           description: Birth year of the user
- *
- *     Login:
- *       type: object
- *       required:
- *         - email
- *         - password
- *       properties:
- *         email:
- *           type: string
- *           example: ibodullayevamunisa570@gmail.com
- *           format: email
- *           description: User email
- *         password:
- *           type: string
- *           format: password
- *           example: hello22
- *           description: User password
+ *         description: Region not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Region not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Unexpected error occurred"
  */
 
 router.post('/register', async (req, res) => {
@@ -400,7 +143,7 @@ router.post('/register', async (req, res) => {
       }
     }
 
-    const { name, password, email, phone,region_id, ...rest } = req.body
+    const { name, password, email, phone, region_id, ...rest } = req.body
     let existingUser = await User.findOne({ where: { email: email } })
 
     const reg = await Region.findByPk(region_id)
@@ -442,6 +185,66 @@ router.post('/register', async (req, res) => {
     res.status(400).send({error: error.message})
   }
 })
+
+/**
+ * @swagger
+ * /user/verify:
+ *   post:
+ *     summary: Verify a user's email with OTP
+ *     description: Verifies a user's email using the OTP sent to their email during registration.
+ *     tags:
+ *       - AUTH
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "ibodullayevamunisa570@example.com"
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *             required:
+ *               - email
+ *               - otp
+ *     responses:
+ *       200:
+ *         description: Email successfully verified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Email successfully verified! You can now log in."
+ *       404:
+ *         description: User not found or OTP invalid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       400:
+ *         description: Bad request or server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Unexpected error occurred"
+ */
 
 router.post('/verify', async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
@@ -488,6 +291,62 @@ router.post('/verify', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /user/resend-otp:
+ *   post:
+ *     summary: Resend OTP to a user's email
+ *     description: Generates a new OTP and sends it to the provided email.
+ *     tags:
+ *       - AUTH
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "ibodullayevamunisa570@example.com"
+ *             required:
+ *               - email
+ *     responses:
+ *       200:
+ *         description: OTP successfully sent to the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Otp sent to johndoe@example.com"
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ *       400:
+ *         description: Bad request or server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Unexpected error occurred"
+ */
+
 router.post('/resend-otp', async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = '/resend-otp'
@@ -529,7 +388,79 @@ router.post('/resend-otp', async (req, res) => {
     res.status(400).send({error: error.message})
   }
 })
-
+/**
+ * @swagger
+ * /user/login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticates a user and returns access and refresh tokens.
+ *     tags:
+ *       - AUTH
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "ibodullayevamunisa570@example.com"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: "password123"
+ *             required:
+ *               - email
+ *               - password
+ *     responses:
+ *       200:
+ *         description: Login successful, returns access and refresh tokens
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 refresh_token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 access_token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       400:
+ *         description: Validation error or wrong password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Wrong password"
+ *       401:
+ *         description: Email not verified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Verify your email first!"
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ */
 router.post('/login', async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = '/login'
@@ -597,6 +528,60 @@ router.post('/login', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /user/refresh-token:
+ *   post:
+ *     summary: Refresh access token
+ *     description: Generates a new access token using a valid refresh token.
+ *     tags:
+ *       - AUTH
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refresh_token:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *             required:
+ *               - refresh_token
+ *     responses:
+ *       200:
+ *         description: Successfully generated new access token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       400:
+ *         description: Invalid or missing refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid refresh token"
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ */
 router.post('/refresh-token', async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = '/refresh-token'
@@ -648,6 +633,84 @@ router.post('/refresh-token', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /user/:
+ *   get:
+ *     summary: Retrieve all users
+ *     description: Fetches a list of all users with their associated region. Only accessible to ADMIN and CEO roles.
+ *     tags:
+ *       - USER
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved users list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "John Doe"
+ *                   email:
+ *                     type: string
+ *                     example: "john.doe@example.com"
+ *                   phone:
+ *                     type: string
+ *                     example: "+1234567890"
+ *                   status:
+ *                     type: string
+ *                     example: "ACTIVE"
+ *                   role:
+ *                     type: string
+ *                     example: "ADMIN"
+ *                   region:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 2
+ *                       name:
+ *                         type: string
+ *                         example: "Tashkent"
+ *       400:
+ *         description: Error while fetching users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Something went wrong"
+ *       401:
+ *         description: Unauthorized access (missing or invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       403:
+ *         description: Forbidden - User does not have permission
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Access denied"
+ */
 router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = '/'
@@ -673,6 +736,88 @@ router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /user/me:
+ *   get:
+ *     summary: Get authenticated user info
+ *     description: Returns the authenticated user's details along with device information.
+ *     tags:
+ *       - USER
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     email:
+ *                       type: string
+ *                       example: "john.doe@example.com"
+ *                     phone:
+ *                       type: string
+ *                       example: "+1234567890"
+ *                     status:
+ *                       type: string
+ *                       example: "ACTIVE"
+ *                     role:
+ *                       type: string
+ *                       example: "USER"
+ *                 device:
+ *                   type: object
+ *                   properties:
+ *                     client:
+ *                       type: string
+ *                       example: "Chrome"
+ *                     os:
+ *                       type: string
+ *                       example: "Windows"
+ *                     device:
+ *                       type: string
+ *                       example: "Desktop"
+ *       400:
+ *         description: Error while retrieving user data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Something went wrong"
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ */
 router.get('/me', AuthMiddleware(), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = '/me'
@@ -705,7 +850,90 @@ router.get('/me', AuthMiddleware(), async (req, res) => {
     res.status(400).send({error: error.message})
   }
 })
-
+/**
+ * @swagger
+ * /user/{id}:
+ *   get:
+ *     summary: Get user by ID
+ *     description: Retrieves user details by their ID. Only accessible to ADMIN users.
+ *     tags:
+ *       - USER
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the user to retrieve
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 name:
+ *                   type: string
+ *                   example: "John Doe"
+ *                 email:
+ *                   type: string
+ *                   example: "john.doe@example.com"
+ *                 phone:
+ *                   type: string
+ *                   example: "+1234567890"
+ *                 status:
+ *                   type: string
+ *                   example: "ACTIVE"
+ *                 role:
+ *                   type: string
+ *                   example: "USER"
+ *       400:
+ *         description: Error while retrieving user data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Something went wrong"
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       403:
+ *         description: Forbidden (User does not have permission)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Forbidden"
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ */
 router.get('/:id', roleMiddleware(['ADMIN']), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = `/${req.params.id}`
@@ -745,7 +973,107 @@ router.get('/:id', roleMiddleware(['ADMIN']), async (req, res) => {
     res.status(400).send({error: error.message})
   }
 })
-
+/**
+ * @swagger
+ * /user/{id}:
+ *   patch:
+ *     summary: Update user details
+ *     description: Allows a user to update their own account details. Admins can update any user's details.
+ *     tags:
+ *       - USER
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the user to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Jane Doe"
+ *               email:
+ *                 type: string
+ *                 example: "jane.doe@example.com"
+ *               phone:
+ *                 type: string
+ *                 example: "+1234567890"
+ *               status:
+ *                 type: string
+ *                 enum: ["ACTIVE", "INACTIVE"]
+ *                 example: "ACTIVE"
+ *     responses:
+ *       200:
+ *         description: Successfully updated the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 name:
+ *                   type: string
+ *                   example: "Jane Doe"
+ *                 email:
+ *                   type: string
+ *                   example: "jane.doe@example.com"
+ *                 phone:
+ *                   type: string
+ *                   example: "+1234567890"
+ *                 status:
+ *                   type: string
+ *                   example: "ACTIVE"
+ *       400:
+ *         description: Error while updating user data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Something went wrong"
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       403:
+ *         description: Forbidden (User does not have permission)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "You are not allowed to patch this user. Only ADMIN can update others."
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ */
 router.patch('/:id', AuthMiddleware(), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = `/${req.params.id}`
@@ -796,7 +1124,78 @@ router.patch('/:id', AuthMiddleware(), async (req, res) => {
     res.status(400).send({error: error.message})
   }
 })
-
+/**
+ * @swagger
+ * /user/{id}:
+ *   delete:
+ *     summary: Delete a user
+ *     description: Allows a user to delete their own account. Admins can delete any user's account.
+ *     tags:
+ *       - USER
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the user to delete
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 deleted_data:
+ *                   type: object
+ *                   description: The deleted user data
+ *                 message:
+ *                   type: string
+ *                   example: "User deleted successfully"
+ *       400:
+ *         description: Error while deleting user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Something went wrong"
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       403:
+ *         description: Forbidden (User does not have permission)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "You are not allowed to delete this user. Only ADMIN can delete others."
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
+ */
 router.delete('/:id', AuthMiddleware(), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim'
   const routePath = `/${req.params.id}`
@@ -850,7 +1249,48 @@ router.delete('/:id', AuthMiddleware(), async (req, res) => {
     res.status(400).send({error: error.message})
   }
 })
-
+/**
+ * @swagger
+ * /user/refresh:
+ *   get:
+ *     summary: Refresh access token
+ *     description: Generates a new access token for an authenticated user.
+ *     tags:
+ *       - USER
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully refreshed the access token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                   example: "newly_generated_jwt_token"
+ *       400:
+ *         description: Error while refreshing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Something went wrong"
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ */
 router.get('/refresh', AuthMiddleware(), async (req, res) => {
     const user = req.user ? req.user.username : 'Anonim';
     const routePath = `/refresh`;
