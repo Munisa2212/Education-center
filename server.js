@@ -53,7 +53,7 @@ app.use("/password", PasswordRoute)
 app.use("/excel", Excel)
 
 
-app.listen(process.env.PORT, () =>
-  console.log(`server started on port ${process.env.PORT}`),
+app.listen(3000, () =>
+  console.log(`server started on port 3000`),
 )
 
