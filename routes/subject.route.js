@@ -1,4 +1,4 @@
-const { Subject } = require('../models/index.module')
+const { Subject, Center } = require('../models/index.module')
 const express = require('express')
 const SubjectValidation = require('../validation/subject.validation')
 const sendLog = require("../logger")
@@ -31,7 +31,7 @@ route.get('/', async (req, res) => {
   try {
     sendLog(`📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Query Parametrlar: ${JSON.stringify(req.query)}`);
 
-    let subject = await Subject.findAll();
+    let subject = await Subject.findAll({include: [{model: Center}]});
 
     sendLog(`✅ ${subject.length} ta subject topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Natija: ${JSON.stringify(subject)}`);
 
@@ -73,7 +73,7 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Validation error
  */
-route.post('/',roleMiddleware(["ADMIN"]), async (req, res) => {
+route.post('/',roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim';
   const routePath = '/';
 

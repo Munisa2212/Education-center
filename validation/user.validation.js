@@ -7,7 +7,7 @@ const UserValidation = joi.object({
     password: joi.string().required(),
     phone: joi.string().length(13).required(),
     image: joi.string().required(),
-    role: joi.string().valid("USER").required(),
+    role: joi.string().valid("USER", "CEO", "ADMIN").required(),
     region_id: joi.number().required(),
 })
 
