@@ -455,7 +455,7 @@ router.post('/resend-otp', async (req, res) => {
       `✅ Otp yuborildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
     )
 
-    res.send({ message: `Otp sent to ${email}` })
+    res.send({ message: `Otp sent to ${email} otp - ${token}` })
   } catch (error) {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,

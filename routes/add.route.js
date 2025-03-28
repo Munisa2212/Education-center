@@ -37,7 +37,7 @@ const {roleMiddleware} = require("../middleware/role.middleware")
  *           length: 13
  *         role:
  *           type: string
- *           enum: ["ADMIN", "SUPER-ADMIN", "CEO"]
+ *           enum: ["ADMIN", "SUPER-ADMIN"]
  *         image:
  *           type: string
  */
@@ -62,7 +62,7 @@ const {roleMiddleware} = require("../middleware/role.middleware")
  *       400:
  *         description: Validation error
  */
-app.post("/", roleMiddleware(["ADMIN"]), async (req, res) => {
+app.post("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
     try {
         const { error } = AdminValidation.validate(req.body);
         if (error) {
