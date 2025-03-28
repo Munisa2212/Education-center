@@ -256,7 +256,7 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Bad request
 */
-route.post('/', roleMiddleware(['ADMIN', "CEO"]), async (req, res) => {
+route.post('/', roleMiddleware(['ADMIN']), async (req, res) => {
   try {
     const { region_id, learningCenter_id, field_id, subject_id, ...rest } =
     req.body
@@ -339,7 +339,7 @@ route.post('/', roleMiddleware(['ADMIN', "CEO"]), async (req, res) => {
       })),
     )
 
-    res.status(201).send({ newBranch })
+    res.status(201).send(await Branch.findByPk(newBranch.id, {include: [{model: Region}, {model: Center}, {model: Field}, {model: Subject}]}))
     sendLog(`✅ Foydalanuvchi (${req.user?.id} - ${req.user?.name}) yangi branch yaratdi: 
 🆔 ID: ${newBranch.id}
 📍 Nomi: ${newBranch.name}
@@ -355,23 +355,75 @@ route.post('/', roleMiddleware(['ADMIN', "CEO"]), async (req, res) => {
   }
 })
 
-route.patch('/:id', roleMiddleware(["ADMIN", "SUPER-ADMIN"]),async (req, res) => {
-  try {
-    let one = await Branch.findByPk(req.params.id)
-    if (!one) return res.status(404).send({ message: 'Not found' })
+route.patch('/:id', roleMiddleware(["ADMIN", "SUPER-ADMIN", "CEO"]), async (req, res) => {
+  const { id } = req.params;
+  const { field_id, subject_id, ...rest } = req.body;
 
-    await one.update(req.body)
-    res.send({ message: 'Updated successfully' })
-  } catch (err) {
-    sendLog(`❌ Xatolik yuz berdi: ${error.message}
-      📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
-      📂 Route: ${req.originalUrl}
-      📥 Sorov: ${req.body ? JSON.stringify(req.body) : 'Body yoq'}
-      🛠️ Stack: ${error.stack}`);
-      console.error('Error in PATCH /branch:', err)
-      return res.status(400).json({ message: err.message })
-    }
-  })
+  try {
+      if (!id) {
+          return res.status(400).send({ message: 'Wrong ID' });
+      }
+
+      const branch = await Branch.findByPk(id);
+      if (!branch) {
+          return res.status(404).send({ message: 'Branch not found' });
+      }
+
+      // Handle field_id
+      if (field_id && Array.isArray(field_id)) {
+          const existingFields = await BranchField.findAll({ where: { BranchId: id } });
+          const existingFieldIds = existingFields.map(f => f.FieldId);
+
+          // Find IDs to remove and add
+          const fieldsToRemove = existingFieldIds.filter(f => !field_id.includes(f));
+          const fieldsToAdd = field_id.filter(f => !existingFieldIds.includes(f));
+
+          // Remove fields
+          await BranchField.destroy({ where: { BranchId: id, FieldId: fieldsToRemove } });
+
+          // Add new fields
+          await BranchField.bulkCreate(fieldsToAdd.map(f => ({ BranchId: id, FieldId: f })));
+      }
+
+      // Handle subject_id
+      if (subject_id && Array.isArray(subject_id)) {
+          const existingSubjects = await BranchSubject.findAll({ where: { BranchId: id } });
+          const existingSubjectIds = existingSubjects.map(s => s.SubjectId);
+
+          // Find IDs to remove and add
+          const subjectsToRemove = existingSubjectIds.filter(s => !subject_id.includes(s));
+          const subjectsToAdd = subject_id.filter(s => !existingSubjectIds.includes(s));
+
+          // Remove subjects
+          await BranchSubject.destroy({ where: { BranchId: id, SubjectId: subjectsToRemove } });
+
+          // Add new subjects
+          await BranchSubject.bulkCreate(subjectsToAdd.map(s => ({ BranchId: id, SubjectId: s })));
+      }
+
+      // Update the branch with other fields
+      await branch.update(rest);
+
+      res.send({
+          message: 'Branch updated successfully',
+          branch: await Branch.findByPk(id, {
+              include: [
+                  { model: Subject, through: { attributes: [] } },
+                  { model: Field, through: { attributes: [] } },
+                  { model: Region, attributes: ["name"] }
+              ]
+          })
+      });
+  } catch (error) {
+      sendLog(`❌ Xatolik yuz berdi: ${error.message}
+          📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
+          📂 Route: ${req.originalUrl}
+          📥 Sorov: ${req.body ? JSON.stringify(req.body) : 'Body yoq'}
+          🛠️ Stack: ${error.stack}`);
+      console.error('Error in PATCH /branch:', error);
+      res.status(400).send({ message: error.message });
+  }
+});
   
   route.get('/:id', async (req, res) => {
     try {
@@ -433,31 +485,6 @@ route.patch('/:id', roleMiddleware(["ADMIN", "SUPER-ADMIN"]),async (req, res) =>
  *       404:
  *         description: Branch not found
 */
-
-route.patch('/:id',roleMiddleware(["SUPER-ADMIN","ADMIN"]), async (req, res) => {
-  const { id } = req.params
-  try {
-    if (!id) {
-      return res.status(400).send({ message: 'Wrong id' })
-    }
-    
-    const data = await Branch.findByPk(id)
-    if (!data) {
-      return res.status(404).send('Branch not found')
-    }
-    
-    await data.update(req.body)
-    res.status(200).send(data)
-  } catch (error) {
-    sendLog(`❌ Xatolik yuz berdi: ${error.message}
-      📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
-      📂 Route: ${req.originalUrl}
-      📥 Sorov: ${req.body ? JSON.stringify(req.body) : 'Body yoq'}
-      🛠️ Stack: ${error.stack}`);
-      console.log(error)
-      res.status(400).send({ message: error })
-    }
-})
 
 /**
  * @swagger

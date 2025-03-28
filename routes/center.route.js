@@ -470,10 +470,10 @@ app.get("/", async (req, res) => {
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
             include: [
+                { model: User, attributes: ["email", "name"] },
                 { model: Subject, through: { attributes: [] } },
                 { model: Field, through: { attributes: [] } },
                 { model: Region, attributes: ["name"] },
-                { model: User, attributes: ["email", "name"] },
                 { model: Branch, attributes: ["name", "location"] },
                 { model: Comment, attributes: ["star", "comment"] }
             ]
@@ -519,7 +519,14 @@ app.get("/", async (req, res) => {
 app.get("/my-learning-centers", roleMiddleware(["CEO"]), async (req, res)=>{
     try {
         let user_id = req.user.id
-        let centers = await Center.findAll({where: {ceo_id: user_id}, include: [{model: Branch}, {model: User}, {model: Region}, {model: Comment}]})
+        let centers = await Center.findAll({where: {ceo_id: user_id}, include: [
+            { model: User, attributes: ["email", "name"] },
+            { model: Subject, through: { attributes: [] } },
+            { model: Field, through: { attributes: [] } },
+            { model: Region, attributes: ["name"] },
+            { model: Branch, attributes: ["name", "location"] },
+            { model: Comment, attributes: ["star", "comment"] }
+        ]})
         if(!centers){
             return res.send({message: "You have no learning-centers yet"})
         }
@@ -633,8 +640,12 @@ app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
 
         let center = await Center.findByPk(id, {
             include: [
+                { model: User, attributes: ["email", "name"] },
+                { model: Subject, through: { attributes: [] } },
+                { model: Field, through: { attributes: [] } },
                 { model: Region, attributes: ["name"] },
-                { model: User, attributes: ["email", "name"] }
+                { model: Branch, attributes: ["name", "location"] },
+                { model: Comment, attributes: ["star", "comment"] }
             ]
         });
 
@@ -666,6 +677,8 @@ app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
 
 app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
     const { id } = req.params;
+    let { field_id, subject_id } = req.body;
+
     try {
         if (!id) {
             sendLog(`⚠️ Xato sorov: ID kiritilmagan
@@ -686,6 +699,39 @@ app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
             return res.status(404).send({ message: "No Center found" });
         }
 
+        // Handle field_id
+        if (field_id && Array.isArray(field_id)) {
+            const existingFields = await CenterField.findAll({ where: { CenterId: id } });
+            const existingFieldIds = existingFields.map(f => f.FieldId);
+
+            // Find IDs to remove and add
+            const fieldsToRemove = existingFieldIds.filter(f => !field_id.includes(f));
+            const fieldsToAdd = field_id.filter(f => !existingFieldIds.includes(f));
+
+            // Remove fields
+            await CenterField.destroy({ where: { CenterId: id, FieldId: fieldsToRemove } });
+
+            // Add new fields
+            await CenterField.bulkCreate(fieldsToAdd.map(f => ({ CenterId: id, FieldId: f })));
+        }
+
+        // Handle subject_id
+        if (subject_id && Array.isArray(subject_id)) {
+            const existingSubjects = await CenterSubject.findAll({ where: { CenterId: id } });
+            const existingSubjectIds = existingSubjects.map(s => s.SubjectId);
+
+            // Find IDs to remove and add
+            const subjectsToRemove = existingSubjectIds.filter(s => !subject_id.includes(s));
+            const subjectsToAdd = subject_id.filter(s => !existingSubjectIds.includes(s));
+
+            // Remove subjects
+            await CenterSubject.destroy({ where: { CenterId: id, SubjectId: subjectsToRemove } });
+
+            // Add new subjects
+            await CenterSubject.bulkCreate(subjectsToAdd.map(s => ({ CenterId: id, SubjectId: s })));
+        }
+
+        // Update the center with other fields
         await center.update(req.body);
 
         sendLog(`✅ O‘quv markazi yangilandi
@@ -694,7 +740,17 @@ app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
             🔍 ID: ${id}
             🔄 Yangilangan ma'lumot: ${JSON.stringify(req.body)}
         `);
-        res.send(center);
+
+        res.send(await Center.findByPk(id, {
+            include: [
+                { model: User, attributes: ["email", "name"] },
+                { model: Subject, through: { attributes: [] } },
+                { model: Field, through: { attributes: [] } },
+                { model: Region, attributes: ["name"] },
+                { model: Branch, attributes: ["name", "location"] },
+                { model: Comment, attributes: ["star", "comment"] }
+            ]
+        }));
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
             📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
@@ -705,7 +761,6 @@ app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
         res.status(400).send({ message: error.message });
     }
 });
-
 
 app.delete("/:id", roleMiddleware(["CEO"]), async (req, res) => {
     const { id } = req.params;
