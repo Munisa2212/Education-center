@@ -856,7 +856,7 @@ router.get('/refresh', AuthMiddleware(), async (req, res) => {
     }
 });
 
-const PromoteRouter = require("./promotion.route")
+const PromoteRouter = require("./addAdmin.route")
 router.use("/promotion", PromoteRouter)
 
 module.exports = router

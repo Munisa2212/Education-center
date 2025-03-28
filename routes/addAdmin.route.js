@@ -1,5 +1,5 @@
 const { roleMiddleware } = require("../middleware/role.middleware")
-const PromotionValidation = require("../validation/promote.validation")
+const PromotionValidation = require("../validation/addAdmin.validation")
 const {User} = require("../models/index.module")
 
 const router = require("express").Router()
@@ -66,7 +66,7 @@ const router = require("express").Router()
  *         description: Unauthorized access
  */
 
-router.post("/", roleMiddleware(["CEO"]), async(req, res)=>{
+router.post("/", roleMiddleware(["ADMIN"]), async(req, res)=>{
     try {
         let {error} = PromotionValidation.validate(req.body)
         if(error) return res.status(400).send({error: error.details[0].message})

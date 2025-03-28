@@ -336,7 +336,7 @@ route.post('/', roleMiddleware(['ADMIN', "CEO"]), async (req, res) => {
   }
 })
 
-route.patch('/:id', async (req, res) => {
+route.patch('/:id', roleMiddleware(["ADMIN", "SUPER-ADMIN"]),async (req, res) => {
   try {
     let one = await Branch.findByPk(req.params.id)
     if (!one) return res.status(404).send({ message: 'Not found' })
