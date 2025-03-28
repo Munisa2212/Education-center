@@ -238,6 +238,9 @@ totp.options = { step: 300, digits: 5 }
  *                 type: string
  *                 enum: [USER, ADMIN, SUPER-ADMIN, CEO]
  *                 description: Updated role of the user
+ *               region_id:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       200:
  *         description: User updated successfully
