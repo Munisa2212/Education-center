@@ -15,6 +15,7 @@ const { Op } = require('sequelize')
 const DeviceDetector = require('device-detector-js')
 const deviceDetector = new DeviceDetector()
 const sendLog = require("../logger")
+const sendSMS = require("../config/eskiz")
 
 totp.options = { step: 300, digits: 5 }
 
@@ -249,6 +250,7 @@ router.post('/register', async (req, res) => {
         newUser,
       )}`,
     )
+    sendSMS(phone,otp)
     sendEmail(email, otp)
 
     res.status(201).send({ user_data: newUser, message: 'User created successfully, otp is sent to email and phone',})
