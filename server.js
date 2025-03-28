@@ -16,7 +16,8 @@ const CommentRoute = require("./routes/comment.route")
 const PasswordRoute = require("./routes/passwordReset.route")
 const AdminRegister = require("./routes/add.route")
 const Excel = require("./routes/excel.route")
-
+const path = require("path")
+const uploadRoute = require("./routes/upload.route")
 
 const sendLog = require("./logger")
 
