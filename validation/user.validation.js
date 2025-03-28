@@ -7,7 +7,7 @@ const UserValidation = joi.object({
     password: joi.string().required(),
     phone: joi.string().length(13).required(),
     image: joi.string().required(),
-    role: joi.string().valid("USER", "ADMIN", "SUPER-ADMIN", "CEO").required(),
+    role: joi.string().valid("USER","ADMIN","SUPER-ADMIN","CEO").required(),
     region_id: joi.number().required(),
 })
 
@@ -17,7 +17,7 @@ const AdminValidation = joi.object({
     email: joi.string().email().required(),
     password: joi.string().required(),
     phone: joi.string().length(13).required(),
-    role: joi.string().valid("USER", "ADMIN", "SUPER-ADMIN", "CEO").required(),
+    role: joi.string().valid("ADMIN", "SUPER-ADMIN", "CEO").required(),
     image: joi.string().required(),
 })
 

@@ -9,7 +9,7 @@ const bcrypt = require('bcrypt')
 
 /**
  * @swagger
- * /password/request-reset 📩:
+ * /password/request-reset:
  *   post:
  *     summary: Request a password reset OTP
  *     tags:
@@ -49,7 +49,7 @@ const bcrypt = require('bcrypt')
  *       404:
  *         description: No account found with the provided email address
  *
- * /password/reset-password 🔑:
+ * /password/reset-password:
  *   post:
  *     summary: Reset the user's password using an OTP
  *     tags:
@@ -86,7 +86,7 @@ const bcrypt = require('bcrypt')
  *         description: No account found with the provided email address
  */
 
-router.post('/request-reset%20%F0%9F%93%A9' ,async (req, res) => {
+router.post('/request-reset' ,async (req, res) => {
     try {
       const { email } = req.body
       console.log(email);
@@ -112,8 +112,7 @@ router.post('/request-reset%20%F0%9F%93%A9' ,async (req, res) => {
       )
   
       res.send({
-        message: `${user.name}, an OTP has been sent to your email (${user.email}). Please check and confirm it!`,
-        otp: otp,
+        message: `${user.name}, an OTP has been sent to your email (${user.email}). Please check and confirm it!`
       })
     } catch (error) {
       sendLog(
@@ -123,7 +122,7 @@ router.post('/request-reset%20%F0%9F%93%A9' ,async (req, res) => {
     }
   })
   
-  router.post('/reset-password%20%F0%9F%94%91',async (req, res) => {
+  router.post('/reset-password',async (req, res) => {
     try {
       let { email, newPassword, otp } = req.body
       if (!email || !newPassword || !otp) {

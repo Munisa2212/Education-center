@@ -41,6 +41,8 @@ totp.options = { step: 300, digits: 5 }
  *     summary: Register a new user
  *     tags: 
  *       - Authorization 🔑
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -58,6 +60,8 @@ totp.options = { step: 300, digits: 5 }
  *     summary: Verify user email with OTP
  *     tags: 
  *       - Authorization 🔑
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -86,6 +90,8 @@ totp.options = { step: 300, digits: 5 }
  *     summary: Resend OTP to user email
  *     tags: 
  *       - Authorization 🔑
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -110,6 +116,8 @@ totp.options = { step: 300, digits: 5 }
  *     summary: Log in as a user
  *     tags: 
  *       - Authorization 🔑
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -132,6 +140,8 @@ totp.options = { step: 300, digits: 5 }
  *     summary: Refresh the access token using a refresh token
  *     tags:
  *       - Authorization 🔑
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

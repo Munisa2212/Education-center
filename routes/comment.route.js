@@ -3,7 +3,8 @@ const {Comment, User, Center} = require("../models/index.module")
 const AuthMiddleware = require("../middleware/auth.middleware")
 const { Op } = require("sequelize");
 const CommentValidation = require("../validation/comment.validation");
-const sendLog = require('../logger')
+const sendLog = require('../logger');
+const { roleMiddleware } = require("../middleware/role.middleware");
 
 /**
  * @swagger
@@ -206,7 +207,7 @@ router.get("/:id", async (req, res) => {
 
 
 
-router.patch("/:id", AuthMiddleware(), async (req, res) => {
+router.patch("/:id",roleMiddleware(["ADMIN","SUPER-ADMIN"]), async (req, res) => {
     try {
         let existingComment = await Comment.findByPk(req.params.id);
         if (!existingComment) {
@@ -238,7 +239,7 @@ router.patch("/:id", AuthMiddleware(), async (req, res) => {
 });
 
 
-router.delete("/:id", AuthMiddleware(), async (req, res) => {
+router.delete("/:id",roleMiddleware(["ADMIN"]), async (req, res) => {
     try {
         let comment = await Comment.findByPk(req.params.id);
         if (!comment) {

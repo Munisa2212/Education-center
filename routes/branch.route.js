@@ -12,6 +12,7 @@ const { roleMiddleware } = require('../middleware/role.middleware')
 const BranchSubject = require('../models/branchSubject.module')
 const BranchField = require('../models/branchField.module')
 const sendLog = require('../logger')
+const AuthMiddleware = require('../middleware/auth.middleware')
 const route = express.Router()
 
 /**
@@ -156,6 +157,47 @@ route.get('/', async (req, res) => {
   }
 })
 
+/**
+ * @swagger
+ * /branch/{id}:
+ *   get:
+ *     summary: Get a branch by ID
+ *     description: Retrieve details of a specific branch using its unique ID.
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - Branch 🏢
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the branch to retrieve
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved branch details
+ *         content:
+ *           application/json:
+ *             example:
+ *               id: 1
+ *               name: "Main Branch"
+ *               location: "Tashkent, Uzbekistan"
+ *               region_id: 1
+ *               branch_number: 3
+ *       404:
+ *         description: Branch not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Branch not found"
+ *       400:
+ *         description: Bad request or server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "An error occurred"
+ */
 
 
 route.get('/:id', async (req, res) => {
@@ -394,7 +436,7 @@ route.patch('/:id', roleMiddleware(["ADMIN", "SUPER-ADMIN"]),async (req, res) =>
  *         description: Branch not found
  */
 
-route.patch('/:id', async (req, res) => {
+route.patch('/:id',roleMiddleware(["SUPER-ADMIN","ADMIN"]), async (req, res) => {
   const { id } = req.params
   try {
     if (!id) {
@@ -440,7 +482,7 @@ route.patch('/:id', async (req, res) => {
  *       404:
  *         description: Branch not found
  */
-route.delete('/:id', async (req, res) => {
+route.delete('/:id',roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     let one = await Branch.findByPk(req.params.id)
     if (!one) return res.status(404).send({ message: 'Not found' })

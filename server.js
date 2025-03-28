@@ -14,6 +14,10 @@ const RatingRoute = require('./routes/rating.route')
 const SearchRoute = require("./routes/search.route")
 const CommentRoute = require("./routes/comment.route")
 const PasswordRoute = require("./routes/passwordReset.route")
+const AdminRegister = require("./routes/add.route")
+const Excel = require("./routes/excel.route")
+const path = require("path")
+const uploadRoute = require("./routes/upload.route")
 
 const sendLog = require("./logger")
 
@@ -29,6 +33,9 @@ connectDB()
 
 setupSwagger(app)
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/upload", uploadRoute);
+app.use("/admin",AdminRegister)
 app.use('/user', UserRoute)
 app.use('/branch', BranchRoute)
 app.use('/region', RegionRoute)
@@ -43,6 +50,8 @@ app.use('/rating', RatingRoute)
 app.use("/search", SearchRoute)
 app.use("/comment", CommentRoute)
 app.use("/password", PasswordRoute)
+app.use("/excel", Excel)
+
 
 app.listen(process.env.PORT, () =>
   console.log(`server started on port ${process.env.PORT}`),
