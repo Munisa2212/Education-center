@@ -82,6 +82,8 @@ route.get('/', async (req, res) => {
 
     sendLog(`✅ ${subject.length} ta subject topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Natija: ${JSON.stringify(subject)}`);
 
+    if(!subject) return res.status(404).send({message: "Subjects not found"})
+
     res.send(subject);
   } catch (err) {
     sendLog(`❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`);
@@ -161,6 +163,7 @@ route.post('/',roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
  *       404:
  *         description: Subject not found
  */
+
 route.get('/:id', async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim';
   const routePath = `/${req.params.id}`;

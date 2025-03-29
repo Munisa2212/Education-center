@@ -264,7 +264,8 @@ app.get("/", async (req, res) => {
             📂 Route: ${req.originalUrl}
             🔢 Limit: ${limit}, Page: ${page}, Order: ${order.toUpperCase()}, SortBy: ${sortBy}
         `);
-
+        
+        if(!data.length) return res.status(404).send({message: "Categories not found"})
         res.send(data);
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}

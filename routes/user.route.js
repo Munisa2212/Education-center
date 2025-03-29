@@ -17,6 +17,7 @@ const deviceDetector = new DeviceDetector()
 const sendLog = require("../logger")
 const sendSMS = require("../config/eskiz")
 const { route } = require('./branch.route')
+const { all } = require('axios')
 
 totp.options = { step: 300, digits: 5 }
 
@@ -841,6 +842,9 @@ router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
     sendLog(
       `✅ ${users.length} ta foydalanuvchi topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
     )
+
+    if(!user) return res.status(404).send({message: "User not found"})
+
     res.send(users)
   } catch (error) {
     sendLog(
@@ -864,6 +868,8 @@ router.get("/my-info", AuthMiddleware(), async(req, res)=>{
       ]},
       ]
     })
+
+    if(!all_data) return res.status(404).send({message: "Nothing found about you!"})
     res.send(all_data)
   } catch (error) {
     res.status(400).send({error: error.message})
