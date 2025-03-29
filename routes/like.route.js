@@ -130,7 +130,7 @@ router.post("/", AuthMiddleware(), async (req, res) => {
     }
 });
 
-router.delete("/",roleMiddleware(["ADMIN"]),async (req, res) => {
+router.delete("/",AuthMiddleware(),async (req, res) => {
     try {
         let {learningCenter_id} = req.body
         let like = await Like.findOne({where: {user_id: req.user.id, learningCenter_id: learningCenter_id}});

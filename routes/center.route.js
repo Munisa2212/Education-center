@@ -769,7 +769,7 @@ app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
     }
 });
 
-app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
+app.patch("/:id", roleMiddleware(["CEO", "SUPER-ADMIN"]), async (req, res) => {
     const { id } = req.params;
     let { field_id, subject_id } = req.body;
 
