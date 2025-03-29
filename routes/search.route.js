@@ -255,7 +255,7 @@ router.get("/region", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
-        if(regions) return res.status(404).send({message: "Regions not found"})
+        if(!regions) return res.status(404).send({message: "Regions not found"})
 
         sendLog(`✅ ${regions.length} ta hudud topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(regions);

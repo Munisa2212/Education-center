@@ -188,8 +188,6 @@ router.get("/", async (req, res) => {
             🔢 Topilgan kommentlar: ${comments.length}
         `);
 
-        if(!comments.length) return res.status(404).send({message: "Comments not found"})
-
         res.send(comments);
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
@@ -269,7 +267,7 @@ router.get("/:id", async (req, res) => {
 
 
 
-router.patch("/:id",roleMiddleware(["ADMIN","SUPER-ADMIN"]), async (req, res) => {
+router.patch("/:id",roleMiddleware(["ADMIN","SUPER-ADMIN","USER","CEO"]), async (req, res) => {
     try {
         let existingComment = await Comment.findByPk(req.params.id);
         if (!existingComment) {

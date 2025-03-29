@@ -201,7 +201,7 @@ router.post('/register', async (req, res) => {
     )
 
     if (req.body.role == 'CEO') {
-      let { error } = AdminValidation.validate(req.body)
+      let { error } = UserValidation.validate(req.body)
       if (error) {
         sendLog(
           `⚠️ Admin validation xatosi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Error: ${error.details[0].message}`,
@@ -720,6 +720,8 @@ router.post('/refresh-token', async (req, res) => {
  *     summary: Get users with filtering
  *     tags:
  *       - User 👤
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query
@@ -843,7 +845,7 @@ router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
       `✅ ${users.length} ta foydalanuvchi topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
     )
 
-    if(!user) return res.status(404).send({message: "User not found"})
+    if(!users) return res.status(404).send({message: "User not found"})
 
     res.send(users)
   } catch (error) {
