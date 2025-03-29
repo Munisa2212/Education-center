@@ -1,4 +1,4 @@
-const { User, Region } = require('../models/index.module')
+const { User, Region, Center, Branch, Field, Subject, Comment} = require('../models/index.module')
 const {
   UserValidation,
   LoginValidation,
@@ -16,6 +16,7 @@ const DeviceDetector = require('device-detector-js')
 const deviceDetector = new DeviceDetector()
 const sendLog = require("../logger")
 const sendSMS = require("../config/eskiz")
+const { route } = require('./branch.route')
 
 totp.options = { step: 300, digits: 5 }
 
@@ -446,6 +447,8 @@ router.post('/resend-otp', async (req, res) => {
     }
 
     const token = totp.generate(email + 'email')
+    console.log(token);
+    
     sendLog(
       `✅ OTP yaratilgan | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Otp: ${token} | Email: ${email}`,
     )
@@ -488,7 +491,7 @@ router.post('/resend-otp', async (req, res) => {
  *               password:
  *                 type: string
  *                 format: password
- *                 example: "password123"
+ *                 example: "SecurePass123!"
  *             required:
  *               - email
  *               - password
@@ -664,7 +667,7 @@ router.post('/refresh-token', async (req, res) => {
 
   try {
     sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
+      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: Anonim | 📌 Body: ${JSON.stringify(
         req.body,
       )}`,
     )
@@ -672,7 +675,7 @@ router.post('/refresh-token', async (req, res) => {
     let { refresh_token } = req.body
     if (!refresh_token) {
       sendLog(
-        `⚠️ Refresh token yoq | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
+        `⚠️ Refresh token yoq | 🔍 ${routePath} | 👤 Kim tomonidan: Anonim`,
       )
       return res.status(400).send({ message: 'Refresh token is required' })
     }
@@ -680,7 +683,7 @@ router.post('/refresh-token', async (req, res) => {
     let decoded = jwt.verify(refresh_token, 'refresh')
     if (!decoded) {
       sendLog(
-        `⚠️ Notogri refresh token | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Token: ${refresh_token}`,
+        `⚠️ Notogri refresh token | 🔍 ${routePath} | 👤 Kim tomonidan: Anonim | 📌 Token: ${refresh_token}`,
       )
       return res.status(400).send({ message: 'Invalid refresh token' })
     }
@@ -688,7 +691,7 @@ router.post('/refresh-token', async (req, res) => {
     let user = await User.findByPk(decoded.id)
     if (!user) {
       sendLog(
-        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User ID: ${decoded.id}`,
+        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: Anonim | 📌 User ID: ${decoded.id}`,
       )
       return res.status(404).send({ message: 'User not found' })
     }
@@ -711,12 +714,47 @@ router.post('/refresh-token', async (req, res) => {
 
 /**
  * @swagger
+ * /search/user:
+ *   get:
+ *     summary: Get users with filtering
+ *     tags:
+ *       - User 👤
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by username
+ *         schema:
+ *           type: string
+ *       - name: email
+ *         in: query
+ *         description: Filter by email
+ *         schema:
+ *           type: string
+ *       - name: phone
+ *         in: query
+ *         description: Filter by phone number
+ *         schema:
+ *           type: string
+ *       - name: role
+ *         in: query
+ *         description: Filter by user role
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of users
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
  * /user/:
  *   get:
  *     summary: Retrieve all users
  *     description: Fetches a list of all users with their associated region. Only accessible to ADMIN and CEO roles.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -812,6 +850,26 @@ router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
   }
 })
 
+router.get("/my-info", AuthMiddleware(), async(req, res)=>{
+  try {
+    let all_data = await User.findByPk(req.user.id, {
+      include: [
+        { model: Region },
+        {model: Center , include: [
+          { model: Branch, attributes: ["name", "location"] },
+          { model: Subject, through: { attributes: [] } },
+          { model: Field, through: { attributes: [] } },
+          { model: Region, attributes: ["name"] },
+          { model: Comment, attributes: ["star", "comment"] }
+      ]},
+      ]
+    })
+    res.send(all_data)
+  } catch (error) {
+    res.status(400).send({error: error.message})
+  }
+})
+
 /**
  * @swagger
  * /user/me:
@@ -819,7 +877,7 @@ router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
  *     summary: Get authenticated user info
  *     description: Returns the authenticated user's details along with device information.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -933,7 +991,7 @@ router.get('/me', AuthMiddleware(), async (req, res) => {
  *     summary: Get user by ID
  *     description: Retrieves user details by their ID. Only accessible to ADMIN users.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -1056,7 +1114,7 @@ router.get('/:id', roleMiddleware(['ADMIN']), async (req, res) => {
  *     summary: Update user details
  *     description: Allows a user to update their own account details. Admins can update any user's details.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -1207,7 +1265,7 @@ router.patch('/:id', AuthMiddleware(), async (req, res) => {
  *     summary: Delete a user
  *     description: Allows a user to delete their own account. Admins can delete any user's account.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -1325,48 +1383,7 @@ router.delete('/:id', AuthMiddleware(), async (req, res) => {
     res.status(400).send({error: error.message})
   }
 })
-/**
- * @swagger
- * /user/refresh:
- *   get:
- *     summary: Refresh access token
- *     description: Generates a new access token for an authenticated user.
- *     tags:
- *       - USER
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Successfully refreshed the access token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 access_token:
- *                   type: string
- *                   example: "newly_generated_jwt_token"
- *       400:
- *         description: Error while refreshing token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Something went wrong"
- *       401:
- *         description: Unauthorized (missing or invalid token)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Unauthorized"
- */
+
 router.get('/refresh', AuthMiddleware(), async (req, res) => {
     const user = req.user ? req.user.username : 'Anonim';
     const routePath = `/refresh`;
@@ -1388,6 +1405,5 @@ router.get('/refresh', AuthMiddleware(), async (req, res) => {
         res.status(400).send({error: error.message})
     }
 });
-
 
 module.exports = router

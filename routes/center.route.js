@@ -9,32 +9,11 @@ const CenterSubject = require("../models/centerSubject.module");
 const app = require("express").Router()
 const sendLog = require('../logger')
 
-
 /**
  * @swagger
- * /center:
- *   post:
- *     summary: Create a new center
- *     security:
- *       - BearerAuth: []
- *     tags:
- *       - LearningCenters 🎓
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Center'
- *     responses:
- *       200:
- *         description: Center created successfully
- *       400:
- *         description: Validation error
- * 
+ * /search/center :
  *   get:
- *     summary: Get all centers with filtering, sorting, and pagination
- *     security:
- *       - BearerAuth: []
+ *     summary: Get centers with filtering, sorting, and pagination
  *     tags:
  *       - LearningCenters 🎓
  *     parameters:
@@ -53,6 +32,21 @@ const sendLog = require('../logger')
  *         description: Filter by CEO ID
  *         schema:
  *           type: integer
+ *       - name: subject_id
+ *         in: query
+ *         description: Filter by subject ID
+ *         schema:
+ *           type: integer
+ *       - name: field_id
+ *         in: query
+ *         description: Filter by field ID
+ *         schema:
+ *           type: integer
+ *       - name: branch_id
+ *         in: query
+ *         description: Filter by branch Id
+ *         schema:
+ *           type: integer
  *       - name: limit
  *         in: query
  *         description: Number of results per page
@@ -65,6 +59,12 @@ const sendLog = require('../logger')
  *         schema:
  *           type: integer
  *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
  *       - name: order
  *         in: query
  *         description: Sorting order (ASC or DESC)
@@ -72,12 +72,24 @@ const sendLog = require('../logger')
  *           type: string
  *           enum: [ASC, DESC]
  *           default: ASC
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
+ *     responses:
+ *       200:
+ *         description: List of centers
+ *       203:
+ *         description: No centers found
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
+ * /center/get/all:
+ *   get:
+ *     summary: Get all centers with filtering, sorting, and pagination
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - LearningCenters 🎓
  *     responses:
  *       200:
  *         description: List of centers
@@ -106,6 +118,44 @@ const sendLog = require('../logger')
  *       404:
  *         description: Center not found
  * 
+ * /center/students:
+ *   get:
+ *     summary: Get students registered in a center
+ *     tags:
+ *       - LearningCenters 🎓
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: learningCenter_id
+ *         in: query
+ *         required: true
+ *         description: Learning center ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of students
+ *       400:
+ *         description: learningCenter_id is required
+ * 
+ * /center:
+ *   post:
+ *     summary: Create a new center
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - LearningCenters 🎓
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Center'
+ *     responses:
+ *       200:
+ *         description: Center created successfully
+ *       400:
+ *         description: Validation error
  *   patch:
  *     summary: Update a center by ID
  *     security:
@@ -150,45 +200,6 @@ const sendLog = require('../logger')
  *       404:
  *         description: Center not found
  * 
- * /center/students:
- *   get:
- *     summary: Get students registered in a center
- *     tags:
- *       - LearningCenters 🎓
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - name: learningCenter_id
- *         in: query
- *         required: true
- *         description: Learning center ID
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: List of students
- *       400:
- *         description: learningCenter_id is required
- * 
- * /center/average-star:
- *   get:
- *     summary: Get average rating of a center
- *     security:
- *       - BearerAuth: []
- *     tags:
- *       - LearningCenters 🎓
- *     parameters:
- *       - name: learningCenter_id
- *         in: query
- *         required: true
- *         description: Learning center ID
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Average star rating
- *       400:
- *         description: learningCenter_id is required
  */
 /**
  * @swagger
@@ -206,7 +217,7 @@ const sendLog = require('../logger')
  *           description: Name of the learning center
  *         phone:
  *           type: string
- *           example: +998882452212
+ *           example: "+998882452212"
  *           description: Contact phone number of the center
  *         image:
  *           type: string
@@ -342,7 +353,6 @@ const sendLog = require('../logger')
  *                   example: "An error occurred while fetching learning centers"
  */
 
-
 app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
     try {
         let { error } = CenterValidation.validate(req.body);
@@ -441,7 +451,7 @@ app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
             🔍 Fields: ${JSON.stringify(field_id)}
         `);
 
-        res.send(req.body);
+        res.send({id: newCenter.id, ...req.body});
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
             📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
@@ -455,7 +465,7 @@ app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
 });
 
 
-app.get("/", async (req, res) => {
+app.get("/get/all", async (req, res) => {
     const { name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
     try {
         const where = {};
@@ -470,12 +480,12 @@ app.get("/", async (req, res) => {
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
             include: [
-                { model: User, attributes: ["email", "name"] },
+                { model: User, attributes: ["id", "email", "name"] },
                 { model: Subject, through: { attributes: [] } },
                 { model: Field, through: { attributes: [] } },
-                { model: Region, attributes: ["name"] },
-                { model: Branch, attributes: ["name", "location"] },
-                { model: Comment, attributes: ["star", "comment"] }
+                { model: Region, attributes: ["id", "name"] },
+                { model: Branch, attributes: ["id", "name", "location", "region_id"] },
+                { model: Comment, attributes: ["id", "star", "comment"] }
             ]
         });
 
@@ -504,6 +514,7 @@ app.get("/", async (req, res) => {
             📂 Route: ${req.originalUrl}
             🔍 Natija: ${centers.length} ta markaz
         `);
+
         res.send(centersWithAverageStar);
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
@@ -519,18 +530,29 @@ app.get("/", async (req, res) => {
 app.get("/my-learning-centers", roleMiddleware(["CEO"]), async (req, res)=>{
     try {
         let user_id = req.user.id
-        let centers = await Center.findAll({where: {ceo_id: user_id}, include: [
+        const centers = await Center.findAll({where: {ceo_id: user_id}, include: [
             { model: User, attributes: ["email", "name"] },
             { model: Subject, through: { attributes: [] } },
             { model: Field, through: { attributes: [] } },
             { model: Region, attributes: ["name"] },
-            { model: Branch, attributes: ["name", "location"] },
-            { model: Comment, attributes: ["star", "comment"] }
+            { model: Branch, attributes: ["name", "location", "region_id"] },
+            { model: Comment, attributes: ["star", "comment"] },
+            { model: Registration}
         ]})
         if(!centers){
             return res.send({message: "You have no learning-centers yet"})
         }
-        res.send(centers)
+        const centersWithAverageStar = centers.map(center => {
+            const comments = center.Comments || [];
+            const totalStars = comments.reduce((sum, comment) => sum + comment.star, 0);
+            const average_star = comments.length > 0 ? (totalStars / comments.length).toFixed(2) : 0;
+
+            return {
+                ...center.toJSON(),
+                average_star
+            };
+        });
+        res.send(centersWithAverageStar)
     } catch (error) {   
         res.status(400).send({error: error.message})
     }

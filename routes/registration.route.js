@@ -1,56 +1,56 @@
 const { roleMiddleware } = require("../middleware/role.middleware")
 const AuthMiddleware = require("../middleware/auth.middleware")
-const {Registration, User} = require("../models/index.module")
+const {Registration, User, Branch, Center} = require("../models/index.module")
 const RegistrationValidation = require("../validation/registration.validation")
 const sendLog = require("../logger")
 const app = require("express").Router()
 /**
  * @swagger
  * tags:
- *   name: Registration 📋
- *   description: User registration for learning centers
+ *   name: Enrolment 📋
+ *   description: User enrolment for learning centers
  * 
  * paths:
- *   /registration:
+ *   /enrolment:
  *     post:
  *       summary: Register a user for a course
  *       security:
  *         - BearerAuth: []
- *       tags: [Registration 📋]
+ *       tags: [Enrolment 📋]
  *       requestBody:
  *         required: true
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Registration'
+ *               $ref: '#/components/schemas/Enrolment'
  *       responses:
  *         201:
  *           description: User successfully registered
  *         400:
  *           description: Validation error or age restriction
  * 
- *   /registration/{id}:
+ *   /enrolment/{id}:
  *     delete:
- *       summary: Delete a registration
+ *       summary: Delete a enrolment
  *       security:
  *         - BearerAuth: []
- *       tags: [Registration 📋]
+ *       tags: [Enrolment 📋]
  *       parameters:
  *         - in: path
  *           name: id
  *           required: true
  *           schema:
  *             type: integer
- *           description: Registration ID
+ *           description: Enrolment ID
  *       responses:
  *         200:
- *           description: Registration deleted successfully
+ *           description: Enrolment deleted successfully
  *         404:
- *           description: Registration not found
+ *           description: Enrolment not found
  * 
  * components:
  *   schemas:
- *     Registration:
+ *     Enrolment:
  *       type: object
  *       properties:
  *         learningCenter_id:
@@ -78,14 +78,24 @@ app.post("/",AuthMiddleware(), async (req, res) => {
         sendLog(`⚠️ Validatsiya xatosi: ${error.details?.[0]?.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${id}`);
         return res.status(400).send({ message: error.details?.[0]?.message || "Validation error" });
       }
-  
+      
+      let center = await Center.findByPk(req.body.learningCenter_id, {include: [{model: Branch}]})
+      if(!center) return res.status(404).send({message: `This learning center with ${req.body.branch_id} id Not Found!`})
+      
+      let message = center ? center.Branchmap(branch_id => branch_id) : "/n"
+
+      console.log(message);
+      
+      let branch = await Branch.findByPk(req.body.branch_id)
+      if(!branch) return res.status(404).send({message: `This learning center doesnt have Branch with ${req.body.branch_id} id!\nExisting Branches: [${message}]`})
+
       let currentYear = new Date().getFullYear();
       let user = await User.findByPk(id);
       let age = currentYear - user.year;
   
       if (age < 18) {
         sendLog(`❌ Yosh cheklovi: ${age} | 👤 User ID: ${id} | 🌍 Route: ${req.originalUrl}`);
-        return res.send("You cannot register to course. Please register with your parent's account");
+        return res.send("You cannot register to course because your age is under 18. Please register with your parent's account");
       }
   
       const { ...data } = req.body;

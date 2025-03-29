@@ -8,6 +8,66 @@ const { roleMiddleware } = require("../middleware/role.middleware");
 
 /**
  * @swagger
+ * /search/comment:
+ *   get:
+ *     summary: Get comments with filtering, sorting, and pagination
+ *     tags:
+ *       - Comment 💬
+ *     parameters:
+ *       - name: user_id
+ *         in: query
+ *         description: Filter by user ID
+ *         schema:
+ *           type: integer
+ *       - name: comment
+ *         in: query
+ *         description: Filter by comment text
+ *         schema:
+ *           type: string
+ *       - name: star
+ *         in: query
+ *         description: Filter by star rating
+ *         schema:
+ *           type: integer
+ *       - name: learningCenter_id
+ *         in: query
+ *         description: Filter by learning center ID
+ *         schema:
+ *           type: integer
+ *       - name: take
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: sortOrder
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of comments
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
  * tags:
  *   name: Comment 💬
  *   description: Comments management for learning centers

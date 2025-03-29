@@ -39,6 +39,7 @@ const User = db.define('User', {
     region_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        defaultValue: 1
     },
     status: {
         type: DataTypes.STRING,

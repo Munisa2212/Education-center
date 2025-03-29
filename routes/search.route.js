@@ -5,411 +5,6 @@ const { Op } = require("sequelize");
 const { Comment, User, Center, Branch, Category, Field, Subject, Region } = require("../models/index.module");
 const sendLog = require("../logger")
 
-/**
- * @swagger
- * /search/comment:
- *   get:
- *     summary: Get comments with filtering, sorting, and pagination
- *     tags:
- *       - Search 🔍
- *     parameters:
- *       - name: user_id
- *         in: query
- *         description: Filter by user ID
- *         schema:
- *           type: integer
- *       - name: comment
- *         in: query
- *         description: Filter by comment text
- *         schema:
- *           type: string
- *       - name: star
- *         in: query
- *         description: Filter by star rating
- *         schema:
- *           type: integer
- *       - name: learningCenter_id
- *         in: query
- *         description: Filter by learning center ID
- *         schema:
- *           type: integer
- *       - name: take
- *         in: query
- *         description: Number of results per page
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: page
- *         in: query
- *         description: Page number
- *         schema:
- *           type: integer
- *           default: 1
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
- *       - name: sortOrder
- *         in: query
- *         description: Sorting order (ASC or DESC)
- *         schema:
- *           type: string
- *           enum: [ASC, DESC]
- *           default: ASC
- *     responses:
- *       200:
- *         description: List of comments
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /search/user:
- *   get:
- *     summary: Get users with filtering
- *     tags:
- *       - Search 🔍
- *     parameters:
- *       - name: name
- *         in: query
- *         description: Filter by username
- *         schema:
- *           type: string
- *       - name: email
- *         in: query
- *         description: Filter by email
- *         schema:
- *           type: string
- *       - name: phone
- *         in: query
- *         description: Filter by phone number
- *         schema:
- *           type: string
- *       - name: role
- *         in: query
- *         description: Filter by user role
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: List of users
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /search/center :
- *   get:
- *     summary: Get centers with filtering, sorting, and pagination
- *     tags:
- *       - Search 🔍
- *     parameters:
- *       - name: name
- *         in: query
- *         description: Filter by center name
- *         schema:
- *           type: string
- *       - name: region_id
- *         in: query
- *         description: Filter by region ID
- *         schema:
- *           type: integer
- *       - name: ceo_id
- *         in: query
- *         description: Filter by CEO ID
- *         schema:
- *           type: integer
- *       - name: subject_id
- *         in: query
- *         description: Filter by subject ID
- *         schema:
- *           type: integer
- *       - name: field_id
- *         in: query
- *         description: Filter by field ID
- *         schema:
- *           type: integer
- *       - name: limit
- *         in: query
- *         description: Number of results per page
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: page
- *         in: query
- *         description: Page number
- *         schema:
- *           type: integer
- *           default: 1
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
- *       - name: order
- *         in: query
- *         description: Sorting order (ASC or DESC)
- *         schema:
- *           type: string
- *           enum: [ASC, DESC]
- *           default: ASC
- *     responses:
- *       200:
- *         description: List of centers
- *       203:
- *         description: No centers found
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /search/branch :
- *   get:
- *     summary: Get branches with filtering, sorting, and pagination
- *     tags:
- *       - Search 🔍
- *     parameters:
- *       - name: name
- *         in: query
- *         description: Filter by branch name
- *         schema:
- *           type: string
- *       - name: location
- *         in: query
- *         description: Filter by branch location
- *         schema:
- *           type: string
- *       - name: center_id
- *         in: query
- *         description: Filter by center ID
- *         schema:
- *           type: integer
- *       - name: limit
- *         in: query
- *         description: Number of results per page
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: page
- *         in: query
- *         description: Page number
- *         schema:
- *           type: integer
- *           default: 1
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
- *       - name: order
- *         in: query
- *         description: Sorting order (ASC or DESC)
- *         schema:
- *           type: string
- *           enum: [ASC, DESC]
- *           default: ASC
- *     responses:
- *       200:
- *         description: List of branches
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /search/category :
- *   get:
- *     summary: Get categories with filtering, sorting, and pagination
- *     tags:
- *       - Search 🔍
- *     parameters:
- *       - name: name
- *         in: query
- *         description: Filter by category name
- *         schema:
- *           type: string
- *       - name: limit
- *         in: query
- *         description: Number of results per page
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: page
- *         in: query
- *         description: Page number
- *         schema:
- *           type: integer
- *           default: 1
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
- *       - name: order
- *         in: query
- *         description: Sorting order (ASC or DESC)
- *         schema:
- *           type: string
- *           enum: [ASC, DESC]
- *           default: ASC
- *     responses:
- *       200:
- *         description: List of categories
- *       404:
- *         description: Category not found
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /search/field :
- *   get:
- *     summary: Get fields with filtering, sorting, and pagination
- *     tags:
- *       - Search 🔍
- *     parameters:
- *       - name: name
- *         in: query
- *         description: Filter by field name
- *         schema:
- *           type: string
- *       - name: limit
- *         in: query
- *         description: Number of results per page
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: page
- *         in: query
- *         description: Page number
- *         schema:
- *           type: integer
- *           default: 1
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
- *       - name: order
- *         in: query
- *         description: Sorting order (ASC or DESC)
- *         schema:
- *           type: string
- *           enum: [ASC, DESC]
- *           default: ASC
- *     responses:
- *       200:
- *         description: List of fields
- *       404:
- *         description: Field not found
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /search/subject :
- *   get:
- *     summary: Get subjects with filtering, sorting, and pagination
- *     tags:
- *       - Search 🔍
- *     parameters:
- *       - name: name
- *         in: query
- *         description: Filter by subject name
- *         schema:
- *           type: string
- *       - name: limit
- *         in: query
- *         description: Number of results per page
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: page
- *         in: query
- *         description: Page number
- *         schema:
- *           type: integer
- *           default: 1
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
- *       - name: order
- *         in: query
- *         description: Sorting order (ASC or DESC)
- *         schema:
- *           type: string
- *           enum: [ASC, DESC]
- *           default: ASC
- *     responses:
- *       200:
- *         description: List of subjects
- *       404:
- *         description: Subject not found
- *       400:
- *         description: Bad request
- */
-
-/**
- * @swagger
- * /search/region :
- *   get:
- *     summary: Get regions with filtering, sorting, and pagination
- *     tags:
- *       - Search 🔍
- *     parameters:
- *       - name: name
- *         in: query
- *         description: Filter by region name
- *         schema:
- *           type: string
- *       - name: limit
- *         in: query
- *         description: Number of results per page
- *         schema:
- *           type: integer
- *           default: 10
- *       - name: page
- *         in: query
- *         description: Page number
- *         schema:
- *           type: integer
- *           default: 1
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
- *       - name: order
- *         in: query
- *         description: Sorting order (ASC or DESC)
- *         schema:
- *           type: string
- *           enum: [ASC, DESC]
- *           default: ASC
- *     responses:
- *       200:
- *         description: List of regions
- *       404:
- *         description: Region not found
- *       400:
- *         description: Bad request
- */
-
 router.get("/comment", async (req, res) => {
     try {
         let { user_id, comment, star, learningCenter_id, take, page, sortBy, sortOrder } = req.query;
@@ -434,11 +29,12 @@ router.get("/comment", async (req, res) => {
             offset,
             order,
             include: [
-                { model: User, attributes: ["name", "email"] },
-                { model: Center, attributes: ["name"] },
+                { model: User, attributes: ["id", "name", "email"] },
+                { model: Center, attributes: ["id", "name"] },
             ],
         });
 
+        if(!comments.length) return res.status(404).send({message: "Comments not found"})
 
         sendLog(`✅ ${comments.length} ta izoh topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(comments);
@@ -464,7 +60,8 @@ router.get("/user", roleMiddleware(["ADMIN"]), async (req, res) => {
         sendLog(`🔄 Filtirlangan ma'lumotlar | 📌 Filter: ${JSON.stringify(where)}`);
 
         const users = await User.findAll({ where });
-
+        
+        if(!users.length) return res.status(404).send({message: "Users not found"})
 
         sendLog(`✅ ${users.length} ta user topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(users);
@@ -477,16 +74,22 @@ router.get("/user", roleMiddleware(["ADMIN"]), async (req, res) => {
 
 router.get("/center", async (req, res) => {
     try {
-        let { name, region_id, ceo_id, subject_id, field_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
+        let { name, region_id, ceo_id, subject_id, field_id, branch_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
         const where = {};
-
         sendLog(`📥 Sorov qabul qilindi | 🔍 GET /center | 📌 Query Params: ${JSON.stringify(req.query)}`);
 
         if (name) where.name = { [Op.like]: `%${name}%` };
         if (region_id) where.region_id = region_id;
         if (ceo_id) where.ceo_id = ceo_id;
-        if (subject_id) where.subject_id = subject_id;
-        if (field_id) where.field_id = field_id;
+
+        const include = [
+            { model: Region, attributes: ["id", "name"] },
+            { model: User, attributes: ["id", "email", "name"] },
+            { model: Branch, attributes: ["id", "name", "location"], ...(branch_id ? { where: { id: branch_id } } : {}) },
+            { model: Comment, attributes: ["id", "star", "comment"] },
+            { model: Subject, through: { attributes: [] }, ...(subject_id ? { where: { id: subject_id } } : {}) },
+            { model: Field, through: { attributes: [] }, ...(field_id ? { where: { id: field_id } } : {}) }
+        ];
 
         sendLog(`🔄 Filtirlangan ma'lumotlar | 📌 Filter: ${JSON.stringify(where)}`);
 
@@ -495,14 +98,10 @@ router.get("/center", async (req, res) => {
             limit: parseInt(limit),
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
-            include: [
-                { model: Region, attributes: ["name"] },
-                { model: User, attributes: ["email", "name"] },
-                { model: Branch, attributes: ["name", "location"] },
-                { model: Comment, attributes: ["star", "comment"] },
-            ],
+            include
         });
 
+        if(!centers.length) return res.status(404).send({message: "Centers not found"})
 
         sendLog(`✅ ${centers.length} ta oquv markazi topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(centers);
@@ -522,7 +121,6 @@ router.get("/branch", async (req, res) => {
 
         if (name) where.name = { [Op.like]: `%${name}%` };
         if (location) where.location = { [Op.like]: `%${location}%` };
-        if (center_id) where.center_id = center_id;
 
         sendLog(`🔄 Filtrlash qollandi | 📌 Filter: ${JSON.stringify(where)}`);
 
@@ -531,8 +129,12 @@ router.get("/branch", async (req, res) => {
             limit: parseInt(limit),
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
+            include: [
+                {model: Center, attributes: ["id", "name", "location"], ...(center_id ? { where: { id: center_id } } : {})}
+            ]
         });
 
+        if(!branches.length) return res.status(404).send({message: "Branches not found"}) 
 
         sendLog(`✅ ${branches.length} ta filial topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(branches);
@@ -561,6 +163,8 @@ router.get("/category", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
             include: [{ model: Resource, attributes: ["name", "description"] }],
         });
+
+        if(!categories.length) return res.status(404).send({message: "Categories not found"})
 
 
         sendLog(`✅ ${categories.length} ta kategoriya topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
@@ -591,6 +195,7 @@ router.get("/field", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
+        if(!fields.length) return res.status(404).send({message: "Fields not found"})
 
         sendLog(`✅ ${fields.length} ta maydon topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(fields);
@@ -620,6 +225,7 @@ router.get("/subject", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
+        if(!subjects.length) return res.status(404).send({message: "Subjects not found"})
 
         sendLog(`✅ ${subjects.length} ta fan topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(subjects);
@@ -649,6 +255,7 @@ router.get("/region", async (req, res) => {
             order: [[sortBy, order.toUpperCase()]],
         });
 
+        if(regions) return res.status(404).send({message: "Regions not found"})
 
         sendLog(`✅ ${regions.length} ta hudud topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
         res.send(regions);

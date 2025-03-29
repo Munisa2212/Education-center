@@ -1,7 +1,7 @@
 const express = require("express")
 const app = express.Router()
 const {AdminValidation} = require("../validation/user.validation") 
-const {User} = require("../models/index.module")
+const {User, Region} = require("../models/index.module")
 const sendLog = require("../logger")
 const {roleMiddleware} = require("../middleware/role.middleware")
 
@@ -69,12 +69,18 @@ app.post("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
             sendLog(`Admin add failed: ${error.details[0].message}`);
             return res.status(400).json({ msg: error.details[0].message });
         }
-        let newAdmin = await User.create(req.body);
+        let {region_id = 1} = req.body
+        
+        let region = await Region.findByPk(region_id)
+        if(!region) return res.status(404).send({message: "Region not found"})
+    
+        let newAdmin = await User.create({...req.body, region_id: region_id});
         sendLog(`Admin added: ${JSON.stringify(newAdmin)}`);
-        res.send(newAdmin);
-    } catch (err) {
-        sendLog(`Admin add error: ${err.message}`);
-        console.log(err.message);
+        res.send({message: "New Admin added successfully!", Admins_data: newAdmin});
+    } catch (error) {
+        sendLog(`Admin add error: ${error.message}`);
+        console.log(error.message);
+        res.status(400).send({error: error.message})
     }
 });
 

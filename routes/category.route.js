@@ -16,27 +16,54 @@ const sendLog = require('../logger')
 
 /**
  * @swagger
- * /category:
- *   post:
- *     summary: Create a new category
- *     security:
- *       - BearerAuth: []
- *     tags: 
+ * /search/category :
+ *   get:
+ *     summary: Get categories with filtering, sorting, and pagination
+ *     tags:
  *       - Category 📂
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Category'
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by category name
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
  *     responses:
  *       200:
- *         description: Category created successfully
+ *         description: List of categories
+ *       404:
+ *         description: Category not found
  *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized access
- * 
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
+ * /category:
  *   get:
  *     summary: Get all categories with optional filters
  *     security:
@@ -81,6 +108,26 @@ const sendLog = require('../logger')
  *         description: No categories found
  *       400:
  *         description: Invalid request
+ * 
+ *   post:
+ *     summary: Create a new category
+ *     security:
+ *       - BearerAuth: []
+ *     tags: 
+ *       - Category 📂
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Category'
+ *     responses:
+ *       200:
+ *         description: Category created successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized access
  * 
  * /category/{id}:
  *   get:
