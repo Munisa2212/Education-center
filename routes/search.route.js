@@ -5,6 +5,7 @@ const { Op } = require("sequelize");
 const { Comment, User, Center, Branch, Category, Field, Subject, Region, Resource } = require("../models/index.module");
 const sendLog = require("../logger")
 
+
 router.get("/comment", async (req, res) => {
     try {
         let { user_id, comment, star, learningCenter_id, take, page, sortBy, sortOrder } = req.query;
