@@ -12,15 +12,6 @@ const { roleMiddleware } = require("../middleware/role.middleware");
  * 
  * paths:
  *   /like:
- *     get:
- *       summary: Get all likes
- *       tags: [Like 💘]
- *       security:
- *         - BearerAuth: []
- *       responses:
- *         200:
- *           description: List of all likes
- * 
  *     post:
  *       summary: Like a learning center
  *       security:
@@ -112,11 +103,14 @@ router.post("/", AuthMiddleware(), async (req, res) => {
 
         let { learningCenter_id } = req.body;
         let center = await Center.findByPk(learningCenter_id);
+        
+        let existingCenter = await Center.findOne({where: {id: learningCenter_id}})
+        if(!existingCenter) return res.status(404).send({message: "Center not found"})
 
         let existingLike = await Like.findOne({where: {user_id: req.user.id, learningCenter_id: learningCenter_id}})
         
         if(existingLike) return res.status(400).send({message: "You have already liked this learning center"})
-
+        
         console.log(req.user.id);
         
         if (!await User.findOne({where: {id: req.user.id}})) return res.status(400).send({message: `User with ${req.user.id} id not found`})
@@ -124,7 +118,7 @@ router.post("/", AuthMiddleware(), async (req, res) => {
         res.send(like);
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
-                 ${routeInfo}
+                 🛤️ Route: ${req.method} ${req.originalUrl}
                  🛠️ Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });
     }
@@ -133,6 +127,10 @@ router.post("/", AuthMiddleware(), async (req, res) => {
 router.delete("/",AuthMiddleware(),async (req, res) => {
     try {
         let {learningCenter_id} = req.body
+
+        let existingCenter = await Center.findOne({where: {id: learningCenter_id}})
+        if(!existingCenter) return res.status(404).send({message: "Center not found"})
+            
         let like = await Like.findOne({where: {user_id: req.user.id, learningCenter_id: learningCenter_id}});
         if (!like) return res.status(404).send({ message: "You have not liked this learning center yet" });
         let deleted = await like.destroy();

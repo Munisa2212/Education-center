@@ -1,5 +1,7 @@
 const express = require('express')
 const { connectDB } = require('./config/db')
+
+const AuthRouter = require("./routes/auth.route")
 const UserRoute = require('./routes/user.route')
 const BranchRoute = require('./routes/branch.route')
 const RegionRoute = require('./routes/region.route')
@@ -51,7 +53,7 @@ app.use("/search", SearchRoute)
 app.use("/comment", CommentRoute)
 app.use("/password", PasswordRoute)
 app.use("/excel", Excel)
-
+app.use("/auth", AuthRouter)
 
 app.listen(3000, () =>
   console.log(`server started on port 3000`),

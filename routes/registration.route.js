@@ -67,7 +67,6 @@ const app = require("express").Router()
  *           example: "2025-03-25"
  */
 
-
 app.post("/",AuthMiddleware(), async (req, res) => {
     const id = req.user.id;
     try {
@@ -80,11 +79,11 @@ app.post("/",AuthMiddleware(), async (req, res) => {
       }
       
       let center = await Center.findByPk(req.body.learningCenter_id, {include: [{model: Branch}]})
-      if(!center) return res.status(404).send({message: `This learning center with ${req.body.branch_id} id Not Found!`})
-    
+      if(!center) return res.status(404).send({message: `Learning center with ${req.body.learningCenter_id_id} id Not Found!`})
       
+      let message = center.Branches.length ? `\nExisting Branches: ${center.Branches.map(id => id == id)}` : ""
       let branch = await Branch.findByPk(req.body.branch_id)
-      if(!branch) return res.status(404).send({message: `This learning center doesnt have Branch with ${req.body.branch_id} id!\nExisting Branches: [${message}]`})
+      if(!branch) return res.status(404).send({message: `This learning center doesnt have Branch with ${req.body.branch_id} id!${message}`})
 
       let currentYear = new Date().getFullYear();
       let user = await User.findByPk(id);
@@ -103,7 +102,7 @@ app.post("/",AuthMiddleware(), async (req, res) => {
       res.send(newRegister);
     } catch (error) {
       sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${id} | 🛠️ Stack: ${error.stack}`);
-      res.status(400).send({ message: error.message });
+      res.status(400).send(error);
     }
   });
   

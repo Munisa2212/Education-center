@@ -122,7 +122,7 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Validation error
  */
-route.post('/',roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+route.post('/',roleMiddleware(["ADMIN"]), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim';
   const routePath = '/';
 
@@ -135,6 +135,9 @@ route.post('/',roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
       return res.status(400).send({ message: error.details[0].message });
     }
 
+    let existingSubject = await Subject.findOne({where: {name: req.body.name}})
+    if(existingSubject) return res.status(400).send({message: "Subject already exists!"})
+      
     let subject = await Subject.create(req.body);
     sendLog(`✅ Yangi subject yaratildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Subject: ${JSON.stringify(subject)}`);
     res.status(201).send(subject);
