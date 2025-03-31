@@ -226,7 +226,7 @@ app.get("/:id", async (req, res) => {
     const { id } = req.params;
 
     try {
-        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${req.user.id} | 🆔 Resource ID: ${id}`);
+        sendLog(`📥 Sorov qabul qilindi | 🔍 GET | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${id} | 🆔 Resource ID: ${id}`);
 
         if (!id) {
             sendLog(`⚠️ Notogri ID | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${id}`);

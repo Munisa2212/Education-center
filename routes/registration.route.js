@@ -81,10 +81,7 @@ app.post("/",AuthMiddleware(), async (req, res) => {
       
       let center = await Center.findByPk(req.body.learningCenter_id, {include: [{model: Branch}]})
       if(!center) return res.status(404).send({message: `This learning center with ${req.body.branch_id} id Not Found!`})
-      
-      let message = center ? center.Branchmap(branch_id => branch_id) : "/n"
-
-      console.log(message);
+    
       
       let branch = await Branch.findByPk(req.body.branch_id)
       if(!branch) return res.status(404).send({message: `This learning center doesnt have Branch with ${req.body.branch_id} id!\nExisting Branches: [${message}]`})

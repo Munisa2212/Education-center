@@ -213,7 +213,7 @@ const sendLog = require('../logger')
  *           description: Optional image URL for the category
  */
 
-app.post("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+app.post("/", roleMiddleware(["ADMIN"]), async (req, res) => {
     try {
         let { error } = CategoryValidation.validate(req.body);
         if (error) {
@@ -325,7 +325,7 @@ app.get("/:id", async (req, res) => {
 });
 
 
-app.delete("/:id", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+app.delete("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -370,7 +370,7 @@ app.delete("/:id", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
 });
 
 
-app.patch("/:id", roleMiddleware(["ADMIN", "SUPER-ADMIN", "CEO"]), async (req, res) => {
+app.patch("/:id", roleMiddleware(["ADMIN", "SUPER-ADMIN"]), async (req, res) => {
     const { id } = req.params;
 
     try {

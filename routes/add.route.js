@@ -62,7 +62,7 @@ const {roleMiddleware} = require("../middleware/role.middleware")
  *       400:
  *         description: Validation error
  */
-app.post("/", roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+app.post("/", roleMiddleware(["ADMIN"]), async (req, res) => {
     try {
         const { error } = AdminValidation.validate(req.body);
         if (error) {

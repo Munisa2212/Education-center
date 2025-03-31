@@ -570,15 +570,6 @@ app.get("/get/all", async (req, res) => {
             ]
         });
 
-        if (!centers.length) {
-            sendLog(`⚠️ Markaz topilmadi
-                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-                📂 Route: ${req.originalUrl}
-                🔍 Sorov: ${JSON.stringify(req.query)}
-            `);
-            return res.send({ message: "No Center found" });
-        }
-
         const centersWithAverageStar = centers.map(center => {
             const comments = center.Comments || [];
             const totalStars = comments.reduce((sum, comment) => sum + comment.star, 0);
@@ -778,7 +769,7 @@ app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
     }
 });
 
-app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
+app.patch("/:id", roleMiddleware(["CEO", "SUPER-ADMIN"]), async (req, res) => {
     const { id } = req.params;
     let { field_id, subject_id } = req.body;
 
@@ -802,39 +793,30 @@ app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
             return res.status(404).send({ message: "No Center found" });
         }
 
-        // Handle field_id
         if (field_id && Array.isArray(field_id)) {
             const existingFields = await CenterField.findAll({ where: { CenterId: id } });
             const existingFieldIds = existingFields.map(f => f.FieldId);
 
-            // Find IDs to remove and add
             const fieldsToRemove = existingFieldIds.filter(f => !field_id.includes(f));
             const fieldsToAdd = field_id.filter(f => !existingFieldIds.includes(f));
 
-            // Remove fields
             await CenterField.destroy({ where: { CenterId: id, FieldId: fieldsToRemove } });
 
-            // Add new fields
             await CenterField.bulkCreate(fieldsToAdd.map(f => ({ CenterId: id, FieldId: f })));
         }
 
-        // Handle subject_id
         if (subject_id && Array.isArray(subject_id)) {
             const existingSubjects = await CenterSubject.findAll({ where: { CenterId: id } });
             const existingSubjectIds = existingSubjects.map(s => s.SubjectId);
 
-            // Find IDs to remove and add
             const subjectsToRemove = existingSubjectIds.filter(s => !subject_id.includes(s));
             const subjectsToAdd = subject_id.filter(s => !existingSubjectIds.includes(s));
 
-            // Remove subjects
             await CenterSubject.destroy({ where: { CenterId: id, SubjectId: subjectsToRemove } });
 
-            // Add new subjects
             await CenterSubject.bulkCreate(subjectsToAdd.map(s => ({ CenterId: id, SubjectId: s })));
         }
 
-        // Update the center with other fields
         await center.update(req.body);
 
         sendLog(`✅ O‘quv markazi yangilandi

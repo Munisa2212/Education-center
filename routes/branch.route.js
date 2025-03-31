@@ -198,8 +198,6 @@ route.get('/', async (req, res) => {
       ]
   })
 
-    if(!branches.length) return res.status(404).send({message: "Branches not found"})
-
     res.json(branches)
     sendLog('Muvaffaqiyatli branchlar GET qilindi✅')
   } catch (error) {
