@@ -327,7 +327,7 @@ router.delete("/:id",roleMiddleware(["ADMIN"]), async (req, res) => {
             🛠️ Stack: ${error.stack}
         `);
         res.status(400).send({ message: error.message });
-    }
+    } 
 });
 
 module.exports = router

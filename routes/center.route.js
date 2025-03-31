@@ -90,14 +90,64 @@ const sendLog = require('../logger')
  *       - BearerAuth: []
  *     tags:
  *       - LearningCenters 🎓
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by center name
+ *         schema:
+ *           type: string
+ *       - name: region_id
+ *         in: query
+ *         description: Filter by region ID
+ *         schema:
+ *           type: integer
+ *       - name: ceo_id
+ *         in: query
+ *         description: Filter by CEO ID
+ *         schema:
+ *           type: integer
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
  *     responses:
  *       200:
  *         description: List of centers
- *       203:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Center'
+ *       404:
  *         description: No centers found
  *       400:
  *         description: Invalid request
- * 
+ */
+
+/**
+ * @swagger
  * /center/{id}:
  *   get:
  *     summary: Get a center by ID
@@ -115,9 +165,16 @@ const sendLog = require('../logger')
  *     responses:
  *       200:
  *         description: Center details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Center'
  *       404:
  *         description: Center not found
- * 
+ */
+
+/**
+ * @swagger
  * /center/students:
  *   get:
  *     summary: Get students registered in a center
@@ -135,9 +192,25 @@ const sendLog = require('../logger')
  *     responses:
  *       200:
  *         description: List of students
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: Student ID
+ *                   name:
+ *                     type: string
+ *                     description: Student name
  *       400:
  *         description: learningCenter_id is required
- * 
+ */
+
+/**
+ * @swagger
  * /center:
  *   post:
  *     summary: Create a new center
@@ -156,6 +229,11 @@ const sendLog = require('../logger')
  *         description: Center created successfully
  *       400:
  *         description: Validation error
+ */
+
+/**
+ * @swagger
+ * /center/{id}:
  *   patch:
  *     summary: Update a center by ID
  *     security:
@@ -180,7 +258,11 @@ const sendLog = require('../logger')
  *         description: Center updated successfully
  *       404:
  *         description: Center not found
- * 
+ */
+
+/**
+ * @swagger
+ * /center/{id}:
  *   delete:
  *     summary: Delete a center by ID
  *     security:
@@ -199,7 +281,6 @@ const sendLog = require('../logger')
  *         description: Center deleted successfully
  *       404:
  *         description: Center not found
- * 
  */
 /**
  * @swagger
