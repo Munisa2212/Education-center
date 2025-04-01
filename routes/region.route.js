@@ -103,7 +103,7 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Xatolik yoki region allaqachon mavjud
  */
-route.post('/', async (req, res) => {
+route.post('/',roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     sendLog(`📥 Sorov qabul qilindi | 🌍 Route: ${req.originalUrl} | 📌 Ma'lumot: ${JSON.stringify(req.body)}`);
 
