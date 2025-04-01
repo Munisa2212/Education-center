@@ -3,20 +3,63 @@ const AuthMiddleware = require("../middleware/auth.middleware")
 const {Registration, User, Branch, Center} = require("../models/index.module")
 const RegistrationValidation = require("../validation/registration.validation")
 const sendLog = require("../logger")
+const e = require("express")
 const app = require("express").Router()
+
 /**
  * @swagger
  * tags:
- *   name: Enrolment 📋
- *   description: User enrolment for learning centers
+ *   - name: Enrolment 📋
+ *     description: User enrolment for learning centers
  * 
  * paths:
+ *   /enrolment/my-enrolments:
+ *     get:
+ *       summary: Get all enrolments for the authenticated user
+ *       security:
+ *         - BearerAuth: []
+ *       tags:
+ *         - Enrolment 📋
+ *       responses:
+ *         200:
+ *           description: List of enrolments
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     user_id:
+ *                       type: integer
+ *                       example: 1
+ *                     center:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                           example: "Learning Center A"
+ *                         location:
+ *                           type: string
+ *                           example: "123 Main St"
+ *                         description:
+ *                           type: string
+ *                           example: "A great place to learn"
+ *         404:
+ *           description: No enrolments found
+ *         400:
+ *           description: Bad request
+ * 
  *   /enrolment:
  *     post:
  *       summary: Register a user for a course
  *       security:
  *         - BearerAuth: []
- *       tags: [Enrolment 📋]
+ *       tags:
+ *         - Enrolment 📋
  *       requestBody:
  *         required: true
  *         content:
@@ -31,10 +74,11 @@ const app = require("express").Router()
  * 
  *   /enrolment/{id}:
  *     delete:
- *       summary: Delete a enrolment
+ *       summary: Delete an enrolment
  *       security:
  *         - BearerAuth: []
- *       tags: [Enrolment 📋]
+ *       tags:
+ *         - Enrolment 📋
  *       parameters:
  *         - in: path
  *           name: id
@@ -49,6 +93,11 @@ const app = require("express").Router()
  *           description: Enrolment not found
  * 
  * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  *   schemas:
  *     Enrolment:
  *       type: object
@@ -66,6 +115,27 @@ const app = require("express").Router()
  *           format: date
  *           example: "2025-03-25"
  */
+app.get("/my-enrolments", AuthMiddleware(), async (req, res) => {
+  try {
+      sendLog(`📥 Request received | GET /my-enrolments | User ID: ${req.user.id}`);
+
+      let enrolments = await Registration.findAll({
+          where: { user_id: req.user.id },
+          include: [{ model: Center, attributes: ["name", "location", "description"] }]
+      });
+
+      if (!enrolments || enrolments.length === 0) {
+          sendLog(`⚠️ No enrolments found for User ID: ${req.user.id}`);
+          return res.status(404).send({ message: "You have not enrolled to any center yet!" });
+      }
+
+      sendLog(`✅ Enrolments retrieved for User ID: ${req.user.id}`);
+      res.send(enrolments); 
+  } catch (error) {
+      sendLog(`❌ Error retrieving enrolments: ${error.message}`);
+      res.status(400).send({ message: error.message });
+  }
+});
 
 app.post("/",AuthMiddleware(), async (req, res) => {
     const id = req.user.id;
@@ -93,7 +163,10 @@ app.post("/",AuthMiddleware(), async (req, res) => {
         sendLog(`❌ Yosh cheklovi: ${age} | 👤 User ID: ${id} | 🌍 Route: ${req.originalUrl}`);
         return res.send("You cannot register to course because your age is under 18. Please register with your parent's account");
       }
-  
+      
+      let existingEnrolment = await Registration.findOne({where: {user_id: req.user.id, learningCenter_id: req.body.learningCenter_id}})
+      if(existingEnrolment) {return res.status(400).send({message: "You have already enrolled to this learning center"})}
+
       const { ...data } = req.body;
       const newRegister = await Registration.create({ ...data, user_id: id });
   
@@ -107,7 +180,7 @@ app.post("/",AuthMiddleware(), async (req, res) => {
   });
   
 
-  app.delete("/:id", roleMiddleware(["ADMIN"]), async (req, res) => {
+  app.delete("/:id", AuthMiddleware(), async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
   
@@ -122,9 +195,12 @@ app.post("/",AuthMiddleware(), async (req, res) => {
       const data = await Registration.findByPk(id);
       if (!data) {
         sendLog(`❌ Ma'lumot topilmadi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId} | 🆔 ID: ${id}`);
-        return res.status(404).send({ message: "Data not found" });
+        return res.status(404).send({ message: "Enrolment not found" });
       }
-  
+      
+      if(!req.user.role in ["ADMIN", "CEO"] || data.user_id != req.user.id){
+        return res.status(400).send({message: `You are not allowed to delete other's enrolment. ${req.user.role} can delete only his own enrolment. Only ADMIN can do it!😉`})
+      }
       await data.destroy();
   
       sendLog(`✅ Ma'lumot ochirildi | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId} | 🆔 ID: ${id}`);
@@ -132,7 +208,7 @@ app.post("/",AuthMiddleware(), async (req, res) => {
       res.send({ message: "Deleted successfully", deleted_data: data });
     } catch (error) {
       sendLog(`❌ Xatolik: ${error.message} | 🌍 Route: ${req.originalUrl} | 👤 User ID: ${userId} | 🛠️ Stack: ${error.stack}`);
-      res.status(400).send({ message: error.message });
+      res.status(400).send({ error: error.message });
     }
   });
   

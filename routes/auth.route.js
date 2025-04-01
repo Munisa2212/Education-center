@@ -230,9 +230,7 @@ router.post('/register', async (req, res) => {
       let otp = totp.generate(email + 'email')
       console.log(otp)
       sendLog(
-        `✅ Foydalanuvchi yaratildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User: ${JSON.stringify(
-          newUser,
-        )}`,
+        `✅ Foydalanuvchi yaratildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User: ${JSON.stringify(newUser)} | 🔑 Otp: ${otp}`,
       )
       sendSMS(phone,otp)
       sendEmail(email, otp)
@@ -576,7 +574,7 @@ router.post('/register', async (req, res) => {
       let access_token = jwt.sign(
         { id: existingUser.id, role: existingUser.role },
         'sekret',
-        { expiresIn: '1h' },
+        { expiresIn: '2h' },
       )
   
       sendLog(
@@ -682,7 +680,7 @@ router.post('/register', async (req, res) => {
       }
   
       let access_token = jwt.sign({ id: user.id, role: user.role }, 'sekret', {
-        expiresIn: '1h',
+        expiresIn: '2h',
       })
       sendLog(
         `✅ Refresh token tasdiqlandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User ID: ${user.id} | Rollar: ${user.role}`,

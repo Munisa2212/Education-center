@@ -9,6 +9,7 @@ const CenterSubject = require("../models/centerSubject.module");
 const app = require("express").Router()
 const sendLog = require('../logger')
 
+
 /**
  * @swagger
  * /search/center :
@@ -42,6 +43,16 @@ const sendLog = require('../logger')
  *         description: Filter by field ID
  *         schema:
  *           type: integer
+ *       - name: student_count
+ *         in: query
+ *         description: Filter by student_count
+ *         schema:
+ *           type: integer
+ *       - name: branch_name
+ *         in: query
+ *         description: Filter by branch name
+ *         schema:
+ *           type: string
  *       - name: branch_id
  *         in: query
  *         description: Filter by branch Id
@@ -648,9 +659,9 @@ app.get("/students",roleMiddleware(["ADMIN","CEO"]), async (req, res) => {
             return res.status(400).send({ message: "learningCenter_id is required" });
         }
         
-        let students = await Registration.findAll({ where: { learningCenter_id: req.query.learningCenter_id } });
+        let students = await User.findAndCountAll({attributes: ["id", "name", "email", "phone"], include: [{model: Registration, where: {learningCenter_id: req.query.learningCenter_id}}]});
 
-        if (!students.length) {
+        if (!students.rows.length) {
             sendLog(`⚠️ Oquvchilar topilmadi
                 📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
                 📂 Route: ${req.originalUrl}
@@ -675,57 +686,6 @@ app.get("/students",roleMiddleware(["ADMIN","CEO"]), async (req, res) => {
         res.status(400).send({ message: error.message });
     }
 });
-
-
-app.get("/average-star", AuthMiddleware(), async (req, res) => {
-    try {
-        let { learningCenter_id } = req.query;
-
-        if (!learningCenter_id) {
-            sendLog(`⚠️ Xato sorov: learningCenter_id kiritilmagan
-                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-                📂 Route: ${req.originalUrl}
-                📥 Sorov: ${JSON.stringify(req.query)}
-            `);
-            return res.status(400).send({ message: "learningCenter_id is required" });
-        }
-
-        let center_data = await Comment.findAll({ where: { learningCenter_id } });
-
-        if (!center_data) {
-            sendLog(`⚠️ Ushbu oquv markazida sharhlar topilmadi
-                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-                📂 Route: ${req.originalUrl}
-                🔍 learningCenter_id: ${learningCenter_id}
-            `);
-            return res.send({ average_star: 0 });
-        }
-
-        let totalStars = center_data.reduce((sum, comment) => sum + comment.star, 0);
-        if(totalStars == 0){
-            return res.send({ average_star: 0 })
-        }
-        let average_star = totalStars / center_data.length;
-
-        sendLog(`✅ Ortacha baho hisoblandi: ${average_star.toFixed(2)}
-            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-            📂 Route: ${req.originalUrl}
-            🔍 learningCenter_id: ${learningCenter_id}
-            ⭐ Sharhlar soni: ${center_data.length}
-        `);
-        
-        res.send({ average_star: average_star.toFixed(2) });
-    } catch (error) {
-        sendLog(`❌ Xatolik yuz berdi: ${error.message}
-            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-            📂 Route: ${req.originalUrl}
-            📥 Sorov: ${JSON.stringify(req.query)}
-            🛠️ Stack: ${error.stack}
-        `);
-        res.status(400).send({ message: error.message });
-    }
-});
-
 
 app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
     const { id } = req.params;

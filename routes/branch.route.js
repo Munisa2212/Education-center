@@ -347,27 +347,32 @@ route.post('/', roleMiddleware(['ADMIN', "CEO"]), async (req, res) => {
       return res.status(404).send({ message: 'Region not found' })
     }
     
-    const subjects = await Subject.findAll({ where: { id: subject_id } })
-    
-    if (subjects.length !== subject_id.length) {
-      sendLog(`🚨 Xatolik: Foydalanuvchi (${req.user?.id} - ${
-        req.user?.name
-      }) quyidagi subject ID larni izladi: ${subject_id}. 
-      Topilganlari: ${subjects.map((s) => s.id)}.
-      Qolganlari topilmadi!`)
-      return res.status(404).send({ message: 'One or more subjects not found' })
+    const notFound_Subjects = []
+    for(let i of subject_id){
+        let existingSubject = await Subject.findOne({where: {id: i}})
+        if(!existingSubject) notFound_Subjects.push(i)
+    }
+    if(notFound_Subjects.length) {
+        sendLog(`⚠️ Bazi subject_id topilmadi
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            🔍 Kiritilgan subject_id: ${JSON.stringify(subject_id)}
+        `);
+        return res.status(404).send({message: `Subjects with ${notFound_Subjects} id not found`})
     }
 
-    const fields = await Field.findAll({ where: { id: field_id } })
-
-    if (fields.length !== field_id.length) {
-      sendLog(`🚨 Xatolik: Foydalanuvchi (${req.user?.id} - ${
-        req.user?.name
-      }) quyidagi field ID larni izladi: ${field_id}. 
-    Topilganlari: ${fields.map((f) => f.id)}.
-    Qolganlari topilmadi!`)
-    
-      return res.status(404).send({ message: 'One or more fields not found' })
+    const notFound_Fields = []
+    for(let i of subject_id){
+        let existingFields = await Field.findOne({where: {id: i}})
+        if(!existingFields) notFound_Fields.push(i)
+    }
+    if(notFound_Fields.length) {
+        sendLog(`⚠️ Bazi field_id topilmadi
+            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+            📂 Route: ${req.originalUrl}
+            🔍 Kiritilgan field_id: ${JSON.stringify(field_id)}
+        `);
+        return res.status(404).send({message: `Fields with ${notFound_Fields} id not found`})
     }
     
     await center.update({ branch_number: center.branch_number + 1 })

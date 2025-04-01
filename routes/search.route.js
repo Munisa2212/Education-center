@@ -2,7 +2,7 @@ const router = require("express").Router();
 const AuthMiddleware = require("../middleware/auth.middleware");
 const { roleMiddleware } = require("../middleware/role.middleware");
 const { Op } = require("sequelize");
-const { Comment, User, Center, Branch, Category, Field, Subject, Region, Resource } = require("../models/index.module");
+const { Comment, User, Center, Branch, Category, Field, Subject, Region, Resource, Registration } = require("../models/index.module");
 const sendLog = require("../logger")
 
 
@@ -75,7 +75,7 @@ router.get("/user", roleMiddleware(["ADMIN"]), async (req, res) => {
 
 router.get("/center", async (req, res) => {
     try {
-        let { name, region_id, ceo_id, subject_id, field_id, branch_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
+        let { name, region_id, ceo_id, branch_name, subject_id, student_count = 0, field_id, branch_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
         const where = {};
         sendLog(`📥 Sorov qabul qilindi | 🔍 GET /center | 📌 Query Params: ${JSON.stringify(req.query)}`);
 
@@ -86,10 +86,11 @@ router.get("/center", async (req, res) => {
         const include = [
             { model: Region, attributes: ["id", "name"] },
             { model: User, attributes: ["id", "email", "name"] },
-            { model: Branch, attributes: ["id", "name", "location"], ...(branch_id ? { where: { id: branch_id } } : {}) },
+            { model: Branch, attributes: ["id", "name", "location"], ...(branch_id ? { where: { id: branch_id } } : {}), ...(branch_name ? { where: {name: { [Op.like]: `%${branch_name}%` }}} : { }) },
             { model: Comment, attributes: ["id", "star", "comment"] },
             { model: Subject, through: { attributes: [] }, ...(subject_id ? { where: { id: subject_id } } : {}) },
-            { model: Field, through: { attributes: [] }, ...(field_id ? { where: { id: field_id } } : {}) }
+            { model: Field, through: { attributes: [] }, ...(field_id ? { where: { id: field_id } } : {}) },
+            {model: Registration}
         ];
 
         sendLog(`🔄 Filtirlangan ma'lumotlar | 📌 Filter: ${JSON.stringify(where)}`);
@@ -104,9 +105,17 @@ router.get("/center", async (req, res) => {
 
         if(!centers.length) return res.status(404).send({message: "Centers not found"})
 
-        sendLog(`✅ ${centers.length} ta oquv markazi topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
-        res.send(centers);
+            let withStudentCount = centers.filter(e => e.Registrations.length >= student_count);
 
+            let arr = withStudentCount.map(e => {
+                const center = e.get({ plain: true }); 
+                center.student_count = center.Registrations.length; 
+                delete center.Registrations;
+                return center;
+            });
+        
+        sendLog(`✅ ${centers.length} ta oquv markazi topildi | 🔍 Query: ${JSON.stringify(req.query)}`);
+        res.send(arr);
     } catch (error) {
         sendLog(`❌ Xatolik: ${error.message} | 🔍 GET /center | 🛠 Stack: ${error.stack}`);
         res.status(400).send({ message: error.message });

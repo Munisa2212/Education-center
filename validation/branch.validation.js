@@ -7,8 +7,8 @@ const Branch_valadation = joi.object({
     location: joi.string().required(),
     region_id: joi.number().required(),
     learningCenter_id: joi.number().required(),
-    field_id: joi.array().items(joi.number().required()).required(),
-    subject_id: joi.array().items(joi.number().required()).required(),
+    field_id: joi.array().required(),
+    subject_id: joi.array().required(),
 })
 
 module.exports = Branch_valadation
