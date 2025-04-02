@@ -19,6 +19,8 @@ const route = express.Router()
  *     summary: Get subjects with filtering, sorting, and pagination
  *     tags:
  *       - Subject 📚
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query
@@ -153,6 +155,8 @@ route.post('/',roleMiddleware(["ADMIN"]), async (req, res) => {
  *   get:
  *     summary: Get a subject by ID
  *     tags: [Subject 📚]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
