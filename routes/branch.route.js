@@ -28,6 +28,8 @@ const route = express.Router()
  *     summary: Get branches with filtering, sorting, and pagination
  *     tags:
  *       - Branch 🏢
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query
@@ -81,6 +83,8 @@ const route = express.Router()
  *   get:
  *     summary: Retrieve a list of branches
  *     tags: [Branch 🏢]
+ *     security:
+ *       - BearerAuth: []
  *     description: Fetches branches with optional filtering, sorting, and pagination.
  *     parameters:
  *       - in: query

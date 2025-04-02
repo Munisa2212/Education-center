@@ -52,6 +52,8 @@ router.post("/", upload.single("image"), (req, res) => {
  *   get:
  *     summary: Get uploaded file
  *     tags: [Upload]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: filename
  *         in: query

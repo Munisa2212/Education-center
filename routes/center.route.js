@@ -17,6 +17,8 @@ const sendLog = require('../logger')
  *     summary: Get centers with filtering, sorting, and pagination
  *     tags:
  *       - LearningCenters 🎓
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query
@@ -99,6 +101,8 @@ const sendLog = require('../logger')
  *     summary: Get all centers with filtering, sorting, and pagination
  *     tags:
  *       - LearningCenters 🎓
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query

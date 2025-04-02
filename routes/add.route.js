@@ -50,6 +50,8 @@ const bcrypt = require("bcrypt")
  *   post:
  *     summary: Add a new admin
  *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

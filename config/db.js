@@ -1,8 +1,8 @@
 const {Sequelize} = require('sequelize');
 require("dotenv").config()
 
-const db = new Sequelize("center","root", "nurali1102",{
-    host: "localhost",
+const db = new Sequelize("n17","root", "1234",{
+    host: "global host",
     dialect: "mysql",
 })
 

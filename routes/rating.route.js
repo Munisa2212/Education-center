@@ -9,6 +9,8 @@ const app = require("express").Router()
  *     summary: Get centers with their star ratings
  *     tags:
  *       - Learning Center Ratings 🏆
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: top

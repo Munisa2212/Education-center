@@ -13,6 +13,8 @@ const { roleMiddleware } = require("../middleware/role.middleware");
  *     summary: Get comments with filtering, sorting, and pagination
  *     tags:
  *       - Comment 💬
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: user_id
  *         in: query
@@ -77,6 +79,8 @@ const { roleMiddleware } = require("../middleware/role.middleware");
  *     get:
  *       summary: Get all comments
  *       tags: [Comment 💬]
+ *     security:
+ *       - BearerAuth: []
  *       responses:
  *         200:
  *           description: List of all comments
@@ -101,6 +105,8 @@ const { roleMiddleware } = require("../middleware/role.middleware");
  *     get:
  *       summary: Get a comment by ID
  *       tags: [Comment 💬]
+ *       security:
+ *         - BearerAuth: []
  *       parameters:
  *         - in: path
  *           name: id

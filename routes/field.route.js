@@ -19,6 +19,8 @@ const route = express.Router()
  *     summary: Get fields with filtering, sorting, and pagination
  *     tags:
  *       - Field 💼
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query
@@ -64,6 +66,8 @@ const route = express.Router()
  *   get:
  *     summary: Get all fields
  *     tags: [Field 💼]
+ *     security:
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: List of all fields
@@ -76,6 +80,8 @@ const route = express.Router()
  *   post:
  *     summary: Create a new field
  *     tags: [Field 💼]
+ *     security:
+ *       - BearerAuth: []
  *     security:
  *       - BearerAuth: []
  *     requestBody:

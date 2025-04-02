@@ -12,6 +12,8 @@ const route = express.Router()
  *     summary: Get regions with filtering, sorting, and pagination
  *     tags:
  *       - Region 📍
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query
@@ -58,6 +60,8 @@ const route = express.Router()
  *   get:
  *     summary: Barcha regionlarni olish
  *     tags: [Region 📍]
+ *     security:
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Regionlar ro‘yxati

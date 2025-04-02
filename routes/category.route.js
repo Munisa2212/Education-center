@@ -21,6 +21,8 @@ const sendLog = require('../logger')
  *     summary: Get categories with filtering, sorting, and pagination
  *     tags:
  *       - Category 📂
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query
