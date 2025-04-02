@@ -82,8 +82,6 @@ const route = express.Router()
  *     tags: [Field 💼]
  *     security:
  *       - BearerAuth: []
- *     security:
- *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

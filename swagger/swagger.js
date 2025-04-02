@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://3.79.234.138:3000/api-docs/#/',
+        url: 'http://3.79.234.138:3000',
         description: 'Global server',
       },
     ],
