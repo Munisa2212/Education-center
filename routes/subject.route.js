@@ -14,6 +14,55 @@ const route = express.Router()
 
 /**
  * @swagger
+ * /search/subject :
+ *   get:
+ *     summary: Get subjects with filtering, sorting, and pagination
+ *     tags:
+ *       - Subject 📚
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by subject name
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of subjects
+ *       404:
+ *         description: Subject not found
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
  * /subject:
  *   get:
  *     summary: Get all subjects
@@ -34,6 +83,8 @@ route.get('/', async (req, res) => {
     let subject = await Subject.findAll({include: [{model: Center}]});
 
     sendLog(`✅ ${subject.length} ta subject topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Natija: ${JSON.stringify(subject)}`);
+
+    if(!subject) return res.status(404).send({message: "Subjects not found"})
 
     res.send(subject);
   } catch (err) {
@@ -73,7 +124,7 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Validation error
  */
-route.post('/',roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
+route.post('/',roleMiddleware(["ADMIN"]), async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim';
   const routePath = '/';
 
@@ -86,6 +137,9 @@ route.post('/',roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
       return res.status(400).send({ message: error.details[0].message });
     }
 
+    let existingSubject = await Subject.findOne({where: {name: req.body.name}})
+    if(existingSubject) return res.status(400).send({message: "Subject already exists!"})
+      
     let subject = await Subject.create(req.body);
     sendLog(`✅ Yangi subject yaratildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Subject: ${JSON.stringify(subject)}`);
     res.status(201).send(subject);
@@ -101,6 +155,8 @@ route.post('/',roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
  *   get:
  *     summary: Get a subject by ID
  *     tags: [Subject 📚]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -114,6 +170,7 @@ route.post('/',roleMiddleware(["ADMIN", "CEO"]), async (req, res) => {
  *       404:
  *         description: Subject not found
  */
+
 route.get('/:id', async (req, res) => {
   const user = req.user ? req.user.username : 'Anonim';
   const routePath = `/${req.params.id}`;

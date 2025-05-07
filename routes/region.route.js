@@ -7,10 +7,61 @@ const route = express.Router()
 
 /**
  * @swagger
+ * /search/region :
+ *   get:
+ *     summary: Get regions with filtering, sorting, and pagination
+ *     tags:
+ *       - Region 📍
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by region name
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of regions
+ *       404:
+ *         description: Region not found
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
  * /region:
  *   get:
  *     summary: Barcha regionlarni olish
  *     tags: [Region 📍]
+ *     security:
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Regionlar ro‘yxati
@@ -56,7 +107,7 @@ route.get('/', async (req, res) => {
  *       400:
  *         description: Xatolik yoki region allaqachon mavjud
  */
-route.post('/', async (req, res) => {
+route.post('/',roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     sendLog(`📥 Sorov qabul qilindi | 🌍 Route: ${req.originalUrl} | 📌 Ma'lumot: ${JSON.stringify(req.body)}`);
 

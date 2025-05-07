@@ -1,4 +1,4 @@
-const { User, Region } = require('../models/index.module')
+const { User, Region, Center, Branch, Field, Subject, Comment} = require('../models/index.module')
 const {
   UserValidation,
   LoginValidation,
@@ -16,93 +16,13 @@ const DeviceDetector = require('device-detector-js')
 const deviceDetector = new DeviceDetector()
 const sendLog = require("../logger")
 const sendSMS = require("../config/eskiz")
+const { route } = require('./branch.route')
+const { all } = require('axios')
 
 totp.options = { step: 300, digits: 5 }
 
 /**
  * @swagger
- * /user/register:
- *   post:
- *     summary: Register a new user
- *     description: Creates a new user and sends an OTP to their email.
- *     tags:
- *       - AUTH
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: "Munisa"
- *               year:
- *                 type: integer
- *                 example: 2005
- *                 description: Birth year of the user
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "ibodullayevamunisa570@example.com"
- *               phone:
- *                 type: string
- *                 example: "+998882452212"
- *               password:
- *                 type: string
- *                 format: password
- *                 example: "SecurePass123!"
- *               image:
- *                 type: string
- *                 example: photo.png 
- *               role:
- *                 type: string
- *                 enum: [ADMIN, CEO, USER]
- *                 example: "CEO"
- *               region_id:
- *                 type: integer
- *                 example: 1
- *             required:
- *               - name
- *               - email
- *               - phone
- *               - password
- *               - role
- *               - region_id
- *     responses:
- *       201:
- *         description: User created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user_data:
- *                   type: object
- *                   example:
- *                     id: 1
- *                     name: "John Doe"
- *                     email: "johndoe@example.com"
- *                     phone: "+998901234567"
- *                     role: "USER"
- *                 message:
- *                   type: string
- *                   example: "User created successfully, OTP is sent to email and phone"
- *       400:
- *         description: Bad request (Validation error or user already exists)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User already exists, email exists"
- *       404:
- *         description: User not found
- *
  * /user/me:
  *   get:
  *     summary: Get current authenticated user info
@@ -187,527 +107,42 @@ totp.options = { step: 300, digits: 5 }
  *           description: User password
  */
 
-router.post('/register', async (req, res) => {
-  const user = req.user ? req.user.username : 'Anonim'
-  const routePath = '/register'
-
-  try {
-    sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
-        req.body,
-      )}`,
-    )
-
-    if (req.body.role == 'CEO') {
-      let { error } = AdminValidation.validate(req.body)
-      if (error) {
-        sendLog(
-          `⚠️ Admin validation xatosi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Error: ${error.details[0].message}`,
-        )
-        console.log(req.body);
-        
-        return res.status(400).send(error.details[0].message)
-      }
-    } else {
-      let { error } = UserValidation.validate(req.body)
-      if (error) {
-        sendLog(
-          `⚠️ User validation xatosi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Error: ${error.details[0].message}`,
-        )
-        return res.status(400).send(error.details[0].message)
-      }
-    }
-    const { name, password, email, phone, region_id, ...rest } = req.body
-    let existingUser = await User.findOne({ where: { email: email } })
-
-    const reg = await Region.findByPk(region_id)
-    if(!reg){
-      return res.status(404).send({message: "Region not found"})
-    }
-    if (existingUser) {
-      sendLog(
-        `⚠️ Foydalanuvchi mavjud | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-      )
-      return res
-        .status(400)
-        .send({ message: 'User already exists, email exists' })
-    }
-
-    let hash = bcrypt.hashSync(password, 10)
-    let newUser = await User.create({
-      ...rest,
-      name: name,
-      phone: phone,
-      email: email,
-      password: hash,
-      region_id: region_id
-    })
-
-    let otp = totp.generate(email + 'email')
-    console.log(otp)
-    sendLog(
-      `✅ Foydalanuvchi yaratildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User: ${JSON.stringify(
-        newUser,
-      )}`,
-    )
-    sendSMS(phone,otp)
-    sendEmail(email, otp)
-
-    res.status(201).send({ user_data: newUser, message: 'User created successfully, otp is sent to email and phone',})
-  } catch (error) {
-    sendLog(
-      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
-    )
-    res.status(400).send({error: error.message})
-  }
-})
-
 /**
  * @swagger
- * /user/verify:
- *   post:
- *     summary: Verify a user's email with OTP
- *     description: Verifies a user's email using the OTP sent to their email during registration.
+ * /search/user:
+ *   get:
+ *     summary: Get users with filtering
  *     tags:
- *       - AUTH
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "ibodullayevamunisa570@example.com"
- *               otp:
- *                 type: string
- *                 example: "123456"
- *             required:
- *               - email
- *               - otp
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by username
+ *         schema:
+ *           type: string
+ *       - name: email
+ *         in: query
+ *         description: Filter by email
+ *         schema:
+ *           type: string
+ *       - name: phone
+ *         in: query
+ *         description: Filter by phone number
+ *         schema:
+ *           type: string
+ *       - name: role
+ *         in: query
+ *         description: Filter by user role
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Email successfully verified
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Email successfully verified! You can now log in."
- *       404:
- *         description: User not found or OTP invalid
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User not found"
+ *         description: List of users
  *       400:
- *         description: Bad request or server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
+ *         description: Bad request
  */
-
-router.post('/verify', async (req, res) => {
-  const user = req.user ? req.user.username : 'Anonim'
-  const routePath = '/verify'
-
-  let { email, otp } = req.body
-
-  try {
-    sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
-        req.body,
-      )}`,
-    )
-
-    let existingUser = await User.findOne({ where: { email: email } })
-
-    if (!existingUser) {
-      sendLog(
-        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-      )
-      return res.status(404).send({ message: 'User not found' })
-    }
-
-    let match = totp.verify({ token: otp, secret: email + 'email' })
-
-    if (!match) {
-      sendLog(
-        `⚠️ Otp notogri | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Otp: ${otp}`,
-      )
-      return res.status(404).send({ message: 'Otp is not valid' })
-    }
-
-    await existingUser.update({ status: 'ACTIVE' })
-
-    sendLog(
-      `✅ Email tasdiqlandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Foydalanuvchi: ${email}`,
-    )
-    res.send({ message: 'Email successfully verified! You can now log in.' })
-  } catch (error) {
-    sendLog(
-      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
-    )
-    res.status(400).send({error: error.message})
-  }
-})
-
-/**
- * @swagger
- * /user/resend-otp:
- *   post:
- *     summary: Resend OTP to a user's email
- *     description: Generates a new OTP and sends it to the provided email.
- *     tags:
- *       - AUTH
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "ibodullayevamunisa570@example.com"
- *             required:
- *               - email
- *     responses:
- *       200:
- *         description: OTP successfully sent to the user
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Otp sent to johndoe@example.com"
- *       404:
- *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User not found"
- *       400:
- *         description: Bad request or server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
- */
-
-router.post('/resend-otp', async (req, res) => {
-  const user = req.user ? req.user.username : 'Anonim'
-  const routePath = '/resend-otp'
-
-  let { email } = req.body
-
-  try {
-    sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
-        req.body,
-      )}`,
-    )
-
-    let existingUser = await User.findOne({ where: { email } })
-
-    if (!existingUser) {
-      sendLog(
-        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-      )
-      return res.status(404).send({ message: 'User not found' })
-    }
-
-    const token = totp.generate(email + 'email')
-    sendLog(
-      `✅ OTP yaratilgan | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Otp: ${token} | Email: ${email}`,
-    )
-
-    sendEmail(email, token)
-    sendLog(
-      `✅ Otp yuborildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-    )
-
-    res.send({ message: `Otp sent to ${email}` })
-  } catch (error) {
-    sendLog(
-      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
-    )
-    console.log(error)
-    res.status(400).send({error: error.message})
-  }
-})
-/**
- * @swagger
- * /user/login:
- *   post:
- *     summary: User login
- *     description: Authenticates a user and returns access and refresh tokens.
- *     tags:
- *       - AUTH
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "ibodullayevamunisa570@example.com"
- *               password:
- *                 type: string
- *                 format: password
- *                 example: "password123"
- *             required:
- *               - email
- *               - password
- *     responses:
- *       200:
- *         description: Login successful, returns access and refresh tokens
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 refresh_token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 access_token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *       400:
- *         description: Validation error or wrong password
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Wrong password"
- *       401:
- *         description: Email not verified
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Verify your email first!"
- *       404:
- *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User not found"
- */
-router.post('/login', async (req, res) => {
-  const user = req.user ? req.user.username : 'Anonim'
-  const routePath = '/login'
-
-  try {
-    sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
-        req.body,
-      )}`,
-    )
-
-    let { error } = LoginValidation.validate(req.body)
-    if (error) {
-      sendLog(
-        `⚠️ Validatsiya xatosi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Error: ${error.details[0].message}`,
-      )
-      return res.status(400).send(error.details[0].message)
-    }
-
-    let { password, email } = req.body
-    let existingUser = await User.findOne({ where: { email: email } })
-
-    if (!existingUser) {
-      sendLog(
-        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-      )
-      return res.status(404).send({ message: 'User not found' })
-    }
-
-    let match = bcrypt.compareSync(password, existingUser.password)
-    if (!match) {
-      sendLog(
-        `⚠️ Notogri parol | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-      )
-      return res.status(400).send({ message: 'Wrong password' })
-    }
-
-    if (existingUser.status !== 'ACTIVE') {
-      sendLog(
-        `⚠️ Email tasdiqlanmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email}`,
-      )
-      return res.status(401).send({ message: 'Verify your email first!' })
-    }
-
-    let refresh_token = jwt.sign(
-      { id: existingUser.id, role: existingUser.role },
-      'refresh',
-      { expiresIn: '1d' },
-    )
-    let access_token = jwt.sign(
-      { id: existingUser.id, role: existingUser.role },
-      'sekret',
-      { expiresIn: '1h' },
-    )
-
-    sendLog(
-      `✅ Kirish muvaffaqiyatli | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Email: ${email} | Rollar: ${existingUser.role}`,
-    )
-    res.send({ refresh_token: refresh_token, access_token: access_token })
-  } catch (err) {
-    sendLog(
-      `❌ Xatolik: ${err.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${err.stack}`,
-    )
-    res.status(400).send({error: error.message})
-  }
-})
-
-/**
- * @swagger
- * /user/refresh-token:
- *   post:
- *     summary: Refresh access token
- *     description: Generates a new access token using a valid refresh token.
- *     tags:
- *       - AUTH
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               refresh_token:
- *                 type: string
- *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *             required:
- *               - refresh_token
- *     responses:
- *       200:
- *         description: Successfully generated new access token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 access_token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *       400:
- *         description: Invalid or missing refresh token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Invalid refresh token"
- *       404:
- *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User not found"
- */
-router.post('/refresh-token', async (req, res) => {
-  const user = req.user ? req.user.username : 'Anonim'
-  const routePath = '/refresh-token'
-
-  try {
-    sendLog(
-      `📥 Sorov qabul qilindi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Body: ${JSON.stringify(
-        req.body,
-      )}`,
-    )
-
-    let { refresh_token } = req.body
-    if (!refresh_token) {
-      sendLog(
-        `⚠️ Refresh token yoq | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
-      )
-      return res.status(400).send({ message: 'Refresh token is required' })
-    }
-
-    let decoded = jwt.verify(refresh_token, 'refresh')
-    if (!decoded) {
-      sendLog(
-        `⚠️ Notogri refresh token | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 Token: ${refresh_token}`,
-      )
-      return res.status(400).send({ message: 'Invalid refresh token' })
-    }
-
-    let user = await User.findByPk(decoded.id)
-    if (!user) {
-      sendLog(
-        `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User ID: ${decoded.id}`,
-      )
-      return res.status(404).send({ message: 'User not found' })
-    }
-
-    let access_token = jwt.sign({ id: user.id, role: user.role }, 'sekret', {
-      expiresIn: '1h',
-    })
-    sendLog(
-      `✅ Refresh token tasdiqlandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 📌 User ID: ${user.id} | Rollar: ${user.role}`,
-    )
-
-    res.send({ access_token: access_token })
-  } catch (error) {
-    sendLog(
-      `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
-    )
-    res.status(400).send({ message: 'Wrong refresh_token' })
-  }
-})
 
 /**
  * @swagger
@@ -716,7 +151,7 @@ router.post('/refresh-token', async (req, res) => {
  *     summary: Retrieve all users
  *     description: Fetches a list of all users with their associated region. Only accessible to ADMIN and CEO roles.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -803,11 +238,36 @@ router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
     sendLog(
       `✅ ${users.length} ta foydalanuvchi topildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user}`,
     )
+
+    if(!users) return res.status(404).send({message: "User not found"})
+
     res.send(users)
   } catch (error) {
     sendLog(
       `❌ Xatolik: ${error.message} | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | 🛠 Stack: ${error.stack}`,
     )
+    res.status(400).send({error: error.message})
+  }
+})
+
+router.get("/my-info", AuthMiddleware(), async(req, res)=>{
+  try {
+    let all_data = await User.findByPk(req.user.id, {
+      include: [
+        { model: Region },
+        {model: Center , include: [
+          { model: Branch, attributes: ["name", "location"] },
+          { model: Subject, through: { attributes: [] } },
+          { model: Field, through: { attributes: [] } },
+          { model: Region, attributes: ["name"] },
+          { model: Comment, attributes: ["star", "comment"] }
+      ]},
+      ]
+    })
+
+    if(!all_data) return res.status(404).send({message: "Nothing found about you!"})
+    res.send(all_data)
+  } catch (error) {
     res.status(400).send({error: error.message})
   }
 })
@@ -819,7 +279,7 @@ router.get('/', roleMiddleware(['ADMIN', 'CEO']), async (req, res) => {
  *     summary: Get authenticated user info
  *     description: Returns the authenticated user's details along with device information.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -933,7 +393,7 @@ router.get('/me', AuthMiddleware(), async (req, res) => {
  *     summary: Get user by ID
  *     description: Retrieves user details by their ID. Only accessible to ADMIN users.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -1056,7 +516,7 @@ router.get('/:id', roleMiddleware(['ADMIN']), async (req, res) => {
  *     summary: Update user details
  *     description: Allows a user to update their own account details. Admins can update any user's details.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -1161,9 +621,9 @@ router.patch('/:id', AuthMiddleware(), async (req, res) => {
       )}`,
     )
 
-    let targetUser = await User.findByPk(req.params.id)
+    let User_id = await User.findByPk(req.params.id)
 
-    if (!targetUser) {
+    if (!User_id) {
       sendLog(
         `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
           req.params,
@@ -1172,7 +632,7 @@ router.patch('/:id', AuthMiddleware(), async (req, res) => {
       return res.status(404).send({ message: 'User not found' })
     }
 
-    if (req.user.role !== 'ADMIN' && req.user.id != targetUser.id) {
+    if (req.user.role !== 'ADMIN' && req.user.id != User_id.id) {
       sendLog(
         `⚠️ Xatolik | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Xabar: "Ruxsat yoq | Faqat ADMIN boshqa foydalanuvchini ozgartira oladi."`,
       )
@@ -1181,7 +641,7 @@ router.patch('/:id', AuthMiddleware(), async (req, res) => {
       })
     }
 
-    let updatedUser = await targetUser.update(req.body)
+    let updatedUser = await User_id.update(req.body)
 
     sendLog(
       `✅ Foydalanuvchi muvaffaqiyatli yangilandi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Yangilangan: ${JSON.stringify(
@@ -1207,7 +667,7 @@ router.patch('/:id', AuthMiddleware(), async (req, res) => {
  *     summary: Delete a user
  *     description: Allows a user to delete their own account. Admins can delete any user's account.
  *     tags:
- *       - USER
+ *       - User 👤
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -1283,9 +743,9 @@ router.delete('/:id', AuthMiddleware(), async (req, res) => {
       )}`,
     )
 
-    let targetUser = await User.findByPk(req.params.id)
+    let User_id = await User.findByPk(req.params.id)
 
-    if (!targetUser) {
+    if (!User_id) {
       sendLog(
         `⚠️ Foydalanuvchi topilmadi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Parametrlar: ${JSON.stringify(
           req.params,
@@ -1294,7 +754,7 @@ router.delete('/:id', AuthMiddleware(), async (req, res) => {
       return res.status(404).send({ message: 'User not found' })
     }
 
-    if (req.user.role !== 'ADMIN' && req.user.id != targetUser.id) {
+    if (req.user.role !== 'ADMIN' && req.user.id != User_id.id) {
       sendLog(
         `⚠️ Xatolik | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | Xabar: "Ruxsat yoq | Faqat ADMIN boshqa foydalanuvchini o‘chirishga ruxsat beradi."`,
       )
@@ -1303,7 +763,7 @@ router.delete('/:id', AuthMiddleware(), async (req, res) => {
       })
     }
 
-    let deletedUser = await targetUser.destroy()
+    let deletedUser = await User_id.destroy()
 
     sendLog(
       `✅ Foydalanuvchi muvaffaqiyatli ochirildi | 🔍 ${routePath} | 👤 Kim tomonidan: ${user} | O‘chirildi: ${JSON.stringify(
@@ -1325,48 +785,7 @@ router.delete('/:id', AuthMiddleware(), async (req, res) => {
     res.status(400).send({error: error.message})
   }
 })
-/**
- * @swagger
- * /user/refresh:
- *   get:
- *     summary: Refresh access token
- *     description: Generates a new access token for an authenticated user.
- *     tags:
- *       - USER
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Successfully refreshed the access token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 access_token:
- *                   type: string
- *                   example: "newly_generated_jwt_token"
- *       400:
- *         description: Error while refreshing token
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Something went wrong"
- *       401:
- *         description: Unauthorized (missing or invalid token)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Unauthorized"
- */
+
 router.get('/refresh', AuthMiddleware(), async (req, res) => {
     const user = req.user ? req.user.username : 'Anonim';
     const routePath = `/refresh`;
@@ -1388,6 +807,5 @@ router.get('/refresh', AuthMiddleware(), async (req, res) => {
         res.status(400).send({error: error.message})
     }
 });
-
 
 module.exports = router

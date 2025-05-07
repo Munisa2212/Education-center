@@ -54,6 +54,8 @@ const bcrypt = require('bcrypt')
  *     summary: Reset the user's password using an OTP
  *     tags:
  *       - Password Reset 🔐
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

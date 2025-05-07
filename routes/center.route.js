@@ -12,31 +12,97 @@ const sendLog = require('../logger')
 
 /**
  * @swagger
- * /center:
- *   post:
- *     summary: Create a new center
- *     security:
- *       - BearerAuth: []
+ * /search/center :
+ *   get:
+ *     summary: Get centers with filtering, sorting, and pagination
  *     tags:
  *       - LearningCenters 🎓
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Center'
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by center name
+ *         schema:
+ *           type: string
+ *       - name: region_id
+ *         in: query
+ *         description: Filter by region ID
+ *         schema:
+ *           type: integer
+ *       - name: ceo_id
+ *         in: query
+ *         description: Filter by CEO ID
+ *         schema:
+ *           type: integer
+ *       - name: subject_id
+ *         in: query
+ *         description: Filter by subject ID
+ *         schema:
+ *           type: integer
+ *       - name: field_id
+ *         in: query
+ *         description: Filter by field ID
+ *         schema:
+ *           type: integer
+ *       - name: student_count
+ *         in: query
+ *         description: Filter by student_count
+ *         schema:
+ *           type: integer
+ *       - name: branch_name
+ *         in: query
+ *         description: Filter by branch name
+ *         schema:
+ *           type: string
+ *       - name: branch_id
+ *         in: query
+ *         description: Filter by branch Id
+ *         schema:
+ *           type: integer
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
  *     responses:
  *       200:
- *         description: Center created successfully
+ *         description: List of centers
+ *       203:
+ *         description: No centers found
  *       400:
- *         description: Validation error
- * 
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
+ * /center/get/all:
  *   get:
  *     summary: Get all centers with filtering, sorting, and pagination
- *     security:
- *       - BearerAuth: []
  *     tags:
  *       - LearningCenters 🎓
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: name
  *         in: query
@@ -65,6 +131,12 @@ const sendLog = require('../logger')
  *         schema:
  *           type: integer
  *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
  *       - name: order
  *         in: query
  *         description: Sorting order (ASC or DESC)
@@ -72,20 +144,23 @@ const sendLog = require('../logger')
  *           type: string
  *           enum: [ASC, DESC]
  *           default: ASC
- *       - name: sortBy
- *         in: query
- *         description: Field to sort by
- *         schema:
- *           type: string
- *           default: id
  *     responses:
  *       200:
  *         description: List of centers
- *       203:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Center'
+ *       404:
  *         description: No centers found
  *       400:
  *         description: Invalid request
- * 
+ */
+
+/**
+ * @swagger
  * /center/{id}:
  *   get:
  *     summary: Get a center by ID
@@ -103,9 +178,75 @@ const sendLog = require('../logger')
  *     responses:
  *       200:
  *         description: Center details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Center'
  *       404:
  *         description: Center not found
- * 
+ */
+
+/**
+ * @swagger
+ * /center/students:
+ *   get:
+ *     summary: Get students registered in a center
+ *     tags:
+ *       - LearningCenters 🎓
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: learningCenter_id
+ *         in: query
+ *         required: true
+ *         description: Learning center ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of students
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: Student ID
+ *                   name:
+ *                     type: string
+ *                     description: Student name
+ *       400:
+ *         description: learningCenter_id is required
+ */
+
+/**
+ * @swagger
+ * /center:
+ *   post:
+ *     summary: Create a new center
+ *     security:
+ *       - BearerAuth: []
+ *     tags:
+ *       - LearningCenters 🎓
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Center'
+ *     responses:
+ *       200:
+ *         description: Center created successfully
+ *       400:
+ *         description: Validation error
+ */
+
+/**
+ * @swagger
+ * /center/{id}:
  *   patch:
  *     summary: Update a center by ID
  *     security:
@@ -130,7 +271,11 @@ const sendLog = require('../logger')
  *         description: Center updated successfully
  *       404:
  *         description: Center not found
- * 
+ */
+
+/**
+ * @swagger
+ * /center/{id}:
  *   delete:
  *     summary: Delete a center by ID
  *     security:
@@ -149,46 +294,6 @@ const sendLog = require('../logger')
  *         description: Center deleted successfully
  *       404:
  *         description: Center not found
- * 
- * /center/students:
- *   get:
- *     summary: Get students registered in a center
- *     tags:
- *       - LearningCenters 🎓
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - name: learningCenter_id
- *         in: query
- *         required: true
- *         description: Learning center ID
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: List of students
- *       400:
- *         description: learningCenter_id is required
- * 
- * /center/average-star:
- *   get:
- *     summary: Get average rating of a center
- *     security:
- *       - BearerAuth: []
- *     tags:
- *       - LearningCenters 🎓
- *     parameters:
- *       - name: learningCenter_id
- *         in: query
- *         required: true
- *         description: Learning center ID
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Average star rating
- *       400:
- *         description: learningCenter_id is required
  */
 /**
  * @swagger
@@ -206,7 +311,7 @@ const sendLog = require('../logger')
  *           description: Name of the learning center
  *         phone:
  *           type: string
- *           example: +998882452212
+ *           example: "+998882452212"
  *           description: Contact phone number of the center
  *         image:
  *           type: string
@@ -342,7 +447,6 @@ const sendLog = require('../logger')
  *                   example: "An error occurred while fetching learning centers"
  */
 
-
 app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
     try {
         let { error } = CenterValidation.validate(req.body);
@@ -383,26 +487,35 @@ app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
             `);
             return res.status(404).send({ message: "Region not found" });
         }
-
-        const fields = await Field.findAll({ where: { id: field_id } });
-        if (fields.length !== field_id.length) {
-            sendLog(`⚠️ Bazi field_id topilmadi
-                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-                📂 Route: ${req.originalUrl}
-                🔍 Kiritilgan field_id: ${JSON.stringify(field_id)}
-            `);
-            return res.status(404).send({ message: "Some fields_id not found" });
+        
+        const notFound_Subjects = []
+        for(let i of subject_id){
+            let existingSubject = await Subject.findOne({where: {id: i}})
+            if(!existingSubject) notFound_Subjects.push(i)
         }
-
-        const subjects = await Subject.findAll({ where: { id: subject_id } });
-        if (subjects.length !== subject_id.length) {
+        if(notFound_Subjects.length) {
             sendLog(`⚠️ Bazi subject_id topilmadi
                 📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
                 📂 Route: ${req.originalUrl}
                 🔍 Kiritilgan subject_id: ${JSON.stringify(subject_id)}
             `);
-            return res.status(404).send({ message: "Some subjects_id not found" });
+            return res.status(404).send({message: `Subjects with ${notFound_Subjects} id not found`})
         }
+
+        const notFound_Fields = []
+        for(let i of subject_id){
+            let existingFields = await Field.findOne({where: {id: i}})
+            if(!existingFields) notFound_Fields.push(i)
+        }
+        if(notFound_Fields.length) {
+            sendLog(`⚠️ Bazi field_id topilmadi
+                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
+                📂 Route: ${req.originalUrl}
+                🔍 Kiritilgan field_id: ${JSON.stringify(field_id)}
+            `);
+            return res.status(404).send({message: `Fields with ${notFound_Fields} id not found`})
+        }
+
 
         const newCenter = await Center.create({
             ...rest,
@@ -441,7 +554,7 @@ app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
             🔍 Fields: ${JSON.stringify(field_id)}
         `);
 
-        res.send(req.body);
+        res.send({id: newCenter.id, ...req.body});
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
             📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
@@ -455,7 +568,7 @@ app.post("/", roleMiddleware(["CEO"]), async (req, res) => {
 });
 
 
-app.get("/", async (req, res) => {
+app.get("/get/all", async (req, res) => {
     const { name, region_id, ceo_id, limit = 10, page = 1, order = "ASC", sortBy = "id" } = req.query;
     try {
         const where = {};
@@ -470,23 +583,14 @@ app.get("/", async (req, res) => {
             offset: (parseInt(page) - 1) * parseInt(limit),
             order: [[sortBy, order.toUpperCase()]],
             include: [
-                { model: User, attributes: ["email", "name"] },
+                { model: User, attributes: ["id", "email", "name"] },
                 { model: Subject, through: { attributes: [] } },
                 { model: Field, through: { attributes: [] } },
-                { model: Region, attributes: ["name"] },
-                { model: Branch, attributes: ["name", "location"] },
-                { model: Comment, attributes: ["star", "comment"] }
+                { model: Region, attributes: ["id", "name"] },
+                { model: Branch, attributes: ["id", "name", "location", "region_id"] },
+                { model: Comment, attributes: ["id", "star", "comment"] }
             ]
         });
-
-        if (!centers.length) {
-            sendLog(`⚠️ Markaz topilmadi
-                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-                📂 Route: ${req.originalUrl}
-                🔍 Sorov: ${JSON.stringify(req.query)}
-            `);
-            return res.send({ message: "No Center found" });
-        }
 
         const centersWithAverageStar = centers.map(center => {
             const comments = center.Comments || [];
@@ -504,6 +608,7 @@ app.get("/", async (req, res) => {
             📂 Route: ${req.originalUrl}
             🔍 Natija: ${centers.length} ta markaz
         `);
+
         res.send(centersWithAverageStar);
     } catch (error) {
         sendLog(`❌ Xatolik yuz berdi: ${error.message}
@@ -519,18 +624,29 @@ app.get("/", async (req, res) => {
 app.get("/my-learning-centers", roleMiddleware(["CEO"]), async (req, res)=>{
     try {
         let user_id = req.user.id
-        let centers = await Center.findAll({where: {ceo_id: user_id}, include: [
+        const centers = await Center.findAll({where: {ceo_id: user_id}, include: [
             { model: User, attributes: ["email", "name"] },
             { model: Subject, through: { attributes: [] } },
             { model: Field, through: { attributes: [] } },
             { model: Region, attributes: ["name"] },
-            { model: Branch, attributes: ["name", "location"] },
-            { model: Comment, attributes: ["star", "comment"] }
+            { model: Branch, attributes: ["name", "location", "region_id"] },
+            { model: Comment, attributes: ["star", "comment"] },
+            { model: Registration}
         ]})
         if(!centers){
             return res.send({message: "You have no learning-centers yet"})
         }
-        res.send(centers)
+        const centersWithAverageStar = centers.map(center => {
+            const comments = center.Comments || [];
+            const totalStars = comments.reduce((sum, comment) => sum + comment.star, 0);
+            const average_star = comments.length > 0 ? (totalStars / comments.length).toFixed(2) : 0;
+
+            return {
+                ...center.toJSON(),
+                average_star
+            };
+        });
+        res.send(centersWithAverageStar)
     } catch (error) {   
         res.status(400).send({error: error.message})
     }
@@ -547,9 +663,9 @@ app.get("/students",roleMiddleware(["ADMIN","CEO"]), async (req, res) => {
             return res.status(400).send({ message: "learningCenter_id is required" });
         }
         
-        let students = await Registration.findAll({ where: { learningCenter_id: req.query.learningCenter_id } });
+        let students = await User.findAndCountAll({attributes: ["id", "name", "email", "phone"], include: [{model: Registration, where: {learningCenter_id: req.query.learningCenter_id}}]});
 
-        if (!students.length) {
+        if (!students.rows.length) {
             sendLog(`⚠️ Oquvchilar topilmadi
                 📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
                 📂 Route: ${req.originalUrl}
@@ -574,57 +690,6 @@ app.get("/students",roleMiddleware(["ADMIN","CEO"]), async (req, res) => {
         res.status(400).send({ message: error.message });
     }
 });
-
-
-app.get("/average-star", AuthMiddleware(), async (req, res) => {
-    try {
-        let { learningCenter_id } = req.query;
-
-        if (!learningCenter_id) {
-            sendLog(`⚠️ Xato sorov: learningCenter_id kiritilmagan
-                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-                📂 Route: ${req.originalUrl}
-                📥 Sorov: ${JSON.stringify(req.query)}
-            `);
-            return res.status(400).send({ message: "learningCenter_id is required" });
-        }
-
-        let center_data = await Comment.findAll({ where: { learningCenter_id } });
-
-        if (!center_data) {
-            sendLog(`⚠️ Ushbu oquv markazida sharhlar topilmadi
-                📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-                📂 Route: ${req.originalUrl}
-                🔍 learningCenter_id: ${learningCenter_id}
-            `);
-            return res.send({ average_star: 0 });
-        }
-
-        let totalStars = center_data.reduce((sum, comment) => sum + comment.star, 0);
-        if(totalStars == 0){
-            return res.send({ average_star: 0 })
-        }
-        let average_star = totalStars / center_data.length;
-
-        sendLog(`✅ Ortacha baho hisoblandi: ${average_star.toFixed(2)}
-            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-            📂 Route: ${req.originalUrl}
-            🔍 learningCenter_id: ${learningCenter_id}
-            ⭐ Sharhlar soni: ${center_data.length}
-        `);
-        
-        res.send({ average_star: average_star.toFixed(2) });
-    } catch (error) {
-        sendLog(`❌ Xatolik yuz berdi: ${error.message}
-            📌 Foydalanuvchi: (${req.user?.id} - ${req.user?.name})
-            📂 Route: ${req.originalUrl}
-            📥 Sorov: ${JSON.stringify(req.query)}
-            🛠️ Stack: ${error.stack}
-        `);
-        res.status(400).send({ message: error.message });
-    }
-});
-
 
 app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
     const { id } = req.params;
@@ -675,7 +740,7 @@ app.get("/:id", roleMiddleware(["CEO"]), async (req, res) => {
     }
 });
 
-app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
+app.patch("/:id", roleMiddleware(["CEO", "SUPER-ADMIN"]), async (req, res) => {
     const { id } = req.params;
     let { field_id, subject_id } = req.body;
 
@@ -699,39 +764,30 @@ app.patch("/:id", roleMiddleware(["CEO"]), async (req, res) => {
             return res.status(404).send({ message: "No Center found" });
         }
 
-        // Handle field_id
         if (field_id && Array.isArray(field_id)) {
             const existingFields = await CenterField.findAll({ where: { CenterId: id } });
             const existingFieldIds = existingFields.map(f => f.FieldId);
 
-            // Find IDs to remove and add
             const fieldsToRemove = existingFieldIds.filter(f => !field_id.includes(f));
             const fieldsToAdd = field_id.filter(f => !existingFieldIds.includes(f));
 
-            // Remove fields
             await CenterField.destroy({ where: { CenterId: id, FieldId: fieldsToRemove } });
 
-            // Add new fields
             await CenterField.bulkCreate(fieldsToAdd.map(f => ({ CenterId: id, FieldId: f })));
         }
 
-        // Handle subject_id
         if (subject_id && Array.isArray(subject_id)) {
             const existingSubjects = await CenterSubject.findAll({ where: { CenterId: id } });
             const existingSubjectIds = existingSubjects.map(s => s.SubjectId);
 
-            // Find IDs to remove and add
             const subjectsToRemove = existingSubjectIds.filter(s => !subject_id.includes(s));
             const subjectsToAdd = subject_id.filter(s => !existingSubjectIds.includes(s));
 
-            // Remove subjects
             await CenterSubject.destroy({ where: { CenterId: id, SubjectId: subjectsToRemove } });
 
-            // Add new subjects
             await CenterSubject.bulkCreate(subjectsToAdd.map(s => ({ CenterId: id, SubjectId: s })));
         }
 
-        // Update the center with other fields
         await center.update(req.body);
 
         sendLog(`✅ O‘quv markazi yangilandi

@@ -12,7 +12,54 @@ const route = express.Router()
  *   name: Field 💼
  *   description: Field management API
  */
-
+/**
+ * @swagger
+ * /search/field :
+ *   get:
+ *     summary: Get fields with filtering, sorting, and pagination
+ *     tags:
+ *       - Field 💼
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: name
+ *         in: query
+ *         description: Filter by field name
+ *         schema:
+ *           type: string
+ *       - name: limit
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: order
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of fields
+ *       404:
+ *         description: Field not found
+ *       400:
+ *         description: Bad request
+ */
 /**
  * @swagger
  * /field:
@@ -27,22 +74,6 @@ const route = express.Router()
  *       400:
  *         description: Bad request
  */
-route.get("/", async (req, res) => {
-  try {
-      const fields = await Field.findAll();
-      sendLog("✅ GET sorovi muvaffaqiyatli bajarildi: fieldlar yuborildi.");
-      res.send(fields);
-  } catch (error) {
-      sendLog(`❌ Xatolik yuz berdi: ${error.message}
-          📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
-          📂 Route: ${req.originalUrl}
-          📥 Sorov: ${JSON.stringify(req.query)}
-          🛠️ Stack: ${error.stack}`);
-      res.status(400).send({ message: error.message });
-  }
-});
-
-
 /**
  * @swagger
  * /field:
@@ -71,29 +102,66 @@ route.get("/", async (req, res) => {
  *         description: Field created successfully
  *       400:
  *         description: Validation error
- */
+*/
+/**
+ * @swagger
+ * /field/{id}:
+ *   get:
+ *     summary: Get a field by ID
+ *     tags: [Field 💼]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Field ID
+ *     responses:
+ *       200:
+ *         description: Field details
+ *       404:
+ *         description: Field not found
+*/
+
+route.get("/", async (req, res) => {
+  try {
+      const fields = await Field.findAll();
+      sendLog("✅ GET sorovi muvaffaqiyatli bajarildi: fieldlar yuborildi.");
+      res.send(fields);
+  } catch (error) {
+      sendLog(`❌ Xatolik yuz berdi: ${error.message}
+          📌 Foydalanuvchi: ${req.user ? `(${req.user.id} - ${req.user.name})` : "Aniqlanmagan foydalanuvchi"}
+          📂 Route: ${req.originalUrl}
+          📥 Sorov: ${JSON.stringify(req.query)}
+          🛠️ Stack: ${error.stack}`);
+      res.status(400).send({ message: error.message });
+  }
+});
+
 route.post('/', roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
     const userInfo = req.user ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` : "Noma'lum foydalanuvchi";
     
     sendLog(`📤 [POST] /fields sorovi boshlandi
-            📌 Foydalanuvchi: ${userInfo}
-            📂 Route: ${req.originalUrl}
-            📥 Sorov: ${JSON.stringify(req.body)}`);
-
-    const { error } = FieldValidation.validate(req.body);
-    if (error) {
-      sendLog(`❌ Validatsiya xatosi
-              📌 Foydalanuvchi: ${userInfo}
+      📌 Foydalanuvchi: ${userInfo}
+      📂 Route: ${req.originalUrl}
+      📥 Sorov: ${JSON.stringify(req.body)}`);
+      
+      const { error } = FieldValidation.validate(req.body);
+      if (error) {
+        sendLog(`❌ Validatsiya xatosi
+          📌 Foydalanuvchi: ${userInfo}
               📂 Route: ${req.originalUrl}
               📥 Sorov: ${JSON.stringify(req.body)}
               ⚠️ Xato: ${error.details[0].message}`);
-      return res.status(400).send({ message: error.details[0].message });
-    }
-
-    let field = await Field.findOne({ where: { name: req.body.name } });
-    if (field) {
-      sendLog(`⚠️ Field allaqachon mavjud
+              return res.status(400).send({ message: error.details[0].message });
+            }
+            
+            let field = await Field.findOne({ where: { name: req.body.name } });
+            if (field) {
+              sendLog(`⚠️ Field allaqachon mavjud
               📌 Foydalanuvchi: ${userInfo}
               📂 Route: ${req.originalUrl}
               📥 Sorov: ${JSON.stringify(req.body)}
@@ -125,27 +193,6 @@ route.post('/', roleMiddleware(["ADMIN"]), async (req, res) => {
 });
 
 
-/**
- * @swagger
- * /field/{id}:
- *   get:
- *     summary: Get a field by ID
- *     tags: [Field 💼]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Field ID
- *     responses:
- *       200:
- *         description: Field details
- *       404:
- *         description: Field not found
- */
 route.get('/:id', async (req, res) => {
   try {
     const userInfo = req.user ? `ID: ${req.user.id}, Role: ${req.user.role}, Email: ${req.user.email}` : "Noma'lum foydalanuvchi";

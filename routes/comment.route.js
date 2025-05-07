@@ -1,9 +1,8 @@
 const router = require("express").Router();
-const {Comment, User, Center} = require("../models/index.module")
-const AuthMiddleware = require("../middleware/auth.middleware")
-const { Op } = require("sequelize");
+const { Comment, User, Center } = require("../models/index.module");
+const AuthMiddleware = require("../middleware/auth.middleware");
 const CommentValidation = require("../validation/comment.validation");
-const sendLog = require('../logger');
+const sendLog = require("../logger");
 const { roleMiddleware } = require("../middleware/role.middleware");
 
 /**
@@ -11,12 +10,79 @@ const { roleMiddleware } = require("../middleware/role.middleware");
  * tags:
  *   name: Comment 💬
  *   description: Comments management for learning centers
- * 
+ */
+
+/**
+ * @swagger
+ * /search/comment:
+ *   get:
+ *     summary: Get comments with filtering, sorting, and pagination
+ *     tags:
+ *       - Comment 💬
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: user_id
+ *         in: query
+ *         description: Filter by user ID
+ *         schema:
+ *           type: integer
+ *       - name: comment
+ *         in: query
+ *         description: Filter by comment text
+ *         schema:
+ *           type: string
+ *       - name: star
+ *         in: query
+ *         description: Filter by star rating
+ *         schema:
+ *           type: integer
+ *       - name: learningCenter_id
+ *         in: query
+ *         description: Filter by learning center ID
+ *         schema:
+ *           type: integer
+ *       - name: take
+ *         in: query
+ *         description: Number of results per page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: sortBy
+ *         in: query
+ *         description: Field to sort by
+ *         schema:
+ *           type: string
+ *           default: id
+ *       - name: sortOrder
+ *         in: query
+ *         description: Sorting order (ASC or DESC)
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: ASC
+ *     responses:
+ *       200:
+ *         description: List of comments
+ *       400:
+ *         description: Bad request
+ */
+
+/**
+ * @swagger
  * paths:
  *   /comment:
  *     get:
  *       summary: Get all comments
  *       tags: [Comment 💬]
+ *       security:
+ *         - BearerAuth: []
  *       responses:
  *         200:
  *           description: List of all comments
@@ -37,10 +103,13 @@ const { roleMiddleware } = require("../middleware/role.middleware");
  *           description: Comment successfully added
  *         400:
  *           description: Validation error
+ * 
  *   /comment/{id}:
  *     get:
  *       summary: Get a comment by ID
  *       tags: [Comment 💬]
+ *       security:
+ *         - BearerAuth: []
  *       parameters:
  *         - in: path
  *           name: id
@@ -53,48 +122,6 @@ const { roleMiddleware } = require("../middleware/role.middleware");
  *           description: Comment found
  *         404:
  *           description: Comment not found
- * 
- *     patch:
- *       summary: Update a comment
- *       security:
- *         - BearerAuth: []
- *       tags: [Comment 💬]
- *       parameters:
- *         - in: path
- *           name: id
- *           required: true
- *           schema:
- *             type: integer
- *           description: Comment ID
- *       requestBody:
- *         required: true
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Comment'
- *       responses:
- *         200:
- *           description: Comment updated
- *         403:
- *           description: User not allowed to update this comment
- * 
- *     delete:
- *       summary: Delete a comment
- *       security:
- *         - BearerAuth: []
- *       tags: [Comment 💬]
- *       parameters:
- *         - in: path
- *           name: id
- *           required: true
- *           schema:
- *             type: integer
- *           description: Comment ID
- *       responses:
- *         200:
- *           description: Comment deleted successfully
- *         403:
- *           description: User not allowed to delete this comment
  * 
  * components:
  *   schemas:
@@ -110,7 +137,7 @@ const { roleMiddleware } = require("../middleware/role.middleware");
  *         learningCenter_id:
  *           type: integer
  *           example: 2
- */ 
+ */
 
 
 router.get("/", async (req, res) => {
@@ -207,7 +234,7 @@ router.get("/:id", async (req, res) => {
 
 
 
-router.patch("/:id",roleMiddleware(["ADMIN","SUPER-ADMIN"]), async (req, res) => {
+router.patch("/:id",roleMiddleware(["ADMIN","SUPER-ADMIN","USER","CEO"]), async (req, res) => {
     try {
         let existingComment = await Comment.findByPk(req.params.id);
         if (!existingComment) {
@@ -265,7 +292,7 @@ router.delete("/:id",roleMiddleware(["ADMIN"]), async (req, res) => {
             🛠️ Stack: ${error.stack}
         `);
         res.status(400).send({ message: error.message });
-    }
+    } 
 });
 
 module.exports = router

@@ -1,12 +1,13 @@
 const express = require("express");
-const upload = require("../upload")
+const path = require("path");
+const upload = require("../upload");
 const router = express.Router();
 
 /**
  * @swagger
  * /upload:
  *   post:
- *     summary: Rasm yuklash
+ *     summary: Upload file
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -22,7 +23,7 @@ const router = express.Router();
  *                 format: binary
  *     responses:
  *       200:
- *         description: Rasm muvaffaqiyatli yuklandi
+ *         description: File uploaded successfully
  *         content:
  *           application/json:
  *             schema:
@@ -31,9 +32,7 @@ const router = express.Router();
  *                 imageUrl:
  *                   type: string
  *       400:
- *         description: Fayl yuklanmadi
- *       500:
- *         description: Server xatosi
+ *         description: File not provided
  */
 router.post("/", upload.single("image"), (req, res) => {
     try {
@@ -41,9 +40,55 @@ router.post("/", upload.single("image"), (req, res) => {
             return res.status(400).json({ msg: "Fayl yuklanmadi!" });
         }
         const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-        res.json({ imageUrl: fileUrl });
+        res.json({ imageUrl: fileUrl, filename: req.file.filename });
     } catch (err) {
-        res.status(500).json({ msg: "Server xatosi", error: err.message });
+        res.status(400).json({ error: err.message });
+    }
+});
+
+/**
+ * @swagger
+ * /upload:
+ *   get:
+ *     summary: Get uploaded file
+ *     tags: [Upload]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: filename
+ *         in: query
+ *         description: Uploaded filename
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: File returned successfully
+ *         content:
+ *           image/png:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: filename not provided or file nor found
+ */
+router.get("/", (req, res) => {
+    try {
+        const { filename } = req.query;
+
+        if (!filename) {
+            return res.status(400).send({ message: "Filename is required!" });
+        }
+
+        const filePath = path.join(__dirname, "../uploads", filename);
+        
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                return res.status(404).send({ message: "File not found!" });
+            }
+        });
+    } catch (error) {
+        res.status(400).send({ error: error.message });
     }
 });
 
